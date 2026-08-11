@@ -1,15 +1,15 @@
 [@sdeverywhere/plugin-worker](../index.md) / workerPlugin
 
-# Function: workerPlugin
+# Function: workerPlugin()
 
-**workerPlugin**(`options?`): `Plugin`
+> **workerPlugin**(`options?`): `Plugin`
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`WorkerPluginOptions`](../interfaces/WorkerPluginOptions.md) |
 
-#### Returns
+## Returns
 
 `Plugin`

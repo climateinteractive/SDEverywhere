@@ -44,7 +44,11 @@ function main() {
     }
   }
 
-  // Generate the docs for the current package
+  // Generate the docs for the current package.
+  //   * We pass `hidePageHeader` because 4.x adds a project title and separator above the
+  //     breadcrumbs on each page, which we don't want.
+  //   * We also pass `parametersFormat table` because 4.x renders each parameter as its
+  //     own heading by default, whereas we prefer the more compact table that 3.x produced.
   const typedocCmd = `typedoc \
 --tsconfig ./tsconfig-build.json \
 --sort source-order \
@@ -54,11 +58,11 @@ function main() {
 --readme none \
 --githubPages false \
 --plugin typedoc-plugin-markdown \
---entryDocument entry.md \
---hideInPageTOC \
---hideMembersSymbol \
---allReflectionsHaveOwnDocument \
---objectLiteralTypeDeclarationStyle list \
+--entryFileName entry.md \
+--outputFileStrategy members \
+--typeDeclarationFormat list \
+--parametersFormat table \
+--hidePageHeader \
 --out docs \
 --cleanOutputDir false \
 src/index.ts`

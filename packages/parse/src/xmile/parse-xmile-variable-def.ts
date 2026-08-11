@@ -16,7 +16,7 @@ import { elemsOf, firstElemOf, firstTextOf, xmlError } from './xml'
  * corresponding to the variable definition (or definitions, in the case of a
  * non-apply-to-all variable that is defined with an `<element>` for each subscript).
  *
- * @param input A string containing the XMILE equation definition.
+ * @param varElem An `XmlElement` containing the XMILE variable definition.
  * @returns An `Equation` AST node.
  */
 export function parseXmileVariableDef(varElem: XmlElement): Equation[] {

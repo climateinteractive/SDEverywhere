@@ -4,24 +4,24 @@
 
 ## Properties
 
-### modelSpecsDir
+### modelSpecsDir?
 
- `Optional` **modelSpecsDir**: `string`
+> `optional` **modelSpecsDir?**: `string`
 
 The absolute path to the directory where model spec files will be written.
 
-___
+***
 
-### configSpecsDir
+### configSpecsDir?
 
- `Optional` **configSpecsDir**: `string`
+> `optional` **configSpecsDir?**: `string`
 
 The absolute path to the directory where config spec files will be written.
 
-___
+***
 
-### stringsDir
+### stringsDir?
 
- `Optional` **stringsDir**: `string`
+> `optional` **stringsDir?**: `string`
 
 The absolute path to the directory where translated strings will be written.

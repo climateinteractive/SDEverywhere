@@ -1,6 +1,6 @@
 [@sdeverywhere/build](../index.md) / BuildContext
 
-# Class: BuildContext
+# Interface: BuildContext
 
 Provides access to common functionality that is needed during the build process.
 This is passed to most plugin functions.
@@ -9,34 +9,34 @@ This is passed to most plugin functions.
 
 ### config
 
- `Readonly` **config**: [`ResolvedConfig`](../interfaces/ResolvedConfig.md)
+> `readonly` **config**: [`ResolvedConfig`](ResolvedConfig.md)
 
 The resolved configuration.
 
 ## Methods
 
-### log
+### log()
 
-**log**(`level`, `msg`): `void`
+> **log**(`level`, `msg`): `void`
 
 Log a message to the console and/or the in-browser overlay panel.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `level` | [`LogLevel`](../types/LogLevel.md) | The log level (verbose, info, error). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `level` | [`LogLevel`](../type-aliases/LogLevel.md) | The log level (verbose, info, error). |
 | `msg` | `string` | The message. |
 
 #### Returns
 
 `void`
 
-___
+***
 
-### prepareStagedFile
+### prepareStagedFile()
 
-**prepareStagedFile**(`srcDir`, `srcFile`, `dstDir`, `dstFile`): `string`
+> **prepareStagedFile**(`srcDir`, `srcFile`, `dstDir`, `dstFile`): `string`
 
 Prepare for writing a file to the staged directory.
 
@@ -45,8 +45,8 @@ staged directory if needed.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `srcDir` | `string` | The directory underneath the configured `staged` directory where the file will be written (this must be a relative path). |
 | `srcFile` | `string` | The name of the file as written to the `staged` directory. |
 | `dstDir` | `string` | The absolute path to the destination directory where the staged file will be copied when the build has completed. |
@@ -58,11 +58,11 @@ staged directory if needed.
 
 The absolute path to the staged file.
 
-___
+***
 
-### writeStagedFile
+### writeStagedFile()
 
-**writeStagedFile**(`srcDir`, `dstDir`, `filename`, `content`): `void`
+> **writeStagedFile**(`srcDir`, `dstDir`, `filename`, `content`): `void`
 
 Write a file to the staged directory.
 
@@ -74,8 +74,8 @@ file is written.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `srcDir` | `string` | The directory underneath the configured `staged` directory where the file will be written (this must be a relative path). |
 | `dstDir` | `string` | The absolute path to the destination directory where the staged file will be copied when the build has completed. |
 | `filename` | `string` | The name of the file. |
@@ -85,18 +85,18 @@ file is written.
 
 `void`
 
-___
+***
 
-### spawnChild
+### spawnChild()
 
-**spawnChild**(`cwd`, `command`, `args`, `opts?`): `Promise`<`ProcessOutput`\>
+> **spawnChild**(`cwd`, `command`, `args`, `opts?`): `Promise`\<`ProcessOutput`\>
 
 Spawn a child process that runs the given command.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `cwd` | `string` | The directory in which the command will be executed. |
 | `command` | `string` | The command to execute. |
 | `args` | `string`[] | The arguments to pass to the command. |
@@ -104,15 +104,15 @@ Spawn a child process that runs the given command.
 
 #### Returns
 
-`Promise`<`ProcessOutput`\>
+`Promise`\<`ProcessOutput`\>
 
 The output of the process.
 
-___
+***
 
-### canonicalVarId
+### canonicalVarId()
 
-**canonicalVarId**(`name`): `string`
+> **canonicalVarId**(`name`): `string`
 
 Format a (subscripted or non-subscripted) model variable name into a canonical
 identifier (with special characters converted to underscore, and subscript/dimension
@@ -120,8 +120,8 @@ parts separated by commas).
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `name` | `string` | The name of the variable in the source model, e.g., `Variable name[DimA, B2]`. |
 
 #### Returns

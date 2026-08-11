@@ -22,23 +22,27 @@ worker thread).
 
 ## Constructors
 
-### constructor
+### Constructor
 
-**new MultiContextModelScheduler**(`runner`, `options?`)
+> **new MultiContextModelScheduler**(`runner`, `options?`): `MultiContextModelScheduler`
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
-| `options?` | `Object` | Additional options for the scheduler. |
+| `options?` | \{ `initialOutputs?`: [`Outputs`](Outputs.md); \} | Additional options for the scheduler. |
 | `options.initialOutputs?` | [`Outputs`](Outputs.md) | An optional `Outputs` instance that will be reused for the initial context. This is useful for saving memory when an `Outputs` instance was already created for, e.g., a initial baseline/reference run. |
+
+#### Returns
+
+`MultiContextModelScheduler`
 
 ## Methods
 
-### isStarted
+### isStarted()
 
-**isStarted**(): `boolean`
+> **isStarted**(): `boolean`
 
 Return true if the scheduler has started any model runs.
 
@@ -46,11 +50,11 @@ Return true if the scheduler has started any model runs.
 
 `boolean`
 
-___
+***
 
-### addContext
+### addContext()
 
-**addContext**(`inputs`, `options?`): [`ModelContext`](../interfaces/ModelContext.md)
+> **addContext**(`inputs`, `options?`): [`ModelContext`](../interfaces/ModelContext.md)
 
 Add a new context that holds a distinct set of model inputs and outputs.
 These inputs and outputs are kept separate from those in other contexts,
@@ -64,28 +68,28 @@ to zero.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `inputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
-| `options?` | `Object` | Additional options for the context. |
-| `options.externalData?` | [`DataMap`](../types/DataMap.md) | Additional data that is external to the model outputs. For example, this can contain data that was captured from an initial reference run, or other static data that is displayed in graphs alongside the model output data in graphs. |
+| `options?` | \{ `externalData?`: [`DataMap`](../type-aliases/DataMap.md); \} | Additional options for the context. |
+| `options.externalData?` | [`DataMap`](../type-aliases/DataMap.md) | Additional data that is external to the model outputs. For example, this can contain data that was captured from an initial reference run, or other static data that is displayed in graphs alongside the model output data in graphs. |
 
 #### Returns
 
 [`ModelContext`](../interfaces/ModelContext.md)
 
-___
+***
 
-### removeContext
+### removeContext()
 
-**removeContext**(`context`): `void`
+> **removeContext**(`context`): `void`
 
 Remove the given context from the set of contexts managed by the scheduler.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `context` | [`ModelContext`](../interfaces/ModelContext.md) | The context to remove. |
 
 #### Returns
