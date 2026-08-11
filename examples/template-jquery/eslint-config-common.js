@@ -2,8 +2,6 @@ import eslintComments from '@eslint-community/eslint-plugin-eslint-comments'
 import eslint from '@eslint/js'
 import tseslint from '@typescript-eslint/eslint-plugin'
 import tsparser from '@typescript-eslint/parser'
-import sveltePlugin from 'eslint-plugin-svelte'
-import svelteParser from 'svelte-eslint-parser'
 import prettier from 'eslint-config-prettier'
 import globals from 'globals'
 
@@ -46,32 +44,6 @@ export default [
     },
     rules: {
       ...commonRules
-    }
-  },
-  {
-    files: ['**/*.svelte', '**/*.svelte.ts'],
-    languageOptions: {
-      parser: svelteParser,
-      parserOptions: {
-        parser: tsparser,
-        extraFileExtensions: ['.svelte'],
-        ecmaVersion: 'latest',
-        sourceType: 'module'
-      },
-      globals: globals.browser
-    },
-    plugins: {
-      ...commonPlugins,
-      svelte: sveltePlugin
-    },
-    rules: {
-      ...commonRules,
-      ...sveltePlugin.configs.recommended.rules,
-      // XXX: Disable the "no-useless-assignment" rule for Svelte files.  ESLint analyzes a
-      // `$:` reactive block as straight-line code that runs once, so an assignment that is
-      // only read on a later run of the block (or from the template) is incorrectly
-      // reported as useless.
-      'no-useless-assignment': 'off'
     }
   },
   prettier
