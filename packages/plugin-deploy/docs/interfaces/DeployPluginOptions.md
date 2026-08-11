@@ -6,9 +6,9 @@ The options that control the deployment process.
 
 ## Properties
 
-### baseUrl
+### baseUrl?
 
- `Optional` **baseUrl**: `string`
+> `optional` **baseUrl?**: `string`
 
 The base URL for the published project.  This is used for determining the URLs
 for remote bundle files used by model-check and for other purposes.
@@ -38,11 +38,11 @@ directory structure, you can update this variable to suit your needs, for exampl
   baseUrl: 'https://sdmodeler123.com/projects/my-model'
 ```
 
-___
+***
 
-### deployDir
+### deployDir?
 
- `Optional` **deployDir**: `string`
+> `optional` **deployDir?**: `string`
 
 The path of the directory to which the build products will be copied.
 If undefined, defaults to the "deploy" directory under the configured
@@ -51,11 +51,11 @@ exist.
 
 This directory is ephemeral and should be listed in your `.gitignore` file.
 
-___
+***
 
-### products
+### products?
 
- `Optional` **products**: `Record`<`string`, [`BuildProduct`](BuildProduct.md)\>
+> `optional` **products?**: `Record`\<`string`, [`BuildProduct`](BuildProduct.md)\>
 
 The build products that will be copied to the `deployDir` directory.
 If undefined, defaults to the following build products that are typically

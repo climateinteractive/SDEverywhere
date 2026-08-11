@@ -6,38 +6,42 @@ A time series of data points for an output variable.
 
 ## Constructors
 
-### constructor
+### Constructor
 
-**new Series**(`varId`, `points`)
+> **new Series**(`varId`, `points`): `Series`
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `varId` | `string` | The ID for the output variable (as used by SDEverywhere). |
 | `points` | [`Point`](../interfaces/Point.md)[] | The data points for the variable, one point per time increment. |
+
+#### Returns
+
+`Series`
 
 ## Properties
 
 ### varId
 
- `Readonly` **varId**: `string`
+> `readonly` **varId**: `string`
 
 The ID for the output variable (as used by SDEverywhere).
 
-___
+***
 
 ### points
 
- `Readonly` **points**: [`Point`](../interfaces/Point.md)[]
+> `readonly` **points**: [`Point`](../interfaces/Point.md)[]
 
 The data points for the variable, one point per time increment.
 
 ## Methods
 
-### getValueAtTime
+### getValueAtTime()
 
-**getValueAtTime**(`time`): `number`
+> **getValueAtTime**(`time`): `number`
 
 Return the Y value at the given time.  Note that this does not attempt to interpolate
 if there is no data point defined for the given time and will return undefined in
@@ -45,8 +49,8 @@ that case.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `time` | `number` | The x (time) value. |
 
 #### Returns
@@ -56,14 +60,14 @@ that case.
 The y value for the given time, or undefined if there is no data point defined
 for the given time.
 
-___
+***
 
-### copy
+### copy()
 
-**copy**(): [`Series`](Series.md)
+> **copy**(): `Series`
 
 Create a new `Series` instance that is a copy of this one.
 
 #### Returns
 
-[`Series`](Series.md)
+`Series`

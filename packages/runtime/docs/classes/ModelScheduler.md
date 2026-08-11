@@ -14,36 +14,36 @@ worker thread).
 
 ## Constructors
 
-### constructor
+### Constructor
 
-**new ModelScheduler**(`runner`, `userInputs`, `outputs`)
+> **new ModelScheduler**(`runner`, `userInputs`, `outputs`): `ModelScheduler`
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `runner` | [`ModelRunner`](../interfaces/ModelRunner.md) | The model runner. |
 | `userInputs` | [`InputValue`](../interfaces/InputValue.md)[] | The input values, in the same order as in the spec file passed to `sde`. |
 | `outputs` | [`Outputs`](Outputs.md) | The structure into which the model outputs will be stored. |
 
+#### Returns
+
+`ModelScheduler`
+
 ## Properties
 
-### onOutputsChanged
+### onOutputsChanged?
 
- `Optional` **onOutputsChanged**: (`outputs`: [`Outputs`](Outputs.md)) => `void`
-
-#### Type declaration
-
-(`outputs`): `void`
+> `optional` **onOutputsChanged?**: (`outputs`) => `void`
 
 Called when `outputs` has been updated after a model run.
 
-##### Parameters
+#### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `outputs` | [`Outputs`](Outputs.md) |
 
-##### Returns
+#### Returns
 
 `void`

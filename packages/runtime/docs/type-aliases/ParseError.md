@@ -1,7 +1,7 @@
 [@sdeverywhere/runtime](../index.md) / ParseError
 
-# Type alias: ParseError
+# Type Alias: ParseError
 
- **ParseError**: ``"invalid-point-count"``
+> **ParseError** = `"invalid-point-count"`
 
 Indicates the type of error encountered when parsing an outputs buffer.

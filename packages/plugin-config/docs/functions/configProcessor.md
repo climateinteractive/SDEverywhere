@@ -1,8 +1,8 @@
 [@sdeverywhere/plugin-config](../index.md) / configProcessor
 
-# Function: configProcessor
+# Function: configProcessor()
 
-**configProcessor**(`options`): (`buildContext`: `BuildContext`) => `Promise`<`ModelSpec`\>
+> **configProcessor**(`options`): (`buildContext`) => `Promise`\<`ModelSpec`\>
 
 Returns a function that can be passed as the `modelSpec` function for the SDEverywhere
 `UserConfig`.  The returned function:
@@ -10,24 +10,12 @@ Returns a function that can be passed as the `modelSpec` function for the SDEver
   - writes JS files to the configured output directories
   - returns a `ModelSpec` that guides the rest of the `sde` build process
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options` | [`ConfigProcessorOptions`](../interfaces/ConfigProcessorOptions.md) |
 
-#### Returns
+## Returns
 
-`fn`
-
-(`buildContext`): `Promise`<`ModelSpec`\>
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `buildContext` | `BuildContext` |
-
-##### Returns
-
-`Promise`<`ModelSpec`\>
+(`buildContext`) => `Promise`\<`ModelSpec`\>

@@ -1,18 +1,18 @@
 [@sdeverywhere/runtime](../index.md) / createConstantDef
 
-# Function: createConstantDef
+# Function: createConstantDef()
 
-**createConstantDef**(`varRef`, `value`): [`ConstantDef`](../interfaces/ConstantDef.md)
+> **createConstantDef**(`varRef`, `value`): [`ConstantDef`](../interfaces/ConstantDef.md)
 
 Create a `ConstantDef` instance.
 
-#### Parameters
+## Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `varRef` | [`VarRef`](../interfaces/VarRef.md) | The reference to the constant variable to be modified. |
 | `value` | `number` | The new constant value. |
 
-#### Returns
+## Returns
 
 [`ConstantDef`](../interfaces/ConstantDef.md)

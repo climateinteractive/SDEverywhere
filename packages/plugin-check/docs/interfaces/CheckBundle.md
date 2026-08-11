@@ -16,22 +16,22 @@ If both `path` and `url` are undefined, model-check will load the latest
 
 ### name
 
- **name**: `string`
+> **name**: `string`
 
 The name of the bundle as displayed in the report (this is typically a branch name).
 
-___
+***
 
-### path
+### path?
 
- `Optional` **path**: `string`
+> `optional` **path?**: `string`
 
 The absolute path to the local JS bundle file.
 
-___
+***
 
-### url
+### url?
 
- `Optional` **url**: `string`
+> `optional` **url?**: `string`
 
 The URL of the remote bundle file.

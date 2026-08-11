@@ -6,16 +6,12 @@ Callback functions that are called when the input value is changed.
 
 ## Properties
 
-### onSet
+### onSet?
 
- `Optional` **onSet**: () => `void`
-
-#### Type declaration
-
-(): `void`
+> `optional` **onSet?**: () => `void`
 
 Called after a new value is set.
 
-##### Returns
+#### Returns
 
 `void`

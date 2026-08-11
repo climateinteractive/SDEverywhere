@@ -1,8 +1,8 @@
 [@sdeverywhere/runtime-async](../index.md) / spawnAsyncModelRunner
 
-# Function: spawnAsyncModelRunner
+# Function: spawnAsyncModelRunner()
 
-**spawnAsyncModelRunner**(`workerSpec`): `Promise`<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
+> **spawnAsyncModelRunner**(`workerSpec`): `Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
 
 Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker
 (a Web Worker when running in a browser environment, or a worker thread
@@ -32,12 +32,12 @@ async function initApp() {
 }
 ```
 
-#### Parameters
+## Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `workerSpec` | { `path`: `string`  } \| { `source`: `string`  } | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `workerSpec` | \{ `path`: `string`; \} \| \{ `source`: `string`; \} | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
 
-#### Returns
+## Returns
 
-`Promise`<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
+`Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>

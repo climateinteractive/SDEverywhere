@@ -8,14 +8,14 @@ Specifies the data that will be used to set or override a lookup definition.
 
 ### varRef
 
- **varRef**: [`VarRef`](VarRef.md)
+> **varRef**: [`VarRef`](VarRef.md)
 
 The reference that identifies the lookup or data variable to be modified.
 
-___
+***
 
-### points
+### points?
 
- `Optional` **points**: `Float64Array`
+> `optional` **points?**: `Float64Array`
 
 The lookup data as a flat array of (x,y) pairs.

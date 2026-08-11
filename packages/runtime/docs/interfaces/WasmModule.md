@@ -10,16 +10,16 @@ set of fields needed by the SDEverywhere runtime.
 
 ### kind
 
- `Readonly` **kind**: ``"wasm"``
+> `readonly` **kind**: `"wasm"`
 
-___
+***
 
 ### outputVarIds
 
- `Readonly` **outputVarIds**: `string`[]
+> `readonly` **outputVarIds**: `string`[]
 
-___
+***
 
-### modelListing
+### modelListing?
 
- `Optional` `Readonly` **modelListing**: `any`
+> `readonly` `optional` **modelListing?**: `any`
