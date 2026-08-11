@@ -25,7 +25,7 @@ export function parseXmileModel(input: string): Model {
   } catch (e) {
     // Include context such as line/column numbers in the error message if available
     const msg = `Failed to parse XMILE model definition:\n\n${e.message}`
-    throw new Error(msg)
+    throw new Error(msg, { cause: e })
   }
 
   // Extract <sim_specs> -> SimulationSpec
