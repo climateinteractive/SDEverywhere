@@ -8,68 +8,56 @@ Represents a writable model input.
 
 ### varId
 
- **varId**: `string`
+> **varId**: `string`
 
 The ID of the associated input variable, as used in SDEverywhere.
 
-___
+***
 
 ### get
 
- **get**: () => `number`
-
-#### Type declaration
-
-(): `number`
+> **get**: () => `number`
 
 Get the current value of the input.
 
-##### Returns
+#### Returns
 
 `number`
 
-___
+***
 
 ### set
 
- **set**: (`value`: `number`) => `void`
-
-#### Type declaration
-
-(`value`): `void`
+> **set**: (`value`) => `void`
 
 Set the input to the given value.
 
-##### Parameters
+#### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `value` | `number` |
 
-##### Returns
+#### Returns
 
 `void`
 
-___
+***
 
 ### reset
 
- **reset**: () => `void`
-
-#### Type declaration
-
-(): `void`
+> **reset**: () => `void`
 
 Reset the input to its default value.
 
-##### Returns
+#### Returns
 
 `void`
 
-___
+***
 
 ### callbacks
 
- **callbacks**: [`InputCallbacks`](InputCallbacks.md)
+> **callbacks**: [`InputCallbacks`](InputCallbacks.md)
 
 Callback functions that are called when the input value is changed.

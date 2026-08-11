@@ -1,7 +1,7 @@
 [@sdeverywhere/runtime](../index.md) / VarName
 
-# Type alias: VarName
+# Type Alias: VarName
 
- **VarName**: `string`
+> **VarName** = `string`
 
 A variable name, as used in the modeling tool.

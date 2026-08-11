@@ -6,9 +6,9 @@ Additional options that can be passed to a `runModel` call to influence the mode
 
 ## Properties
 
-### constants
+### constants?
 
- `Optional` **constants**: [`ConstantDef`](ConstantDef.md)[]
+> `optional` **constants?**: [`ConstantDef`](ConstantDef.md)[]
 
 If defined, override the values for the specified constant variables.
 
@@ -19,11 +19,11 @@ constants, you must provide them in the options for each `runModel` call.  To
 reset constants to their original values, simply stop passing them in the options
 (or pass an empty array).
 
-___
+***
 
-### lookups
+### lookups?
 
- `Optional` **lookups**: [`LookupDef`](LookupDef.md)[]
+> `optional` **lookups?**: [`LookupDef`](LookupDef.md)[]
 
 If defined, override the data for the specified lookups and/or data variables.
 

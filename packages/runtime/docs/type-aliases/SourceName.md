@@ -1,7 +1,7 @@
 [@sdeverywhere/runtime](../index.md) / SourceName
 
-# Type alias: SourceName
+# Type Alias: SourceName
 
- **SourceName**: `string`
+> **SourceName** = `string`
 
 The name of a data source for external/static datasets, e.g., 'Ref', 'Constants'.

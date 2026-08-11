@@ -13,8 +13,6 @@ import { firstElemOf, elemsOf, xmlError } from './xml'
  * Parse the given XMILE model definition and return a `Model` AST node.
  *
  * @param input A string containing the XMILE model.
- * @param context An object that provides access to file system resources (such as
- * external data files) that are referenced during the parse phase.
  * @returns A `Model` AST node.
  */
 export function parseXmileModel(input: string): Model {

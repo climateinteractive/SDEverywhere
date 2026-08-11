@@ -11,7 +11,7 @@ import { elemsOf, firstElemOf, xmlError } from './xml'
 /**
  * Parse the given XMILE dimension (`<dim>`) definition and return a `DimensionDef` AST node.
  *
- * @param input A string containing the XMILE `<dim>` definition.
+ * @param dimElem An `XmlElement` containing the XMILE `<dim>` definition.
  * @returns A `DimensionDef` AST node.
  */
 export function parseXmileDimensionDef(dimElem: XmlElement): DimensionDef {
