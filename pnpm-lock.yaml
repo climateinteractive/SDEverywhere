@@ -728,6 +728,9 @@ importers:
       '@rollup/plugin-replace':
         specifier: ^6.0.3
         version: 6.0.3(rollup@4.62.4)
+      '@sdeverywhere/build':
+        specifier: ^0.3.10
+        version: link:../build
       '@sdeverywhere/check-core':
         specifier: ^0.1.12
         version: link:../check-core
@@ -756,15 +759,15 @@ importers:
         specifier: ^7.1.12
         version: 7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)
     devDependencies:
-      '@sdeverywhere/build':
-        specifier: '*'
-        version: link:../build
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
 
   packages/plugin-config:
     dependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.10
+        version: link:../build
       byline:
         specifier: ^5.0.0
         version: 5.0.0
@@ -775,9 +778,6 @@ importers:
         specifier: ^2.17.6
         version: 2.17.6
     devDependencies:
-      '@sdeverywhere/build':
-        specifier: '*'
-        version: link:../build
       '@types/byline':
         specifier: ^4.2.33
         version: 4.2.33
@@ -798,38 +798,43 @@ importers:
         version: 0.7.0
 
   packages/plugin-deploy:
-    devDependencies:
+    dependencies:
       '@sdeverywhere/build':
-        specifier: '*'
+        specifier: ^0.3.10
         version: link:../build
+    devDependencies:
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
 
   packages/plugin-vite:
-    devDependencies:
+    dependencies:
       '@sdeverywhere/build':
-        specifier: '*'
+        specifier: ^0.3.10
         version: link:../build
+    devDependencies:
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)
 
   packages/plugin-wasm:
     dependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.10
+        version: link:../build
       find-up:
         specifier: ^6.3.0
         version: 6.3.0
     devDependencies:
-      '@sdeverywhere/build':
-        specifier: '*'
-        version: link:../build
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
 
   packages/plugin-worker:
     dependencies:
+      '@sdeverywhere/build':
+        specifier: ^0.3.10
+        version: link:../build
       '@sdeverywhere/runtime':
         specifier: ^0.2.9
         version: link:../runtime
@@ -840,9 +845,6 @@ importers:
         specifier: ^7.1.12
         version: 7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)
     devDependencies:
-      '@sdeverywhere/build':
-        specifier: '*'
-        version: link:../build
       '@types/node':
         specifier: ^20.14.8
         version: 20.19.19
