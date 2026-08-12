@@ -12,3 +12,17 @@ packages:
 # because those don't always play well with release-please, so instead we
 # use normal semver ranges (e.g., "^1.2.3") and let pnpm handle resolution.
 linkWorkspacePackages: true
+
+# Automatically install peer dependencies:
+#   https://pnpm.io/settings#autoinstallpeers
+# This is the default in pnpm >= 8, but we set it explicitly because the
+# plugin packages rely on it: they declare `@sdeverywhere/build` only as a
+# peer dependency (not as a dev dependency), and this setting is what makes
+# pnpm resolve that peer to the local `packages/build` workspace package.
+# Keeping it out of `devDependencies` is deliberate: release-please's
+# `node-workspace` plugin builds its dependency graph from `dependencies`,
+# `devDependencies`, and `optionalDependencies` only, so a peer-only
+# reference means the plugin packages aren't force-bumped (and their
+# `@sdeverywhere/build` range isn't rewritten) every time `build` is
+# released.
+autoInstallPeers: true
