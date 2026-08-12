@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf sde-prep",
+    "lint": "eslint . --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "dev-js": "GEN_FORMAT=js sde dev",
     "dev-wasm": "GEN_FORMAT=c sde dev",
     "build-js": "GEN_FORMAT=js sde bundle",
     "build-wasm": "GEN_FORMAT=c sde bundle",
     "test-js": "./run-tests.sh js",
     "test-wasm": "./run-tests.sh wasm",
-    "ci:int-test": "run-s clean test-js clean test-wasm"
+    "ci:int-test": "run-s clean lint prettier:check test-js clean test-wasm"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",
