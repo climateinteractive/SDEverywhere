@@ -47,7 +47,7 @@ export async function parseAndGenerate(input, modelKind, spec, operations, model
   if (spec.externalDatfiles) {
     for (let datfile of spec.externalDatfiles) {
       let prefix = ''
-      let filename = ''
+      let filename
       if (typeof datfile === 'object') {
         prefix = Object.keys(datfile)[0]
         filename = datfile[prefix]

@@ -483,7 +483,7 @@ function generateLevelInit(callExpr, ctx) {
   const fnId = callExpr.fnId
 
   // Get the index of the argument holding the initial value expression
-  let initialArgIndex = 0
+  let initialArgIndex
   switch (fnId) {
     case '_ACTIVE_INITIAL':
     case '_INTEG':
