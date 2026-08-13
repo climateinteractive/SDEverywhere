@@ -9,6 +9,7 @@ import { findUp } from 'find-up'
 
 import type { BuildContext, ResolvedModelSpec, Plugin } from '@sdeverywhere/build'
 
+import { normalizeEmccArgs } from './emcc-args'
 import type { WasmPluginOptions } from './options'
 
 export function wasmPlugin(options?: WasmPluginOptions): Plugin {
@@ -152,7 +153,7 @@ async function buildWasm(
     } else {
       argsArray = options.emccArgs
     }
-    argsArray.forEach(addArg)
+    normalizeEmccArgs(argsArray).forEach(addArg)
   } else {
     addArg('-Wall')
     addArg('-Os')
