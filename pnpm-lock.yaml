@@ -528,7 +528,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@sdeverywhere/check-core':
-        specifier: ^0.1.12
+        specifier: ^0.1.13
         version: link:../check-core
       assert-never:
         specifier: ^1.2.1
@@ -601,7 +601,7 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.13
+        specifier: ^0.3.14
         version: link:../build
       '@sdeverywhere/compile':
         specifier: ^0.7.32
@@ -726,10 +726,10 @@ importers:
         specifier: ^0.3.10
         version: link:../build
       '@sdeverywhere/check-core':
-        specifier: ^0.1.12
+        specifier: ^0.1.13
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.24
+        specifier: ^0.2.25
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.9
