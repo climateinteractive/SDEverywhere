@@ -2,7 +2,38 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { normalizeEmccArgs } from './emcc-args'
+import { defaultEmccArgs, normalizeEmccArgs } from './emcc-args'
+
+describe('defaultEmccArgs', () => {
+  it('should return the default set of arguments', () => {
+    expect(defaultEmccArgs()).toEqual([
+      '-Wall',
+      '-Os',
+      '-sSTRICT=1',
+      '-sMALLOC=emmalloc',
+      '-sFILESYSTEM=0',
+      '-sMODULARIZE=1',
+      '-sSINGLE_FILE=1',
+      '-sEXPORT_ES6=1',
+      '-sUSE_ES6_IMPORT_META=0',
+      `-sENVIRONMENT='web,webview,worker'`,
+      `-sEXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`,
+      `-sEXPORTED_RUNTIME_METHODS=['cwrap']`
+    ])
+  })
+
+  it('should use the no-space notation for each `-s` argument', () => {
+    for (const arg of defaultEmccArgs()) {
+      expect(arg).not.toMatch(/\s/)
+    }
+  })
+
+  it('should return a new array each time so that the caller can safely modify it', () => {
+    const args = defaultEmccArgs()
+    args.push('-sASSERTIONS=1')
+    expect(defaultEmccArgs()).not.toContain('-sASSERTIONS=1')
+  })
+})
 
 describe('normalizeEmccArgs', () => {
   it('should leave simple arguments unchanged', () => {
