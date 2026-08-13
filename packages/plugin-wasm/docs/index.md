@@ -37,3 +37,7 @@ export async function config() {
 ## Options
 
 - [WasmPluginOptions](interfaces/WasmPluginOptions.md)
+
+## Configuration
+
+- [defaultEmccArgs](functions/defaultEmccArgs.md)
