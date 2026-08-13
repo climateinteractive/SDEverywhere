@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.24...check-ui-shell-v0.2.25) (2026-08-13)
+
+
+### Bug Fixes
+
+* remove unused/incomplete freeform view code ([#863](https://github.com/climateinteractive/SDEverywhere/issues/863)) ([5542f20](https://github.com/climateinteractive/SDEverywhere/commit/5542f20b9055f4da829f44ba0f8b4b74afb54f0f)), closes [#862](https://github.com/climateinteractive/SDEverywhere/issues/862)
+* use untrack when initializing `initialName` in bundle copy dialog ([#854](https://github.com/climateinteractive/SDEverywhere/issues/854)) ([76fb1c5](https://github.com/climateinteractive/SDEverywhere/commit/76fb1c573b3a6c42fb9e8915662b826e44d86cae)), closes [#853](https://github.com/climateinteractive/SDEverywhere/issues/853)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.12 to ^0.1.13
+
 ## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.23...check-ui-shell-v0.2.24) (2026-05-28)
 
 

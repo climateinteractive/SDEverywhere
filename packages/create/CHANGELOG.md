@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.40](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.39...create-v0.2.40) (2026-08-13)
+
+
+### Dependencies
+
+* require Node.js v22 as minimum supported version ([#870](https://github.com/climateinteractive/SDEverywhere/issues/870)) ([bf5f651](https://github.com/climateinteractive/SDEverywhere/commit/bf5f651a69535f22859597ea435bd7958137a229)), closes [#869](https://github.com/climateinteractive/SDEverywhere/issues/869)
+
 ## [0.2.39](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.38...create-v0.2.39) (2026-08-10)
 
 

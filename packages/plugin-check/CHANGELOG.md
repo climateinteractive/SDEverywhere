@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.35](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.34...plugin-check-v0.3.35) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade rollup to 4.62.4 ([#866](https://github.com/climateinteractive/SDEverywhere/issues/866)) ([cad1585](https://github.com/climateinteractive/SDEverywhere/commit/cad158531a1661144e44916b9ae37c564f8b8e6a)), closes [#865](https://github.com/climateinteractive/SDEverywhere/issues/865)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.12 to ^0.1.13
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.24 to ^0.2.25
+
 ## [0.3.34](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.33...plugin-check-v0.3.34) (2026-08-10)
 
 
