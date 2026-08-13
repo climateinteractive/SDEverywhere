@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.45](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.44...cli-v0.7.45) (2026-08-13)
+
+
+### Dependencies
+
+* require Node.js v22 as minimum supported version ([#870](https://github.com/climateinteractive/SDEverywhere/issues/870)) ([bf5f651](https://github.com/climateinteractive/SDEverywhere/commit/bf5f651a69535f22859597ea435bd7958137a229)), closes [#869](https://github.com/climateinteractive/SDEverywhere/issues/869)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.13 to ^0.3.14
+
 ## [0.7.44](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.43...cli-v0.7.44) (2026-08-10)
 
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade sanitize-html to 2.17.6 ([#868](https://github.com/climateinteractive/SDEverywhere/issues/868)) ([097384a](https://github.com/climateinteractive/SDEverywhere/commit/097384a12ff463294240d3c663dc0c21c9e9ea1e)), closes [#867](https://github.com/climateinteractive/SDEverywhere/issues/867)
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.14
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.9...plugin-config-v0.2.10) (2026-05-04)
 
 

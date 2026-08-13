@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.12...check-core-v0.1.13) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade ajv to latest version ([#858](https://github.com/climateinteractive/SDEverywhere/issues/858)) ([566d111](https://github.com/climateinteractive/SDEverywhere/commit/566d1111eac877fa95814272a7bd02bea22fe6d5)), closes [#857](https://github.com/climateinteractive/SDEverywhere/issues/857)
+
 ## [0.1.12](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.11...check-core-v0.1.12) (2026-05-28)
 
 

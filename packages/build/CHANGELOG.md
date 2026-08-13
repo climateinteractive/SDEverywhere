@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.14](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.13...build-v0.3.14) (2026-08-13)
+
+
+### Bug Fixes
+
+* remove folder-hash dependency and use node:crypto instead ([#874](https://github.com/climateinteractive/SDEverywhere/issues/874)) ([8773269](https://github.com/climateinteractive/SDEverywhere/commit/87732692bbacb2cc48244c5980d045dc551a0695)), closes [#873](https://github.com/climateinteractive/SDEverywhere/issues/873)
+
 ## [0.3.13](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.12...build-v0.3.13) (2026-08-10)
 
 
