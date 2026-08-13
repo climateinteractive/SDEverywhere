@@ -29,6 +29,7 @@
     { "type": "feat", "hidden": false, "section": "Features" },
     { "type": "fix", "hidden": false, "section": "Bug Fixes" },
     { "type": "perf", "hidden": false, "section": "Performance Improvements" },
+    { "type": "docs", "hidden": false, "section": "Documentation Updates" },
     { "type": "deps", "hidden": false, "section": "Dependencies" }
   ]
 }
