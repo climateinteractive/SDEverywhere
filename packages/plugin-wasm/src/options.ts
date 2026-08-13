@@ -19,26 +19,11 @@ export interface WasmPluginOptions {
    * This is also the notation recommended by the
    * [Emscripten documentation](https://emscripten.org/docs/tools_reference/emcc.html).
    *
-   * If undefined, the plugin will use the following default set of arguments (as returned
-   * by `defaultEmccArgs`), which are tuned for (and known to work with) Emscripten
-   * versions 2.0.34 and 3.1.46, among others.
-   * ```
-   *   -Wall
-   *   -Os
-   *   -sSTRICT=1
-   *   -sMALLOC=emmalloc
-   *   -sFILESYSTEM=0
-   *   -sMODULARIZE=1
-   *   -sSINGLE_FILE=1
-   *   -sEXPORT_ES6=1
-   *   -sUSE_ES6_IMPORT_META=0
-   *   -sENVIRONMENT='web,webview,worker'
-   *   -sEXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']
-   *   -sEXPORTED_RUNTIME_METHODS=['cwrap']
-   * ```
+   * If undefined, the plugin will use the default set of arguments returned by
+   * {@link defaultEmccArgs}.
    *
-   * If you only need to add to the default arguments, use `defaultEmccArgs` instead of
-   * repeating the full set, for example:
+   * If you only need to add to the default arguments, use {@link defaultEmccArgs} instead
+   * of repeating the full set, for example:
    * ```js
    *   emccArgs: [...defaultEmccArgs(), '-sASSERTIONS=1']
    * ```
