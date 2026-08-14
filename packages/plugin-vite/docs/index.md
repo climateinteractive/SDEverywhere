@@ -6,7 +6,6 @@ Example `sde.config.js` file:
 
 ```js
 import { vitePlugin } from '@sdeverywhere/plugin-vite'
-import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
@@ -22,10 +21,7 @@ export async function config() {
     },
 
     plugins: [
-      // Generate a `generated-model.js` file containing the Wasm model
-      wasmPlugin(),
-
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin(),
 
       // Build or serve a web application using a provided Vite config file.

@@ -6,7 +6,6 @@ Example `sde.config.js` file:
 
 ```js
 import { checkPlugin } from '@sdeverywhere/plugin-check'
-import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
@@ -22,13 +21,10 @@ export async function config() {
     },
 
     plugins: [
-      // Generate a `generated-model.js` file containing the Wasm model
-      wasmPlugin(),
-
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin(),
 
-      // Run checks and comparison tests against the generated Wasm model
+      // Run checks and comparison tests against the generated model
       checkPlugin({
         // There are no required properties; see `CheckPluginOptions` below
         // for optional configuration

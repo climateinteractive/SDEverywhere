@@ -5,7 +5,6 @@
 Example `sde.config.js` file:
 
 ```js
-import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
 import { workerPlugin } from '@sdeverywhere/plugin-worker'
 
 export async function config() {
@@ -21,14 +20,35 @@ export async function config() {
     },
 
     plugins: [
-      // Generate a `generated-model.js` file containing the Wasm model
-      wasmPlugin(),
-
-      // Generate a `worker.js` file that runs the Wasm model in a worker
+      // Generate a `worker.js` file that runs the generated model in a worker
       workerPlugin({
         // There are no required properties; see `WorkerPluginOptions` below
         // for optional configuration
       })
+    ]
+  }
+}
+```
+
+If you set `genFormat` to `'c'`, add `wasmPlugin()` before `workerPlugin()` so that the
+generated C code is compiled to a WebAssembly module first:
+
+```js
+import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
+import { workerPlugin } from '@sdeverywhere/plugin-worker'
+
+export async function config() {
+  return {
+    genFormat: 'c',
+
+    // ...
+
+    plugins: [
+      // Generate a `generated-model.js` file containing the Wasm model
+      wasmPlugin(),
+
+      // Generate a `worker.js` file that runs the Wasm model in a worker
+      workerPlugin()
     ]
   }
 }

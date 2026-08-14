@@ -29,14 +29,16 @@ export async function config() {
       // Build or serve a web application using a provided Vite config file
       vitePlugin({
         // ...
-      })
+      }),
 
       // Run checks and comparison tests against the generated model
       checkPlugin({
         // ...
-      })
+      }),
 
-      // Deploy the app and model-check report to GitHub Pages
+      // Deploy the app and model-check report to GitHub Pages.  Make sure that
+      // `deployPlugin` is the last step, since it depends on the output of the
+      // earlier plugins.
       deployPlugin({
         // There are no required properties; see `DeployPluginOptions` below
         // for optional configuration
