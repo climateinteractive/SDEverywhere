@@ -12,6 +12,7 @@ import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
+import { normalizeModelSpec } from './model-spec.js'
 
 /**
  * Parse a Vensim or XMILE model and generate C code.
@@ -28,7 +29,7 @@ import { generateCode } from './generate/gen-code.js'
  *
  * @param {string} input The preprocessed Vensim or XMILE model text.
  * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
- * @param {*} spec The model spec (from the JSON file).
+ * @param {import('./model-spec.js').ModelSpec} spec The model spec (from the JSON file).
  * @param {string[]} operations The set of operations to perform; can include 'generateC', 'generateJS',
  * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
  * read but no operation will be performed.
@@ -40,12 +41,16 @@ import { generateCode } from './generate/gen-code.js'
  * @return A string containing the generated C code.
  */
 export async function parseAndGenerate(input, modelKind, spec, operations, modelDirname, modelName, buildDir, varname) {
+  // Resolve any deprecated property names in the spec so that we only need to
+  // consult the preferred names below
+  normalizeModelSpec(spec)
+
   // Read time series from external DAT files into a single object.
-  // externalDatfiles is an array of either filenames or objects
+  // datFiles is an array of either filenames or objects
   // giving a variable name prefix as the key and a filename as the value.
   let extData = new Map()
-  if (spec.externalDatfiles) {
-    for (let datfile of spec.externalDatfiles) {
+  if (spec.datFiles) {
+    for (let datfile of spec.datFiles) {
       let prefix = ''
       let filename
       if (typeof datfile === 'object') {
