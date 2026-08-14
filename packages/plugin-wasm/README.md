@@ -22,7 +22,117 @@ yarn add -D @sdeverywhere/plugin-wasm
 
 ## Usage
 
-_TODO: This section needs to be fleshed out. In the meantime, you can refer to the API documentation below for the options used to configure this plugin._
+_Note:_ If you followed the "Quick Start" instructions above and/or are using one of the standard project templates provided by SDEverywhere, the `sde.config.js` file should already be set up to use `plugin-wasm`.
+Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-wasm` can be integrated into your project.
+
+### Why use this plugin?
+
+SDEverywhere can generate your model as either JavaScript or C code, which is controlled by the `genFormat` property in your `sde.config.js` file:
+
+- If `genFormat` is `'js'` (the default), the generated model is plain JavaScript that runs in a browser or in Node.js with no additional build steps. In this case, you do _not_ need `plugin-wasm`.
+- If `genFormat` is `'c'`, the generated C code must be compiled to a WebAssembly module before it can be used in a browser or in Node.js. This is the job of `plugin-wasm`.
+
+A WebAssembly model typically runs faster than the pure JavaScript version, but requires the [Emscripten SDK](https://emscripten.org) to be installed.
+Regardless of which format you choose, the same runtime APIs (e.g., `ModelRunner`) can be used to run the generated model, so it is easy to switch between the two.
+
+### Prerequisites
+
+This plugin runs the Emscripten compiler (`emcc`), so the Emscripten SDK must be installed on your machine (and on your CI machine, if you build there).
+The `@sdeverywhere/create` package can install the SDK for you; see the "Quick Start" instructions above.
+
+By default, the plugin walks up the directory structure from your project to find the nearest `emsdk` directory.
+If your SDK lives somewhere else, use the `emsdkDir` option (see "Configuring the Emscripten SDK location" below).
+
+### Steps
+
+1. Add `@sdeverywhere/plugin-wasm` as a project "dev" dependency:
+
+```sh
+cd your-model-project
+npm install --save-dev @sdeverywhere/plugin-wasm
+```
+
+2. Update your `sde.config.js` file to set `genFormat` to `'c'` and to use `wasmPlugin`. Make sure that `wasmPlugin` appears before any plugin that consumes the generated model (for example, `plugin-worker`):
+
+```js
+import { wasmPlugin } from '@sdeverywhere/plugin-wasm'
+import { workerPlugin } from '@sdeverywhere/plugin-worker'
+
+export async function config() {
+  return {
+    // `plugin-wasm` requires the sde compiler to generate C code
+    genFormat: 'c',
+
+    modelFiles: ['model/example.mdl'],
+
+    // ...
+
+    plugins: [
+      // Generate a `generated-model.js` file containing the Wasm model
+      wasmPlugin({
+        // Include options here if needed
+      }),
+
+      // Other plugins that use the generated model must run after `wasmPlugin`
+      workerPlugin()
+    ]
+  }
+}
+```
+
+3. Run `sde bundle` (or `sde dev`). The plugin compiles the generated C code and writes a `generated-model.js` file to the `sde-prep` directory.
+
+### The generated model file
+
+The plugin writes a single `generated-model.js` file that contains the compiled Wasm module inlined as base64 data (the default `emcc` arguments include `-sSINGLE_FILE=1`), so there is no separate `.wasm` file to load or deploy.
+
+The default module exports a function that loads the model, so it can be used directly with the `@sdeverywhere/runtime` APIs:
+
+```js
+import loadGeneratedModel from './sde-prep/generated-model.js'
+
+const generatedModel = await loadGeneratedModel()
+```
+
+More commonly, you will let `plugin-worker` wrap this file in a `worker.js` file that runs the model on a separate thread; see the [`@sdeverywhere/plugin-worker`](https://github.com/climateinteractive/SDEverywhere/tree/main/packages/plugin-worker) package for details.
+
+Use the `outputJsPath` option if you want the file written somewhere other than the `sde-prep` directory:
+
+```js
+wasmPlugin({
+  outputJsPath: joinPath(__dirname, 'packages', 'core', 'src', 'model', 'generated', 'generated-model.js')
+})
+```
+
+### Configuring the Emscripten SDK location
+
+If the plugin cannot find your `emsdk` directory automatically, set `emsdkDir` to an absolute path (or to a function that returns one, which is useful if the location is only known at build time):
+
+```js
+wasmPlugin({
+  emsdkDir: process.env.EMSDK || '/opt/emsdk'
+})
+```
+
+### Customizing the `emcc` arguments
+
+The plugin passes a default set of arguments to `emcc` that is known to work with the SDEverywhere runtime; see [`defaultEmccArgs`](./docs/functions/defaultEmccArgs.md) for the full list.
+
+Each element of the `emccArgs` array is passed to `emcc` as a separate command line argument (they are not processed by a shell), so a `-s` option must be written without a space between the flag and the option name, for example `-sASSERTIONS=1`.
+
+If you only need to add to the defaults, spread `defaultEmccArgs()` instead of repeating the full set:
+
+```js
+import { defaultEmccArgs, wasmPlugin } from '@sdeverywhere/plugin-wasm'
+
+// ...
+
+wasmPlugin({
+  emccArgs: [...defaultEmccArgs(), '-sASSERTIONS=1']
+})
+```
+
+_Note:_ If you replace the defaults entirely, be sure to keep the `-sEXPORTED_FUNCTIONS` and `-sEXPORTED_RUNTIME_METHODS` arguments, since the SDEverywhere runtime depends on those exports.
 
 ## Documentation
 
