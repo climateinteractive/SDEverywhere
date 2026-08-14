@@ -127,15 +127,15 @@ As suggested at the end of the `create` script, type the following command to se
 npm run dev
 ```
 
-### Option 2: Start with existing model
+### Option 2: Start with an existing model
 
 > [!NOTE] We recommend doing Option 1 first, before trying with an existing model since setting up an existing model likely has more complications with data files and other model settings.
 
-If you already have a directory containing a Vensim `mdl` file, change to that directory first.
-(The script will generate some new files in that directory, so if you would prefer, feel free to create a fresh directory that includes just your `mdl` file.)
+If you already have a directory containing a Vensim `mdl` or Stella `stmx` model file, change to that directory first.
+(The script will generate some new files in that directory, so if you would prefer, feel free to create a fresh directory that includes just your model file.)
 
 ```sh
-# Change to the directory containing your `mdl` file:
+# Change to the directory containing your model file:
 cd my-project-folder
 ```
 
