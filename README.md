@@ -183,13 +183,13 @@ For example:
 
 ## Caveats
 
-SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim that SDEverywhere cannot translate yet.
+SDEverywhere has been used to generate code for complex models with thousands of equations, but your model may use features of Vensim or Stella that SDEverywhere cannot translate yet.
 Please fork our code and contribute!
 
 Here are some prominent current limitations:
 
 - Sketch information, the visual representation of the model, is not converted.
-- Only the most common [Vensim functions](https://github.com/climateinteractive/SDEverywhere/wiki/Supported-Vensim-Functions) are implemented.
+- Only the most common [Vensim functions](https://github.com/climateinteractive/SDEverywhere/wiki/Supported-Vensim-Functions) and [XMILE/Stella functions](https://github.com/climateinteractive/SDEverywhere/wiki/Supported-XMILE-and-Stella-Functions) are implemented.
 - All models run using the Euler integrator.
 - Strings are not supported.
 - You must rewrite tabbed arrays as separate, non-apply-to-all variables.
