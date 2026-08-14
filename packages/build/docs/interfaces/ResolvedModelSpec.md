@@ -9,6 +9,10 @@ fully resolved (paths have been validated, input and output variables have
 been checked, etc).  This is the spec object that will be passed to plugin
 functions.
 
+## Extends
+
+- `ResolvedModelSpecProps`
+
 ## Properties
 
 ### inputVarNames
@@ -51,7 +55,7 @@ The output variable specs for the model.
 
 ### datFiles
 
-> **datFiles**: `string`[]
+> **datFiles**: `DatFileSpec`[]
 
 The dat files that provide the data for exogenous data variables in the
 model.
@@ -126,12 +130,96 @@ be available to be captured at runtime.
 
 ***
 
-### options?
+### ~~options?~~
 
-> `optional` **options?**: `object`
+> `optional` **options?**: `ModelSpec`
 
-Additional options included with the SDE `spec.json` file.
+Additional properties to include in the generated `spec.json` file.
+
+#### Deprecated
+
+All properties that are supported in a `spec.json` file are now declared
+directly on this interface, so it is no longer necessary to use this escape hatch.
+Any properties provided here will be merged into the generated `spec.json` file, but
+this property will be removed in a future release.
+
+***
+
+### directData?
+
+> `optional` **directData?**: `object`
+
+The mapping of data tag to Excel workbook file name, used to resolve the data for
+`GET DIRECT DATA`, `GET DIRECT CONSTANTS`, and `GET DIRECT LOOKUPS` calls in the
+model.
+
+Each key is the tag that appears in the model equation (for example, `?data`), and
+each value is the name of an `xlsx` file that is resolved relative to the model
+directory.
 
 #### Index Signature
 
-\[`key`: `string`\]: `any`
+\[`dataTag`: `string`\]: `string`
+
+#### Inherited from
+
+`ResolvedModelSpecProps.directData`
+
+***
+
+### dimensionFamilies?
+
+> `optional` **dimensionFamilies?**: `object`
+
+The mapping of dimension name to family name, used when SDEverywhere cannot infer
+the family for a dimension from the model alone.
+
+Both the keys and the values use the dimension names as they appear in the modeling
+tool (they are converted to canonical form when the spec file is read).
+
+#### Index Signature
+
+\[`dimName`: `string`\]: `string`
+
+#### Inherited from
+
+`ResolvedModelSpecProps.dimensionFamilies`
+
+***
+
+### specialSeparationDims?
+
+> `optional` **specialSeparationDims?**: `object`
+
+The mapping of variable identifier to the dimension(s) on which that variable should
+be separated into one variable instance per subscript.
+
+Separating a variable is sometimes necessary to break a dependency cycle that would
+otherwise prevent the model from being evaluated.  Each value can be either a single
+dimension identifier or an array of dimension identifiers.
+
+#### Index Signature
+
+\[`varId`: `string`\]: `string` \| `string`[]
+
+#### Inherited from
+
+`ResolvedModelSpecProps.specialSeparationDims`
+
+***
+
+### separateAllVarsWithDims?
+
+> `optional` **separateAllVarsWithDims?**: (`string` \| `string`[])[]
+
+The dimensions for which all variables should be separated into one variable instance
+per subscript.
+
+This is a convenience alternative to `specialSeparationDims` that avoids the need to
+list each affected variable.  Each entry can be either a single dimension identifier
+or an array of dimension identifiers; a variable is separated only if every dimension
+in the entry appears on the left-hand side of its equation.
+
+#### Inherited from
+
+`ResolvedModelSpecProps.separateAllVarsWithDims`
