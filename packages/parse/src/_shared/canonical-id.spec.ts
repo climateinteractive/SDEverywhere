@@ -31,6 +31,18 @@ describe('canonicalId', () => {
     // add('bslash', '\\')
     add('lparen', '(')
     add('rparen', ')')
+    add('plus', '+')
+    add('gt', '>')
+    add('lt', '<')
+    add('eq', '=')
+    add('hash', '#')
+    add('at', '@')
+    add('caret', '^')
+    add('star', '*')
+    add('tilde', '~')
+    add('question', '?')
+    add('colon', ':')
+    add('semi', ';')
     input += ' characters"'
     expected += '_characters_'
     expect(canonicalId(input)).toBe(expected)
@@ -41,6 +53,12 @@ describe('canonicalId', () => {
     // TODO: Handle backslashes
     // expect(canonicalId('"The \\"Final\\" Frontier"')).toBe('')
     expect(canonicalId("érosion d'action")).toBe('_érosion_d_action')
+  })
+
+  it('should preserve accented and Unicode letters', () => {
+    expect(canonicalId("érosion d'action")).toBe('_érosion_d_action')
+    expect(canonicalId('café')).toBe('_café')
+    expect(canonicalId('naïve')).toBe('_naïve')
   })
 
   it('should preserve mark when preceded by whitespace', () => {

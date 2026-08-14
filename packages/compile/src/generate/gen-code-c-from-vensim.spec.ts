@@ -8,6 +8,7 @@ import { resetSubscriptsAndDimensions } from '../_shared/subscript'
 import Model from '../model/model'
 
 import { parseInlineVensimModel } from '../_tests/test-support'
+import { generateCode } from './gen-code'
 import { generateC } from './gen-code-c'
 
 type ExtData = Map<string, Map<number, number>>
@@ -654,5 +655,39 @@ double _b[2];`)
       Y = X + 1 ~~|
     `
     expect(() => readInlineModelAndGenerateC(mdl)).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
+  })
+
+  it('should break a false cyclic dependency by separating a variable whose references are defined element by element', () => {
+    // A false cycle appears when `y` keeps the DimC dimension: the single `y` node
+    // depends on both `x[C1]` and `x[C2]`, while `price` depends only on `y[C1]`,
+    // so the merged dependencies form the cycle y → x[C2] → price → y.  At the
+    // element level the dependencies are acyclic (as Vensim evaluates them), so
+    // code generation should recover by separating `y` on DimC.
+    const mdl = `
+      DimC: C1, C2 ~~|
+      x[C1] = 1 ~~|
+      x[C2] = price ~~|
+      y[DimC] = x[DimC] * 2 ~~|
+      price = y[C1] + 1 ~~|
+    `
+    resetHelperState()
+    resetSubscriptsAndDimensions()
+    Model.resetModelState()
+    const parsedModel = parseInlineVensimModel(mdl)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const spec: any = {}
+    const code = generateCode(parsedModel, {
+      spec,
+      operations: ['generateC'],
+      extData: undefined,
+      directData: new Map(),
+      modelDirname: undefined
+    })
+    // The `y` variable should have been separated on DimC so that `y[C1]` can be
+    // evaluated before `price`, and `y[C2]` after it
+    expect(spec.specialSeparationDims).toEqual({ _y: ['_dimc'] })
+    expect(code.indexOf('_y[0] =')).toBeGreaterThan(0)
+    expect(code.indexOf('_y[0] =')).toBeLessThan(code.indexOf('_price ='))
+    expect(code.indexOf('_price =')).toBeLessThan(code.indexOf('_y[1] ='))
   })
 })

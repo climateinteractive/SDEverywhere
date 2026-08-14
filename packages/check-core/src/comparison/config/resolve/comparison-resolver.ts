@@ -489,18 +489,21 @@ function resolveScenarioForDistinctInputSpecs(
 ): ComparisonScenario {
   // TODO: Unlike the more typical "scenario with inputs" case, when we have "distinct"
   // inputs (separate sets of inputs for the two models) we only include the `settings`
-  // array in the resulting `ComparisonScenario` if there are errors in resolving the
-  // inputs.  If all inputs were resolved successfully, then the `settings` array will
-  // be empty.  This is probably fine for now but it could stand to be redesigned.
-  const inputsWithErrors: ComparisonScenarioInput[] = []
+  // array in the resulting `ComparisonScenario` for inputs that have an error or warning
+  // (so the UI can flag them).  If all inputs were resolved cleanly, the `settings` array
+  // will be empty.  This is probably fine for now but it could stand to be redesigned.
+  const inputsWithIssues: ComparisonScenarioInput[] = []
 
   // Resolve the input settings for the left and right sides separately
   const settingsL: InputSetting[] = []
   const settingsR: InputSetting[] = []
 
-  // Helper function that resolves an input for the given model/side.  If the input is
-  // resolved successfully, an `InputSetting` will be saved for that side.  Otherwise,
-  // a `ComparisonScenarioInput` describing the error will be saved.
+  // Helper function that resolves an input for the given model/side.  If the resolved
+  // input has no fatal `error`, an `InputSetting` will be saved for that side (this
+  // includes inputs with a non-fatal `warning`, e.g. out-of-range values, which the
+  // model can still be run with).  If the resolved input has a fatal `error` or a
+  // `warning`, a `ComparisonScenarioInput` describing the issue is also added to
+  // `inputsWithIssues` so the UI can annotate it.
   function resolveInputSpec(
     side: 'left' | 'right',
     modelInputs: ModelInputs,
@@ -518,19 +521,24 @@ function resolveScenarioForDistinctInputSpecs(
         assertNever(inputSpec)
     }
 
-    if (inputState.error !== undefined) {
-      // The input could not be resolved, so add it to the set of error inputs
+    if (inputState.error !== undefined || inputState.warning !== undefined) {
+      // The input has a fatal error or a non-fatal warning; record it so the UI can
+      // annotate it
       // TODO: For now we include an empty object (with undefined properties) for the
       // "other" side.  Maybe we can make the state properties optional, or maybe we
       // just need a less awkward way of handling these input states in the "distinct"
       // inputs case.
-      inputsWithErrors.push({
+      inputsWithIssues.push({
         requestedName: inputSpec.inputName,
         stateL: side === 'left' ? inputState : {},
         stateR: side === 'right' ? inputState : {}
       })
-    } else {
-      // The input was resolved, so create a scenario that works for this side
+    }
+
+    if (inputState.error === undefined && inputState.inputVar !== undefined) {
+      // The input was resolved (possibly with a warning), so create a scenario setting
+      // that works for this side.  Warnings are non-fatal — the model still runs with
+      // the requested (possibly out-of-range) value.
       const inputSetting = inputSettingFromResolvedInputState(inputState)
       if (side === 'left') {
         settingsL.push(inputSetting)
@@ -544,10 +552,14 @@ function resolveScenarioForDistinctInputSpecs(
   inputSpecsL.forEach(inputSpec => resolveInputSpec('left', modelInputsL, inputSpec))
   inputSpecsR.forEach(inputSpec => resolveInputSpec('right', modelInputsR, inputSpec))
 
-  // Create a `ScenarioSpec` for each side if there were no errors
+  // Create a `ScenarioSpec` for each side if there were no fatal errors.  Warnings on
+  // their own do not prevent spec construction.
+  const hasFatalError = inputsWithIssues.some(
+    input => input.stateL.error !== undefined || input.stateR.error !== undefined
+  )
   let specL: ScenarioSpec
   let specR: ScenarioSpec
-  if (inputsWithErrors.length === 0) {
+  if (!hasFatalError) {
     specL = inputSettingsSpec(settingsL)
     specR = inputSettingsSpec(settingsR)
   }
@@ -561,7 +573,7 @@ function resolveScenarioForDistinctInputSpecs(
     subtitle,
     settings: {
       kind: 'input-settings',
-      inputs: inputsWithErrors
+      inputs: inputsWithIssues
     },
     specL,
     specR
@@ -794,19 +806,35 @@ function resolveInputVarAtPosition(inputVar: InputVar, position: InputPosition):
 
 /**
  * Return a `ComparisonScenarioInputState` for the input at the given value.
+ *
+ * If the value is out of range for the input variable, the returned state
+ * still includes the resolved `inputVar` and the requested `value` (so the
+ * scenario can still run with that value) and attaches a non-fatal
+ * `value-out-of-range` warning that consumers can surface as an annotation.
  */
 function resolveInputVarAtValue(inputVar: InputVar, value: number): ComparisonScenarioInputState {
-  // Check that the value is in the valid range
-  // TODO: This may not be valid for switch inputs
-  if (value >= inputVar.minValue && value <= inputVar.maxValue) {
+  let inRange: boolean
+  switch (inputVar.kind) {
+    case 'slider':
+      inRange = value >= inputVar.minValue && value <= inputVar.maxValue
+      break
+    case 'switch':
+      inRange = value === inputVar.offValue || value === inputVar.onValue
+      break
+    default:
+      assertNever(inputVar)
+  }
+  if (inRange) {
     return {
       inputVar,
       value
     }
   } else {
     return {
-      error: {
-        kind: 'invalid-value'
+      inputVar,
+      value,
+      warning: {
+        kind: 'value-out-of-range'
       }
     }
   }
@@ -831,16 +859,34 @@ function inputPosition(position: ComparisonScenarioInputPosition): InputPosition
 }
 
 /**
- * Get the value of the input at the given position.
+ * Get the value of the input at the given position.  For switch inputs,
+ * `at-minimum` maps to the switch's `offValue` and `at-maximum` maps to its
+ * `onValue`.
  */
 function inputValueAtPosition(inputVar: InputVar, position: InputPosition): number {
   switch (position) {
     case 'at-default':
       return inputVar.defaultValue
     case 'at-minimum':
-      return inputVar.minValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.minValue
+        case 'switch':
+          return inputVar.offValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     case 'at-maximum':
-      return inputVar.maxValue
+      switch (inputVar.kind) {
+        case 'slider':
+          return inputVar.maxValue
+        case 'switch':
+          return inputVar.onValue
+        default:
+          assertNever(inputVar)
+      }
+    // eslint-disable-next-line no-fallthrough
     default:
       assertNever(position)
   }

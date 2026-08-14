@@ -196,11 +196,18 @@ async function generateCode(context: BuildContext, sdeDir: string, sdeCmdPath: s
   const genFormatName = genFormat.toUpperCase()
   log('verbose', `  Generating ${genFormatName} code`)
 
+  // Get the directory containing the model file(s).  This will be used as the `--datadir` option
+  // (for the `sde generate` command) so that data files referenced by the model are resolved correctly
+  // when the preprocessed model is used to generate code.  The preprocessed model is located in the
+  // `sde-prep` directory, which is different from the original model directory, so we to tell the
+  // compiler to resolve data files relative to the original model directory.
+  const dataDir = dirname(context.config.modelFiles[0])
+
   // Use SDE to generate both a JS/C version of the model (`--outformat`) AND a JSON list of all model
   // dimensions and variables (`--list`)
   const command = sdeCmdPath
   const outFormat = `--outformat=${genFormat}`
-  const genCmdArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', 'processed']
+  const genCmdArgs = ['generate', outFormat, '--list', '--spec', 'spec.json', '--datadir', dataDir, 'processed']
   const genCmdOutput = await context.spawnChild(prepDir, command, genCmdArgs, {
     // By default, ignore lines that start with "WARNING: Data for" since these are often harmless
     // TODO: Don't filter by default, but make it configurable

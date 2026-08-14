@@ -1,8 +1,8 @@
 import { parseVensimModel } from '@sdeverywhere/parse'
 
-import { canonicalName, cartesianProductOf, newDepreciationVarName, newFixedDelayVarName } from '../_shared/helpers.js'
+import { canonicalName, newDepreciationVarName, newFixedDelayVarName } from '../_shared/helpers.js'
 
-import { hasMapping, indexNamesForSubscript, isDimension, isIndex, sub } from '../_shared/subscript.js'
+import { hasMapping, isDimension, isIndex, sub } from '../_shared/subscript.js'
 
 import Model from './model.js'
 import { generateDelayVariables } from './read-equation-fn-delay.js'
@@ -11,6 +11,7 @@ import { generateNpvVariables } from './read-equation-fn-npv.js'
 import { generateSmoothVariables } from './read-equation-fn-smooth.js'
 import { generateTrendVariables } from './read-equation-fn-trend.js'
 import { generateLookup } from './read-equation-fn-with-lookup.js'
+import { matchingRhsRefIds } from './read-equations-expand.js'
 import { readVariables } from './read-variables.js'
 
 class Context {
@@ -480,6 +481,11 @@ function visitFunctionCall(v, callExpr, context) {
         validateCallArgs(callExpr, 3)
         break
 
+      case '_ALLOCATE_BY_PRIORITY':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 5)
+        break
+
       case '_DELAY1':
       case '_DELAY1I':
       case '_DELAY3':
@@ -502,6 +508,10 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[2] = 'init'
         break
 
+      case '_DEMAND_AT_PRICE':
+        validateCallArgs(callExpr, 3)
+        break
+
       case '_DEPRECIATE_STRAIGHTLINE':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 4)
@@ -516,13 +526,18 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[2] = 'init'
         break
 
+      case '_FIND_MARKET_PRICE':
+        validateCallArgs(callExpr, 4)
+        break
+
       case '_GAME':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 1)
         generateGameVariables(v, callExpr, context)
         break
 
-      case '_GET_DIRECT_CONSTANTS': {
+      case '_GET_DIRECT_CONSTANTS':
+      case '_GET_XLS_CONSTANTS':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 3)
         validateCallArgType(callExpr, 0, 'string')
@@ -536,10 +551,11 @@ function visitFunctionCall(v, callExpr, context) {
           startCell: callExpr.args[2].text
         }
         break
-      }
 
       case '_GET_DIRECT_DATA':
+      case '_GET_XLS_DATA':
       case '_GET_DIRECT_LOOKUPS':
+      case '_GET_XLS_LOOKUPS':
         validateCallDepth(callExpr, context)
         validateCallArgs(callExpr, 4)
         validateCallArgType(callExpr, 0, 'string')
@@ -579,6 +595,11 @@ function visitFunctionCall(v, callExpr, context) {
         argModes[1] = 'init'
         break
 
+      case '_INVERT_MATRIX':
+        validateCallDepth(callExpr, context)
+        validateCallArgs(callExpr, 2)
+        break
+
       case '_NPV':
         validateCallArgs(callExpr, 4)
         addFnReference = false
@@ -602,6 +623,10 @@ function visitFunctionCall(v, callExpr, context) {
         addFnReference = false
         visitArgs = false
         generateSmoothVariables(v, callExpr, context)
+        break
+
+      case '_SUPPLY_AT_PRICE':
+        validateCallArgs(callExpr, 3)
         break
 
       case '_TREND':
@@ -839,25 +864,27 @@ function visitFunctionCall(v, callExpr, context) {
       if (callExpr.fnId === '_WITH_LOOKUP' && index > 1) {
         // XXX: For `WITH LOOKUP` calls, only process the first argument; need to generalize this
         break
-      } else if (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) {
-        // Handle the second (`pp` or priority profile) argument of `ALLOCATE AVAILABLE` calls
+      } else if (
+        (callExpr.fnId === '_ALLOCATE_AVAILABLE' && index === 1) ||
+        (callExpr.fnId === '_DEMAND_AT_PRICE' && index === 1) ||
+        (callExpr.fnId === '_SUPPLY_AT_PRICE' && index === 1) ||
+        (callExpr.fnId === '_FIND_MARKET_PRICE' && (index === 1 || index === 3))
+      ) {
+        // Handle the second (`pp` or priority profile) argument of allocation function calls
         // specially.  An example call with a 2D `pp` looks like this:
         //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch,ptype], avail) ~~|
         // Or a 3D `pp` with a dimension:
         //   shipments[item,branch] = ALLOCATE AVAILABLE(demand[branch], priority[item,branch,ptype], avail) ~~|
         // Or a 3D `pp` with a specific subscript:
         //   shipments[branch] = ALLOCATE AVAILABLE(demand[branch], priority[item1,branch,ptype], avail) ~~|
-        // Vensim requires passing a reference with `ptype` as the last subscript, but the function
-        // implementation uses the `ppriority` and `pwidth` values (the `ptype` is currently assumed
-        // to be 3).  Therefore we need to add references to all variants of the variable, not just
-        // the ones for `ptype`.
+        // Vensim requires passing a reference with `ptype` as the last subscript.
         if (argExpr.kind !== 'variable-ref') {
-          throw new Error(`ALLOCATE AVAILABLE argument 'pp' must be a variable reference`)
+          throw new Error(`${callExpr.fnName} argument 'pp' must be a variable reference`)
         }
         // TODO: Throw an error if the last dimension of arg0 does not match last dimension of LHS
         // TODO: Throw an error if the second-to-last dimension of arg1 does not match last dimension of LHS
         // TODO: Throw an error if the last subscript of arg1 does not have the "shape" of a `ppriority` dimension
-        // TODO: Throw an error if the `ptype` value is not 3
+        // TODO: Throw an error if the `ptype` value is unsupported
         // Get the RHS subscript/dimension IDs
         const rhsVarBaseRefId = argExpr.varId
         const rhsVarSubIds = argExpr.subscriptRefs?.map(subRef => subRef.subId) || []
@@ -877,6 +904,9 @@ function visitFunctionCall(v, callExpr, context) {
           }
         }
         continue
+      } else if (callExpr.fnId === '_ALLOCATE_BY_PRIORITY') {
+        // TODO: Throw an error if the last dimension of arg0 does not match last dimension of LHS
+        // TODO: Throw an error if the last dimension of arg1 does not match last dimension of LHS
       }
 
       context.setArgIndex(index, argModes[index])
@@ -967,21 +997,26 @@ function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   // it must be non-apply-to-all.  The goal now is to determine which instances (refIds) are
   // relevant for the given `lhsVariable` context.
   //
-  // First, get all combinations of the LHS subscripts that map to the subscripts/dimensions
-  // in the RHS variable reference.  For example:
+  // First, determine the set of LHS subscript indices accessed at each position of the RHS
+  // variable reference.  For example:
   //   y[DimA,DimB,DimC] :EXCEPT: [DimA,DimB,C1] = x[DimA,DimC,DimB]
   // In this case the `DimC` on the RHS is only "accessed" by `C2` from the LHS, so we would
-  // build an array of strings representing the possible subset of combinations, like this:
-  //   _a1,_c2,_b1
-  //   _a1,_c2,_b2
-  //   _a2,_c2,_b1
-  //   _a2,_c2,_b2
+  // build a per-position set of accessed indices, like this:
+  //   position 0 (DimA on RHS): { _a1, _a2 }
+  //   position 1 (DimC on RHS): { _c2 }
+  //   position 2 (DimB on RHS): { _b1, _b2 }
   //
-  // Then, for each RHS variable instance:
-  //   - get all combinations of RHS subscripts that can be accepted by that RHS instance
-  //     (build an array of strings, e.g., ['_a1,_c1,_b1', '_a1,_c1,_b1', ...])
-  //   - see if any of the LHS subscript combos match any of the RHS subscript combos; if
-  //     so, then add the RHS `refId` to the array of variables referenced by the LHS
+  // Then, for each RHS variable instance, check whether every subscript position has at
+  // least one index in common between the LHS set and the indices that the RHS instance
+  // accepts at that position.  If so, add the RHS `refId` to the array of variables
+  // referenced by the LHS.
+  //
+  // Conceptually this is equivalent to checking whether any combination in the LHS
+  // cartesian product matches any combination in the RHS cartesian product, but we can
+  // avoid computing the cartesian products explicitly because positions in a cartesian
+  // product are independent: if every position has at least one element in common, then
+  // there exists a full combination that matches.  This reduces the complexity from
+  // O(product of dimension sizes) to O(sum of dimension sizes).
   //
   // In the following examples, suppose the referenced RHS variable is non-apply-to-all and
   // has two instances:
@@ -1012,43 +1047,18 @@ function expandedRefIdsForVar(lhsVariable, rhsBaseRefId, rhsSubIds) {
   //   _x[_dima,_c2,_dimb]
   //
 
-  // Step 1: Get all combinations of the LHS subscripts that map to the subscripts/dimensions
-  // in the RHS variable reference.  Here `rhsSubIds` is the array of parsed subscript/dimension
-  // IDs that appear in the RHS variable reference.  We figure out which LHS subscripts/dimensions
-  // are relevant for the RHS subscripts/dimensions given the context of the LHS variable (which
-  // may have been separated/expanded).
+  // Step 1: Resolve the LHS subscript/dimension at each position of the RHS variable
+  // reference.  Here `rhsSubIds` is the array of parsed subscript/dimension IDs that
+  // appear in the RHS variable reference.  We figure out which LHS subscripts/dimensions
+  // are relevant for the RHS subscripts/dimensions given the context of the LHS variable
+  // (which may have been separated/expanded).
   const lhsSubRefs = lhsVariable.parsedEqn.lhs.varDef.subscriptRefs
   const lhsSubIds = lhsSubRefs?.map(subRef => subRef.subId) || []
   const mappedLhsSubIds = rhsSubIds.map(rhsSubId => resolveRhsSubOrDim(lhsVariable, lhsSubIds, rhsSubId))
 
-  // Step 2: Build an array of mapped LHS subscript combos (one string of comma-separated
-  // subscript IDs for each combo)
-  const mappedLhsSubIdsPerPosition = mappedLhsSubIds.map(indexNamesForSubscript)
-  const mappedLhsCombos = cartesianProductOf(mappedLhsSubIdsPerPosition).map(combo => combo.join(','))
-
-  // Step 3: For each RHS variable instance, get all combinations of RHS subscripts that can
-  // be accepted by that particular RHS instance
-  const rhsRefIds = []
-  for (const rhsVarInstance of rhsVarInstances) {
-    // Build RHS subscript combos (one string of comma-separated subscript IDs for each combo)
-    const rhsVarInstanceSubIdsPerPosition = rhsVarInstance.subscripts.map(indexNamesForSubscript)
-    const rhsCombos = cartesianProductOf(rhsVarInstanceSubIdsPerPosition).map(combo => combo.join(','))
-
-    // See if any of the LHS subscript combos match any of the RHS subscript combos
-    for (const lhsCombo of mappedLhsCombos) {
-      if (rhsCombos.includes(lhsCombo)) {
-        // There was a match; add the refId and break out of the inner loop
-        rhsRefIds.push(rhsVarInstance.refId)
-        break
-      }
-    }
-  }
-
-  // Return the sorted array of relevant refIds
-  // TODO: Sorting is not essential here, but the legacy reader sorted so we will keep that
-  // behavior now to avoid invalidating tests.  Later we should remove this `sort` call and
-  // update the tests accordingly.
-  return rhsRefIds.sort()
+  // Step 2: Find the RHS variable instances whose subscripts overlap with the LHS
+  // subscripts at every position
+  return matchingRhsRefIds(mappedLhsSubIds, rhsVarInstances)
 }
 
 /**

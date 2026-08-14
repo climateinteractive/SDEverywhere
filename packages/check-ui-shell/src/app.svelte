@@ -15,9 +15,6 @@ import type { CompareDetailViewModel } from './components/compare/detail/compare
 
 import FilterPopover from './components/filter/filter-popover.svelte'
 
-import type { FreeformViewModel } from './components/freeform/freeform-vm'
-import Freeform from './components/freeform/freeform.svelte'
-
 import Header from './components/header/header.svelte'
 
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -35,14 +32,14 @@ export let viewModel: AppViewModel
 
 const checksInProgress = viewModel.checksInProgress
 const progress = viewModel.progress
+const errorMessage = viewModel.errorMessage
 const zoom = viewModel.headerViewModel.zoom
 
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 let traceViewModel: TraceViewModel
-let freeformViewModel: FreeformViewModel
 
-type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'trace'
 let viewMode: ViewMode = 'summary'
 
 type BundleSelectorSide = 'left' | 'right' | undefined
@@ -204,13 +201,6 @@ function onKeyDown(event: KeyboardEvent) {
       showSummary()
       event.preventDefault()
       break
-    // case 'f':
-    //   if (!freeformViewModel) {
-    //     freeformViewModel = viewModel.createFreeformViewModel()
-    //   }
-    //   viewMode = 'freeform'
-    //   event.preventDefault()
-    //   break
     case 't':
       if (viewMode !== 'trace') {
         traceViewModel = viewModel.createTraceViewModel()
@@ -234,12 +224,14 @@ function onKeyDown(event: KeyboardEvent) {
     <Header on:command={onCommand} viewModel={viewModel.headerViewModel} />
     {#if $checksInProgress}
       <div class="progress-container">
-        <div class="progress">{$progress}</div>
+        {#if $errorMessage}
+          <div class="error-message">{$errorMessage}</div>
+        {:else}
+          <div class="progress">{$progress}</div>
+        {/if}
       </div>
     {:else if viewMode === 'comparison-detail'}
       <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
-    {:else if viewMode === 'freeform'}
-      <Freeform on:command={onCommand} viewModel={freeformViewModel} />
     {:else if viewMode === 'trace'}
       <Trace on:command={onCommand} viewModel={traceViewModel} />
     {:else if viewMode === 'perf'}
@@ -306,6 +298,14 @@ function onKeyDown(event: KeyboardEvent) {
   align-items: center;
   justify-content: center;
   font-size: 2em;
+}
+
+.error-message {
+  max-width: 80%;
+  text-align: center;
+  color: red;
+  font-size: 1em;
+  white-space: pre-wrap;
 }
 
 .popover-overlay {

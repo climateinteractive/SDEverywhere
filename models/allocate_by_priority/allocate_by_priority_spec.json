@@ -1,0 +1,4 @@
+{
+  "name": "ALLOCATE BY PRIORITY test model",
+  "outputVarNames": ["Time", "shipments[Boston]", "shipments[Dayton]", "shipments[Fresno]", "total supply available"]
+}

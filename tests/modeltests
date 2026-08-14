@@ -64,7 +64,7 @@ function test {
     fi
     # Reduce comparison precision for models that cannot reproduce Vensim results.
     PRECISION="1e-4"
-    if [[ $MODEL == "allocate" ]]; then
+    if [[ $MODEL == "allocate" || $MODEL == "allocate_ptype" || $MODEL == "allocate_price" ]]; then
       PRECISION="1e-2"
     fi
     node "$SDE_MAIN" test $TEST_ARGS --genformat $GEN_FORMAT --tooldat $TOOL_DAT -p $PRECISION "$MODEL_DIR/$MODEL.$INPUT_FORMAT"
@@ -158,11 +158,19 @@ else
 
     if [[ $GEN_FORMAT == "js" ]]; then
       # Skip tests for models that are not yet supported for JS target
-      if [[ $m == "allocate" || $m == delayfixed* || $m == "depreciate" || $m == "gamma_ln" ]]; then
+      if [[ $m == allocate* || $m == delayfixed* || $m == "depreciate" || $m == "gamma_ln" ]]; then
           echo "Skipping test for $m (not yet supported for JS target)"
           echo
           continue
       fi
+    fi
+
+    # XXX: Skip tests for models that are known to produce different results from Vensim
+    # due to Vensim bugs or undefined behavior
+    if [[ $m == "directlookups_invalidcell" ]]; then
+      echo "Skipping test for $m (Vensim results are unexpected)"
+      echo
+      continue
     fi
 
     if [[ $cmd == "compare" ]]; then

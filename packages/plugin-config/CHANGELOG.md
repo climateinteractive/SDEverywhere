@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade sanitize-html to 2.17.6 ([#868](https://github.com/climateinteractive/SDEverywhere/issues/868)) ([097384a](https://github.com/climateinteractive/SDEverywhere/commit/097384a12ff463294240d3c663dc0c21c9e9ea1e)), closes [#867](https://github.com/climateinteractive/SDEverywhere/issues/867)
+
+## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.9...plugin-config-v0.2.10) (2026-05-04)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+
 ## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.8...plugin-config-v0.2.9) (2026-02-04)
 
 

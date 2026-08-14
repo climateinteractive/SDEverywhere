@@ -116,11 +116,20 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     // Emit decl/init code for the lookup
     const lookupDef = generateLookupFromPoints(variable, mode, /*copy=*/ false, cLhs, loopIndexVars, outFormat)
     if (lookupDef.length > 0) {
+      if (mode === 'decl') {
+        // When declaring a lookup, even if the lookup variable includes dimensions (i.e., is
+        // partially apply-to-all), the data variable declarations should not be inside for loops,
+        // so we omit them in this case
+        return [...lookupDef]
+      }
       return [...openLoops, ...lookupDef, ...closeLoops]
     } else {
       return []
     }
   }
+
+  // Keep a buffer of code that will be included before all subscript loops
+  const preLoopLines = []
 
   // Keep a buffer of code that will be included before the innermost loop
   const preInnerLoopLines = []
@@ -139,6 +148,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
     cLhs,
     loopIndexVars,
     arrayIndexVars,
+    emitPreLoop: s => preLoopLines.push(s),
     emitPreInnerLoop: s => preInnerLoopLines.push(s),
     emitPreFormula: s => preFormulaLines.push(s),
     emitPostFormula: s => postFormulaLines.push(s),
@@ -155,7 +165,7 @@ export function generateEquation(variable, mode, extData, directData, modelDir, 
   }
 
   // Combine all lines of comments and code into a single array
-  return [comment, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
+  return [comment, ...preLoopLines, ...openLoops, ...preFormulaLines, formula, ...postFormulaLines, ...closeLoops]
 }
 
 /**

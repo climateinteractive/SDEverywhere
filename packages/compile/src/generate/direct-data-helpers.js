@@ -1,8 +1,7 @@
 import path from 'node:path'
 
-import XLSX from 'xlsx'
-
 import { cdbl, readCsv, readXlsx } from '../_shared/helpers.js'
+import { encodeCell } from '../_shared/xlsx.js'
 
 /**
  * Return a `getCellValue` function that reads the CSV or XLS[X] content.
@@ -47,8 +46,17 @@ function handleExcelWorkbook(fileOrTag, workbook, tab, dataKind, dataSource) {
     let sheet = workbook.Sheets[tab]
     if (sheet) {
       return (c, r) => {
-        let cell = sheet[XLSX.utils.encode_cell({ c, r })]
-        return cell != null ? cdbl(cell.v) : null
+        let cell = sheet[encodeCell({ c, r })]
+        if (cell == null || cell.v === '') {
+          return null
+        }
+        try {
+          return cdbl(cell.v)
+        } catch (_error) {
+          // Return null when the cell value cannot be converted to a number;
+          // the caller will treat this as the end of data.
+          return null
+        }
       }
     } else {
       throw new Error(`Direct ${dataKind} worksheet ${tab} in ${dataSource} ${fileOrTag} not found`)
@@ -72,13 +80,16 @@ function handleCsvFile(file, dataPathname, delimiter, dataKind) {
   let data = readCsv(dataPathname, delimiter)
   if (data) {
     return (c, r) => {
-      let value = '0.0'
-      try {
-        value = data[r] != null && data[r][c] != null ? cdbl(data[r][c]) : null
-      } catch (error) {
-        console.error(`${error.message} in ${dataPathname}`)
+      if (data[r] == null || data[r][c] == null || data[r][c] === '') {
+        return null
       }
-      return value
+      try {
+        return cdbl(data[r][c])
+      } catch (_error) {
+        // Return null when the cell value cannot be converted to a number;
+        // the caller will treat this as the end of data.
+        return null
+      }
     }
   } else {
     throw new Error(`Direct ${dataKind} file ${file} could not be read`)

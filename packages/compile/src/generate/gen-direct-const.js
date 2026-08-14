@@ -1,7 +1,6 @@
-import XLSX from 'xlsx'
-
 import { cartesianProductOf } from '../_shared/helpers.js'
 import { indexInSepDim, isDimension, sub } from '../_shared/subscript.js'
+import { decodeCell } from '../_shared/xlsx.js'
 
 import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
@@ -73,7 +72,7 @@ export function generateDirectConstInit(variable, directData, modelDir) {
   // Read tabular data into an indexed variable for each cell.
   let numericSubscripts = lhsIndexSubscripts.map(idx => idx.map(s => sub(s).value))
   let lhsSubscripts = numericSubscripts.map(s => s.reduce((a, v) => a.concat(`[${v}]`), ''))
-  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
+  let dataAddress = decodeCell(startCell.toUpperCase())
   let startCol = dataAddress.c
   let startRow = dataAddress.r
   if (startCol < 0 || startRow < 0) {
@@ -82,7 +81,12 @@ export function generateDirectConstInit(variable, directData, modelDir) {
   for (let i = 0; i < cellOffsets.length; i++) {
     let rowOffset = cellOffsets[i][0] ? cellOffsets[i][0] : 0
     let colOffset = cellOffsets[i][1] ? cellOffsets[i][1] : 0
+    // Use 0.0 as a fallback when the cell is missing, empty, or contains a non-numeric value.
+    // (Vensim raises an error in this case, but SDE has historically tolerated invalid cells.)
     let dataValue = getCellValue(startCol + colOffset, startRow + rowOffset)
+    if (dataValue == null) {
+      dataValue = '0.0'
+    }
     let lhs = `${variable.varName}${lhsSubscripts[i] || ''}`
     lines.push(`  ${lhs} = ${dataValue};`)
   }

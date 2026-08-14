@@ -86,7 +86,7 @@ For more details on all of these packages, refer to the ["Packages"](#packages) 
 
 The SDEverywhere libraries and tools can be used on any computer running macOS, Windows, or Linux.
 
-SDEverywhere requires [Node.js](https://nodejs.org) version 20 or later (the current LTS version 22 is recommended).
+SDEverywhere requires [Node.js](https://nodejs.org) version 22 or later (the current LTS version 24 is recommended).
 Node.js is a cross-platform runtime environment that allows for running JavaScript-based tools (like SDEverywhere) on macOS, Windows, and Linux computers.
 
 Note: It is not necessary to have extensive knowledge of Node.js and JavaScript in order to use SDEverywhere, but a one-time download of Node.js is necessary to get started.

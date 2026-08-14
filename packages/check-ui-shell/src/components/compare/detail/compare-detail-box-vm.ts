@@ -102,6 +102,7 @@ export class CompareDetailBoxViewModel {
       'right',
       this.scenario.specR,
       datasetKeys,
+      undefined,
       (datasetMapL, datasetMapR) => {
         if (!this.dataRequested) {
           return

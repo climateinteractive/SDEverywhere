@@ -8,8 +8,7 @@
     "dev": "sde dev",
     "build": "sde bundle",
     "vite": "vite",
-    "preview": "vite preview --open --outDir ./sde-prep/check-report",
-    "save-baseline": "sde-check baseline --save"
+    "preview": "vite preview --open --outDir ./sde-prep/check-report"
   },
   "dependencies": {
     "@sdeverywhere/build": "^0.3.7",

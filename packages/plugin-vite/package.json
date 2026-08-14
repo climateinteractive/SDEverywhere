@@ -34,8 +34,7 @@
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
-    "vite": "^7.1.12"
+    "vite": "^7.3.6"
   },
   "author": "Climate Interactive",
   "license": "MIT",

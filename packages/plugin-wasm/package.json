@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-wasm",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "files": [
     "dist/**"
   ],
@@ -21,9 +21,9 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
-    "test:watch": "echo No tests yet",
-    "test:ci": "echo No tests yet",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsup",
     "docs": "../../scripts/gen-docs.js",
@@ -36,7 +36,6 @@
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

@@ -13,8 +13,6 @@ import { firstElemOf, elemsOf, xmlError } from './xml'
  * Parse the given XMILE model definition and return a `Model` AST node.
  *
  * @param input A string containing the XMILE model.
- * @param context An object that provides access to file system resources (such as
- * external data files) that are referenced during the parse phase.
  * @returns A `Model` AST node.
  */
 export function parseXmileModel(input: string): Model {
@@ -25,7 +23,7 @@ export function parseXmileModel(input: string): Model {
   } catch (e) {
     // Include context such as line/column numbers in the error message if available
     const msg = `Failed to parse XMILE model definition:\n\n${e.message}`
-    throw new Error(msg)
+    throw new Error(msg, { cause: e })
   }
 
   // Extract <sim_specs> -> SimulationSpec

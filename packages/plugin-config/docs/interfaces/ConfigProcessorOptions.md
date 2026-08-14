@@ -6,15 +6,15 @@
 
 ### config
 
- **config**: `string`
+> **config**: `string`
 
 The absolute path to the directory containing the CSV config files.
 
-___
+***
 
-### out
+### out?
 
- `Optional` **out**: `string` \| [`ConfigProcessorOutputPaths`](ConfigProcessorOutputPaths.md)
+> `optional` **out?**: `string` \| [`ConfigProcessorOutputPaths`](ConfigProcessorOutputPaths.md)
 
 Either a single path to a base output directory (in which case, the recommended
 directory structure will be used) or a `ConfigProcessorOutputPaths` containing specific paths.

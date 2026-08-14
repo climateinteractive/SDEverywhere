@@ -8,6 +8,6 @@ Describes a model output variable.
 
 ### varName
 
- **varName**: `string`
+> **varName**: `string`
 
 The variable name (as used in the modeling tool).

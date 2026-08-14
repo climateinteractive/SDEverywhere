@@ -4,9 +4,9 @@
 
 ## Properties
 
-### outputPaths
+### outputPaths?
 
- `Optional` **outputPaths**: `string`[]
+> `optional` **outputPaths?**: `string`[]
 
 The destination paths for the generated worker JS files.  If undefined,
 a `worker.js` file will be written to the configured `prepDir`.

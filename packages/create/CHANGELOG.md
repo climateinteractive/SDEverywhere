@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.2.40](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.39...create-v0.2.40) (2026-08-13)
+
+
+### Dependencies
+
+* require Node.js v22 as minimum supported version ([#870](https://github.com/climateinteractive/SDEverywhere/issues/870)) ([bf5f651](https://github.com/climateinteractive/SDEverywhere/commit/bf5f651a69535f22859597ea435bd7958137a229)), closes [#869](https://github.com/climateinteractive/SDEverywhere/issues/869)
+
+## [0.2.39](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.38...create-v0.2.39) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.31 to ^0.7.32
+
+## [0.2.38](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.37...create-v0.2.38) (2026-06-03)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.30 to ^0.7.31
+
+## [0.2.37](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.36...create-v0.2.37) (2026-04-28)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.29 to ^0.7.30
+
+## [0.2.36](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.35...create-v0.2.36) (2026-04-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.28 to ^0.7.29
+
 ## [0.2.35](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.34...create-v0.2.35) (2026-03-09)
 
 

@@ -1,4 +1,4 @@
-<!-- Copyright (c) 2021-2022 Climate Interactive / New Venture Fund -->
+<!-- Copyright (c) 2021-2026 Climate Interactive / New Venture Fund -->
 
 <!-- SCRIPT -->
 <script lang="ts">
@@ -6,6 +6,9 @@ import type { DotPlotViewModel } from './dot-plot-vm'
 
 export let viewModel: DotPlotViewModel
 export let colorClass: string
+export let showAxisLabels = false
+export let avgLabelPosition: 'above' | 'below' | undefined = undefined
+export let avgLabelTextClass = ''
 </script>
 
 <!-- TEMPLATE -->
@@ -17,6 +20,22 @@ export let colorClass: string
     <div class={`dot ${colorClass}`} style="left: {point}%;"></div>
   {/each}
   <div class={`vline avg-line ${colorClass}`} style="left: {viewModel.avgPoint}%;"></div>
+  {#if viewModel.overflowCount > 0}
+    <div class="overflow" title={`${viewModel.overflowCount} sample(s) beyond p95`}>+{viewModel.overflowCount}</div>
+  {/if}
+  {#if showAxisLabels}
+    <div class="axis-label axis-label-left">{viewModel.min.toFixed(1)}</div>
+    <div class="axis-label axis-label-right">{viewModel.max.toFixed(1)}</div>
+  {/if}
+  {#if avgLabelPosition === 'below'}
+    <div class={`avg-label avg-label-below ${avgLabelTextClass}`} style="left: {viewModel.avgPoint}%;">
+      {viewModel.avg.toFixed(1)}
+    </div>
+  {:else if avgLabelPosition === 'above'}
+    <div class={`avg-label avg-label-above ${avgLabelTextClass}`} style="left: {viewModel.avgPoint}%;">
+      {viewModel.avg.toFixed(1)}
+    </div>
+  {/if}
 </div>
 
 <!-- STYLE -->
@@ -64,5 +83,57 @@ $line-color: #555;
   margin-left: -$dot-size * 0.5;
   border-radius: $dot-size * 0.5;
   opacity: 0.2;
+}
+
+.overflow {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  height: $height;
+  display: flex;
+  align-items: center;
+  margin-left: 0.4rem;
+  color: #888;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.axis-label {
+  position: absolute;
+  top: $height;
+  margin-top: 0.1rem;
+  color: #888;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  transform: translateX(-50%);
+
+  &.axis-label-left {
+    left: 0;
+  }
+
+  &.axis-label-right {
+    left: 100%;
+  }
+}
+
+.avg-label {
+  position: absolute;
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: nowrap;
+
+  &.avg-label-below {
+    top: $height;
+    margin-top: 0.1rem;
+    transform: translateX(-50%);
+  }
+
+  &.avg-label-above {
+    top: 0;
+    margin-top: -0.1rem;
+    transform: translate(-50%, -100%);
+  }
 }
 </style>

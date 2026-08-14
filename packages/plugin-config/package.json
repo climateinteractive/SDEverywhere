@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.9",
+  "version": "0.2.11",
   "files": [
     "dist/**",
     "template-config/**"
@@ -35,13 +35,12 @@
   "dependencies": {
     "byline": "^5.0.0",
     "csv-parse": "^5.3.3",
-    "sanitize-html": "^2.13.0"
+    "sanitize-html": "^2.17.6"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",

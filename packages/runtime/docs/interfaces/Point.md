@@ -8,14 +8,14 @@ A data point.
 
 ### x
 
- **x**: `number`
+> **x**: `number`
 
 The x value (typically a time value).
 
-___
+***
 
 ### y
 
- **y**: `number`
+> **y**: `number`
 
 The y value.

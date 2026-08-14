@@ -1,7 +1,7 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import type { DatasetsResult } from '../_shared/data-source'
-import type { ScenarioSpec } from '../_shared/scenario-spec-types'
+import type { DatasetsResult, GetDatasetsOptions } from '../_shared/data-source'
+import type { ConstantOverride, LookupOverride, ScenarioSpec } from '../_shared/scenario-spec-types'
 import type { BundleModels, Task, TaskKey } from '../_shared/task-queue'
 import { TaskQueue } from '../_shared/task-queue'
 import type { DatasetKey } from '../_shared/types'
@@ -59,6 +59,9 @@ class SuiteRunner {
   private readonly pendingTaskKeys: Set<TaskKey> = new Set()
   private stopped = false
 
+  /** The idle listener that propagates `TaskQueue` errors to `onError`. */
+  private idleListener?: (error?: Error) => void
+
   constructor(
     private readonly config: Config,
     private readonly taskQueue: TaskQueue,
@@ -72,11 +75,38 @@ class SuiteRunner {
       }
       this.stopped = true
     }
+    this.removeIdleListener()
+  }
+
+  /**
+   * Remove the idle listener from the task queue, if one is registered.
+   */
+  private removeIdleListener(): void {
+    if (this.idleListener) {
+      this.taskQueue.removeIdleListener(this.idleListener)
+      this.idleListener = undefined
+    }
   }
 
   start(options?: RunSuiteOptions): void {
     // Send the initial progress update
     this.callbacks.onProgress?.(0)
+
+    // Listen for errors emitted by the task queue.  If a task fails (for
+    // example, a `getDatasetsForScenario` call rejects), the task queue
+    // catches the error and notifies its idle listeners.  Without this
+    // listener, the error would be silently dropped and the suite would
+    // hang waiting for tasks that will never complete.
+    this.idleListener = error => {
+      if (error) {
+        this.removeIdleListener()
+        if (!this.stopped) {
+          this.stopped = true
+          this.callbacks.onError?.(error)
+        }
+      }
+    }
+    this.taskQueue.onIdle(this.idleListener)
 
     // Create a data planner to map out the model runs that are needed to
     // efficiently fetch the data to perform both the checks and comparisons
@@ -136,24 +166,21 @@ class SuiteRunner {
     }
 
     // When all tasks have been processed, build the report and notify the completion callback
-    const buildReport = (error?: Error) => {
-      if (error) {
-        this.callbacks.onError?.(error)
-      } else {
-        const checkReport = buildCheckReport()
-        let comparisonReport: ComparisonReport
-        if (this.config.comparison) {
-          comparisonReport = {
-            testReports: buildComparisonTestReports(),
-            perfReportL: this.perfStatsL.toReport(),
-            perfReportR: this.perfStatsR.toReport()
-          }
+    const buildReport = () => {
+      this.removeIdleListener()
+      const checkReport = buildCheckReport()
+      let comparisonReport: ComparisonReport
+      if (this.config.comparison) {
+        comparisonReport = {
+          testReports: buildComparisonTestReports(),
+          perfReportL: this.perfStatsL.toReport(),
+          perfReportR: this.perfStatsR.toReport()
         }
-        this.callbacks.onComplete?.({
-          checkReport,
-          comparisonReport
-        })
       }
+      this.callbacks.onComplete?.({
+        checkReport,
+        comparisonReport
+      })
     }
 
     // Schedule a task for each data request
@@ -195,10 +222,16 @@ class SuiteRunner {
 
     async function getDatasets(
       bundleModel: BundleModel | undefined,
-      scenarioSpec: ScenarioSpec | undefined
+      scenarioSpec: ScenarioSpec | undefined,
+      constants: ConstantOverride[] | undefined,
+      lookups: LookupOverride[] | undefined
     ): Promise<DatasetsResult> {
       if (bundleModel && scenarioSpec) {
-        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys)
+        let options: GetDatasetsOptions | undefined
+        if (constants || lookups) {
+          options = { constants, lookups }
+        }
+        return bundleModel.getDatasetsForScenario(scenarioSpec, datasetKeys, options)
       } else {
         return undefined
       }
@@ -208,8 +241,8 @@ class SuiteRunner {
     const bundleModelL = bundleModels.L
     const bundleModelR = bundleModels.R
     const [datasetsResultL, datasetsResultR] = await Promise.all([
-      getDatasets(bundleModelL, request.scenarioSpecL),
-      getDatasets(bundleModelR, request.scenarioSpecR)
+      getDatasets(bundleModelL, request.scenarioSpecL, request.constantsL, request.lookupsL),
+      getDatasets(bundleModelR, request.scenarioSpecR, request.constantsR, request.lookupsR)
     ])
 
     // Update the performance stats

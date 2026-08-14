@@ -13,7 +13,7 @@ function xml(input: string): XmlElement {
   try {
     xml = parseXml(input)
   } catch (e) {
-    throw new Error(`Invalid XML:\n${input}\n\n${e}`)
+    throw new Error(`Invalid XML:\n${input}\n\n${e}`, { cause: e })
   }
   return xml.root
 }

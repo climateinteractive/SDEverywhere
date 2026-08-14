@@ -17,8 +17,9 @@ import { generateJS } from './gen-code-js.js'
  * @param {Map<string, any>} opts.directData The mapping of dataset name used in a
  * `GET DIRECT DATA` call (e.g., `?data`) to the tabular data contained in the loaded
  * data file.
- * @param {string} opts.modelDirname The path to the directory containing the model
- * (used for resolving data files for `GET DIRECT SUBSCRIPT`).
+ * @param {string} opts.modelDirname The absolute path to the directory containing data
+ * (dat, xlsx, csv) files that are referenced by the model.  This path is used for
+ * resolving data files for `GET DIRECT SUBSCRIPT` calls.
  * @returns A string containing the generated code.
  */
 export function generateCode(parsedModel, opts) {

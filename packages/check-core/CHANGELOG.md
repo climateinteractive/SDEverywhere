@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.1.13](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.12...check-core-v0.1.13) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade ajv to latest version ([#858](https://github.com/climateinteractive/SDEverywhere/issues/858)) ([566d111](https://github.com/climateinteractive/SDEverywhere/commit/566d1111eac877fa95814272a7bd02bea22fe6d5)), closes [#857](https://github.com/climateinteractive/SDEverywhere/issues/857)
+
+## [0.1.12](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.11...check-core-v0.1.12) (2026-05-28)
+
+
+### Bug Fixes
+
+* treat out-of-range values in comparison tests as a warning instead of error ([#827](https://github.com/climateinteractive/SDEverywhere/issues/827)) ([5677f64](https://github.com/climateinteractive/SDEverywhere/commit/5677f642e9e2d9e2c6c597650dd381b787d9bbec)), closes [#825](https://github.com/climateinteractive/SDEverywhere/issues/825)
+
+## [0.1.11](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.10...check-core-v0.1.11) (2026-05-11)
+
+
+### Bug Fixes
+
+* improve performance stats view in model-check ([#822](https://github.com/climateinteractive/SDEverywhere/issues/822)) ([58cf73b](https://github.com/climateinteractive/SDEverywhere/commit/58cf73b7be919612898f2f16f79b4cdeeef12616)), closes [#821](https://github.com/climateinteractive/SDEverywhere/issues/821)
+
+## [0.1.10](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.9...check-core-v0.1.10) (2026-05-04)
+
+
+### Features
+
+* update model-check packages to allow for overriding constants and lookups ([#818](https://github.com/climateinteractive/SDEverywhere/issues/818)) ([4b0aa8c](https://github.com/climateinteractive/SDEverywhere/commit/4b0aa8c8711723b46cc3226368d10de241dc291d)), closes [#770](https://github.com/climateinteractive/SDEverywhere/issues/770)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+
+## [0.1.9](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.8...check-core-v0.1.9) (2026-05-01)
+
+
+### Bug Fixes
+
+* update SuiteRunner to correctly handle task errors + display errors in CLI and UI ([#813](https://github.com/climateinteractive/SDEverywhere/issues/813)) ([f0da024](https://github.com/climateinteractive/SDEverywhere/commit/f0da024d0be8bd56cf22f655448f979884b6aca1)), closes [#812](https://github.com/climateinteractive/SDEverywhere/issues/812)
+
+## [0.1.8](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.7...check-core-v0.1.8) (2026-04-14)
+
+
+### Bug Fixes
+
+* correct renamed variable handling so that check tests are unaffected by rename mappings ([#808](https://github.com/climateinteractive/SDEverywhere/issues/808)) ([4a267b6](https://github.com/climateinteractive/SDEverywhere/commit/4a267b69675a51f1d04de85649fe5e10aa397b0c)), closes [#807](https://github.com/climateinteractive/SDEverywhere/issues/807)
+
 ## [0.1.7](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.6...check-core-v0.1.7) (2026-01-05)
 
 

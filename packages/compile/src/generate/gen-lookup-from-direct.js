@@ -1,8 +1,8 @@
 import * as R from 'ramda'
-import XLSX from 'xlsx'
 
 import { listConcat } from '../_shared/helpers.js'
 import { sub } from '../_shared/subscript.js'
+import { decodeCell, decodeCol, decodeRow } from '../_shared/xlsx.js'
 
 import { handleExcelOrCsvFile } from './direct-data-helpers.js'
 
@@ -61,7 +61,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   // The cell(c,r) function wraps data access by column and row.
   let lookupData = ''
   let lookupSize = 0
-  let dataAddress = XLSX.utils.decode_cell(startCell.toUpperCase())
+  let dataAddress = decodeCell(startCell.toUpperCase())
   let dataCol = dataAddress.c
   let dataRow = dataAddress.r
   if (dataCol < 0 || dataRow < 0) {
@@ -71,7 +71,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   let timeCol, timeRow, nextCell
   if (isNaN(parseInt(timeRowOrCol))) {
     // Time values are in a column.
-    timeCol = XLSX.utils.decode_col(timeRowOrCol.toUpperCase())
+    timeCol = decodeCol(timeRowOrCol.toUpperCase())
     timeRow = dataRow
     dataCol += indexNum
     nextCell = () => {
@@ -81,7 +81,7 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
   } else {
     // Time values are in a row.
     timeCol = dataCol
-    timeRow = XLSX.utils.decode_row(timeRowOrCol)
+    timeRow = decodeRow(timeRowOrCol)
     dataRow += indexNum
     nextCell = () => {
       dataCol++
@@ -89,14 +89,21 @@ function generateDirectDataLookup(varLhs, getCellValue, timeRowOrCol, startCell,
     }
   }
 
-  let timeValue = getCellValue(timeCol, timeRow)
-  let dataValue = getCellValue(dataCol, dataRow)
-  while (timeValue != null && dataValue != null) {
-    lookupData = listConcat(lookupData, `${timeValue}, ${dataValue}`, true)
-    lookupSize++
+  // Read time/value pairs, matching Vensim's behavior:
+  //   - Stop reading when the first non-numeric time value is encountered.  This
+  //     allows additional content (e.g., labels) to follow the data in the row or column.
+  //   - Skip pairs with a non-numeric data value, but continue reading subsequent pairs.
+  while (true) {
+    const timeValue = getCellValue(timeCol, timeRow)
+    if (timeValue == null) {
+      break
+    }
+    const dataValue = getCellValue(dataCol, dataRow)
+    if (dataValue != null) {
+      lookupData = listConcat(lookupData, `${timeValue}, ${dataValue}`, true)
+      lookupSize++
+    }
     nextCell()
-    dataValue = getCellValue(dataCol, dataRow)
-    timeValue = getCellValue(timeCol, timeRow)
   }
   if (lookupSize === 0) {
     throw new Error(`Empty lookup data array for ${varLhs}`)

@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf sde-prep",
-    "lint": "eslint tests --max-warnings 0",
+    "lint": "eslint . --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "dev": "sde dev",
     "build": "sde bundle",
     "serve-test-bundles": "pnpx http-server --cors -p 9000 .",
@@ -22,7 +24,7 @@
     "test-build-with-valid-remote-baseline": "TEST_BASELINE=remote-valid run-s build",
     "test-build-with-invalid-remote-baseline": "TEST_BASELINE=remote-invalid run-s build",
     "skip-test": "echo Skipping model-check integration tests on CI for now",
-    "ci:int-test": "run-s clean skip-test"
+    "ci:int-test": "run-s clean lint prettier:check skip-test"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",

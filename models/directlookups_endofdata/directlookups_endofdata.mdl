@@ -1,0 +1,52 @@
+{UTF-8}
+
+DimA: A1 ~~|
+
+x from csv[DimA] = GET DIRECT LOOKUPS('data/data.csv', ',', '2', 'D3')
+  ~
+  ~ This tests the case where there is a BLANK cell after the last time value
+    to indicate the end of the time values.  Vensim stops reading data points
+    when it reaches the first non-numeric time value.  For this variable,
+    only 3 data points should be read.
+  ~ :SUPPLEMENTARY
+  |
+
+x from xlsx[DimA] = GET DIRECT LOOKUPS('data/data.xlsx', 'data', '2', 'D3')
+  ~
+  ~ This tests the case where there is a BLANK cell after the last time value
+    to indicate the end of the time values.  Vensim stops reading data points
+    when it reaches the first non-numeric time value.  For this variable,
+    only 3 data points should be read.
+  ~ :SUPPLEMENTARY
+  |
+
+y from csv[DimA] = GET DIRECT LOOKUPS('data/data.csv', ',', '3', 'K4')
+  ~
+  ~ This tests the case where there is a NON-NUMERIC cell after the last time value
+    to indicate the end of the time values.  Vensim stops reading data points
+    when it reaches the first non-numeric time value.  For this variable,
+    only 3 data points should be read.
+  ~ :SUPPLEMENTARY
+  |
+
+y from xlsx[DimA] = GET DIRECT LOOKUPS('data/data.xlsx', 'data', '3', 'K4')
+  ~
+  ~ This tests the case where there is a NON-NUMERIC cell after the last time value
+    to indicate the end of the time values.  Vensim stops reading data points
+    when it reaches the first non-numeric time value.  For this variable,
+    only 3 data points should be read.
+  ~ :SUPPLEMENTARY
+  |
+
+x value from csv = x from csv[A1](Time) ~~|
+
+x value from xlsx = x from xlsx[A1](Time) ~~|
+
+y value from csv = y from csv[A1](Time) ~~|
+
+y value from xlsx = y from xlsx[A1](Time) ~~|
+
+INITIAL TIME = 2000 ~~|
+FINAL TIME = 2002 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = 1 ~~|

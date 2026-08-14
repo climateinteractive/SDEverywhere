@@ -74,7 +74,9 @@ $bar-width: 15rem;
   display: flex;
   flex-direction: row;
   flex: 0 0 auto;
-  align-items: flex-end;
+  // Align the bar with the first line of the title so that the bar stays put even when
+  // the title-part wraps onto multiple lines (e.g. when annotations are long)
+  align-items: flex-start;
   margin: 0.2rem 0;
   opacity: 0.8;
 
@@ -86,9 +88,13 @@ $bar-width: 15rem;
 .bar-container {
   display: flex;
   flex-direction: row;
+  // Never shrink the colored bar; we'd rather have annotations wrap below than have
+  // the bar squeezed by long annotation pills
+  flex-shrink: 0;
   width: $bar-width;
   height: 0.8rem;
-  margin-bottom: 0.25rem;
+  // Nudge the bar down so its midline aligns with the first line of the title text
+  margin-top: 0.35rem;
   cursor: pointer;
 }
 
@@ -122,6 +128,10 @@ $bar-width: 15rem;
   display: flex;
   flex-direction: row;
   align-items: baseline;
+  // Wrap long annotations onto additional lines so they don't push the row wider than
+  // the viewport
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
 }
 
 .title {

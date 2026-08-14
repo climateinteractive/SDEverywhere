@@ -28,6 +28,20 @@ a from tagged xlsx =
     'B2'
   ) ~~~:SUPPLEMENTARY|
 
+a from named xlsx using GET XLS =
+  GET XLS CONSTANTS(
+    'data/a.xlsx',
+    'a',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
+a from tagged xlsx using GET XLS =
+  GET XLS CONSTANTS(
+    '?a',
+    'a',
+    'B2'
+  ) ~~~:SUPPLEMENTARY|
+
 b[DimB] =
   GET DIRECT CONSTANTS(
     'data/b.csv',

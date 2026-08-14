@@ -114,7 +114,10 @@ export class BundleManager {
         requestCredentials = 'include'
       }
       // Add cache busting parameter to avoid issues with servers that aggressively cache files
-      remoteBundlesUrl += `?cb=${Date.now()}`
+      // (skip for `data:` URLs, which don't support query parameters)
+      if (!remoteBundlesUrl.startsWith('data:')) {
+        remoteBundlesUrl += `?cb=${Date.now()}`
+      }
       const response = await fetch(remoteBundlesUrl, { headers, credentials: requestCredentials })
       if (!response.ok) {
         throw new Error(`Failed to fetch remote bundles: ${response.statusText}`)

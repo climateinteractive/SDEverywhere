@@ -38,6 +38,6 @@ export async function config() {
 ## Plugin API
 
 - [Plugin](interfaces/Plugin.md)
-- [BuildContext](classes/BuildContext.md)
+- [BuildContext](interfaces/BuildContext.md)
 - [ResolvedConfig](interfaces/ResolvedConfig.md)
 - [ResolvedModelSpec](interfaces/ResolvedModelSpec.md)

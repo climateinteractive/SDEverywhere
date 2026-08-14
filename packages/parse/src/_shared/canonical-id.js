@@ -6,10 +6,14 @@ const reTrailingMark = new RegExp('\\s+!$', 'g')
 // Detect one or more consecutive whitespace or underscore characters
 const reWhitespace = new RegExp('(\\s|_)+', 'g')
 
-// Detect special punctuation characters
-// TODO: We do not currently include '!' characters in this set; we should only replace these
-// when they don't appear at the end of a (marked) dimension
-const reSpecialChars = new RegExp(`['"\\.,\\-\\$&%\\/\\|()]`, 'g')
+// Detect characters that are not valid in C/JS identifiers.  This matches anything
+// that is not a Unicode letter (\p{L}), Unicode digit (\p{N}), underscore,
+// or '!' (which is preserved for dimension marks).
+// TODO: Note that this means that we don't currently replace '!' characters that
+// appear within a variable or dimension name.  We should replace these with underscore
+// (like we do for other special characters) except in the case where they appear at
+// the end of the dimension name to indicate a marked dimension.
+const reSpecialChars = /[^\p{L}\p{N}_!]/gu
 
 /**
  * Format a model variable or subscript/dimension name into a valid C identifier (with
@@ -37,7 +41,8 @@ export function canonicalId(name) {
       // underscore character; this matches the behavior of Vensim documented here:
       //   https://www.vensim.com/documentation/ref_variable_names.html
       .replace(reWhitespace, '_')
-      // Replace each special punctuation character with an underscore
+      // Replace any characters that are not valid in C/JS identifiers with an underscore
+      // (preserving Unicode letters/digits and the '!' mark for dimensions)
       .replace(reSpecialChars, '_')
       // Convert to lower case
       .toLowerCase()

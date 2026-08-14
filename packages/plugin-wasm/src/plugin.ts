@@ -9,6 +9,7 @@ import { findUp } from 'find-up'
 
 import type { BuildContext, ResolvedModelSpec, Plugin } from '@sdeverywhere/build'
 
+import { defaultEmccArgs, normalizeEmccArgs } from './emcc-args'
 import type { WasmPluginOptions } from './options'
 
 export function wasmPlugin(options?: WasmPluginOptions): Plugin {
@@ -131,14 +132,11 @@ async function buildWasm(
   const addInput = (file: string) => {
     addArg(`build/${file}`)
   }
-  const addFlag = (flag: string) => {
-    addArg('-s')
-    addArg(flag)
-  }
   addInput('processed.c')
   addInput('macros.c')
   addInput('model.c')
   addInput('vensim.c')
+  addInput('allocation.c')
   addArg('--pre-js')
   addArg('build/processed_extras.js')
   addArg('-Ibuild')
@@ -151,28 +149,9 @@ async function buildWasm(
     } else {
       argsArray = options.emccArgs
     }
-    argsArray.forEach(addArg)
+    normalizeEmccArgs(argsArray).forEach(addArg)
   } else {
-    addArg('-Wall')
-    addArg('-Os')
-    addFlag('STRICT=1')
-    addFlag('MALLOC=emmalloc')
-    addFlag('FILESYSTEM=0')
-    addFlag('MODULARIZE=1')
-    addFlag('SINGLE_FILE=1')
-    addFlag('EXPORT_ES6=1')
-    addFlag('USE_ES6_IMPORT_META=0')
-    // Note: The following argument is used to override the default list of supported environments.
-    // The problem is that the default list includes "node", but we can't use `USE_ES6_IMPORT_META=0`
-    // if "node" is included in the list.  We want `USE_ES6_IMPORT_META=0` because using 1 causes
-    // problems with our init code since we also use `SINGLE_FILE=1` (inlined wasm).  The bottom
-    // line is that if we omit "node" from this list, the wasm will still work fine in both browser
-    // and Node.js contexts (tested in Emscripten 2.0.34 and 3.1.46).
-    addFlag(`ENVIRONMENT='web,webview,worker'`)
-    addFlag(
-      `EXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`
-    )
-    addFlag(`EXPORTED_RUNTIME_METHODS=['cwrap']`)
+    defaultEmccArgs().forEach(addArg)
   }
 
   // context.log('verbose', `    emcc args: ${args}`)

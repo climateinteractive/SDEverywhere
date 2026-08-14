@@ -33,7 +33,15 @@ export type {
   NamedBundle
 } from './bundle/bundle-types'
 
-export type { ImplVar, InputId, InputVar, OutputVar, RelatedItem } from './bundle/var-types'
+export type {
+  ImplVar,
+  InputId,
+  InputVar,
+  OutputVar,
+  RelatedItem,
+  SliderInputVar,
+  SwitchInputVar
+} from './bundle/var-types'
 
 export type {
   EncodedImplVars,

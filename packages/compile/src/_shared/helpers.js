@@ -1,9 +1,9 @@
-import * as fs from 'node:fs'
 import util from 'util'
 import { parse as parseCsv } from 'csv-parse/sync'
 import * as R from 'ramda'
-import XLSX from 'xlsx'
+
 import B from './bufx.js'
+import { readXlsx as readXlsxFile, resetXlsxCache } from './xlsx.js'
 
 import { canonicalId, canonicalVarId } from '@sdeverywhere/parse'
 
@@ -24,12 +24,6 @@ let nextLevelVarSeq = 1
 let nextAuxVarSeq = 1
 // parsed csv data cache
 let csvData = new Map()
-// parsed xlsx data cache
-let xlsxData = new Map()
-
-// Newer versions of the xlsx package require manually setting the `fs` instance
-// before using the `XLSX.readFile` function
-XLSX.set_fs(fs)
 
 // XXX: This is needed for tests due to sequence numbers being in module-level storage
 export function resetHelperState() {
@@ -40,7 +34,7 @@ export function resetHelperState() {
   nextLevelVarSeq = 1
   nextAuxVarSeq = 1
   csvData.clear()
-  xlsxData.clear()
+  resetXlsxCache()
 }
 
 export let canonicalName = name => {
@@ -127,10 +121,10 @@ export let listConcat = (a, x, addSpaces = false) => {
 }
 // Convert a number or string into a C double constant string.
 // A blank string is converted to zero, following Excel.
-// A string that cannot be converted throws an exception.
+// A string that cannot be converted throws an error.
 export let cdbl = x => {
   function throwError() {
-    throw new Error(`ERROR: cannot convert "${x}" to a number`)
+    throw new Error(`Cannot convert "${x}" to a number`)
   }
   let s = '0.0'
   if (typeof x === 'number') {
@@ -203,15 +197,10 @@ export let isIterable = obj => {
 }
 // Command helpers
 export let readXlsx = pathname => {
-  // Read the XLSX file at the pathname and parse it.
-  // Return a `XLSX.WorkBook` object that can be used to access the data.
-  // Cache parsed files to support multiple reads from different equations.
-  let xlsx = xlsxData.get(pathname)
-  if (!xlsx) {
-    xlsx = XLSX.readFile(pathname, { cellDates: true })
-    xlsxData.set(pathname, xlsx)
-  }
-  return xlsx
+  // Read the XLSX file at the pathname and parse it. Return a workbook
+  // object ({ SheetNames, Sheets }) that can be used to access the data.
+  // The underlying reader caches parsed files by path.
+  return readXlsxFile(pathname)
 }
 export let readCsv = (pathname, delimiter = ',') => {
   // Read the CSV file at the pathname and parse it with the given delimiter.

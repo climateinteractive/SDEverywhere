@@ -1,5 +1,92 @@
 # Changelog
 
+## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.24...check-ui-shell-v0.2.25) (2026-08-13)
+
+
+### Bug Fixes
+
+* remove unused/incomplete freeform view code ([#863](https://github.com/climateinteractive/SDEverywhere/issues/863)) ([5542f20](https://github.com/climateinteractive/SDEverywhere/commit/5542f20b9055f4da829f44ba0f8b4b74afb54f0f)), closes [#862](https://github.com/climateinteractive/SDEverywhere/issues/862)
+* use untrack when initializing `initialName` in bundle copy dialog ([#854](https://github.com/climateinteractive/SDEverywhere/issues/854)) ([76fb1c5](https://github.com/climateinteractive/SDEverywhere/commit/76fb1c573b3a6c42fb9e8915662b826e44d86cae)), closes [#853](https://github.com/climateinteractive/SDEverywhere/issues/853)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.12 to ^0.1.13
+
+## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.23...check-ui-shell-v0.2.24) (2026-05-28)
+
+
+### Bug Fixes
+
+* improve layout of error/warning annotations in model-check ([#831](https://github.com/climateinteractive/SDEverywhere/issues/831)) ([f5dc050](https://github.com/climateinteractive/SDEverywhere/commit/f5dc050a4cab607f4e135581a02f9726887a66e8)), closes [#826](https://github.com/climateinteractive/SDEverywhere/issues/826)
+* treat out-of-range values in comparison tests as a warning instead of error ([#827](https://github.com/climateinteractive/SDEverywhere/issues/827)) ([5677f64](https://github.com/climateinteractive/SDEverywhere/commit/5677f642e9e2d9e2c6c597650dd381b787d9bbec)), closes [#825](https://github.com/climateinteractive/SDEverywhere/issues/825)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.11 to ^0.1.12
+
+## [0.2.23](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.22...check-ui-shell-v0.2.23) (2026-05-11)
+
+
+### Bug Fixes
+
+* improve performance stats view in model-check ([#822](https://github.com/climateinteractive/SDEverywhere/issues/822)) ([58cf73b](https://github.com/climateinteractive/SDEverywhere/commit/58cf73b7be919612898f2f16f79b4cdeeef12616)), closes [#821](https://github.com/climateinteractive/SDEverywhere/issues/821)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.10 to ^0.1.11
+
+## [0.2.22](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.21...check-ui-shell-v0.2.22) (2026-05-04)
+
+
+### Features
+
+* update model-check packages to allow for overriding constants and lookups ([#818](https://github.com/climateinteractive/SDEverywhere/issues/818)) ([4b0aa8c](https://github.com/climateinteractive/SDEverywhere/commit/4b0aa8c8711723b46cc3226368d10de241dc291d)), closes [#770](https://github.com/climateinteractive/SDEverywhere/issues/770)
+
+
+### Bug Fixes
+
+* convert InputVar type to a discriminated union with slider and switch variants ([#820](https://github.com/climateinteractive/SDEverywhere/issues/820)) ([9bd55cb](https://github.com/climateinteractive/SDEverywhere/commit/9bd55cbb811a4ec4f9e786d7bfe1ecf56975ef47)), closes [#819](https://github.com/climateinteractive/SDEverywhere/issues/819)
+* don't include cache busting parameter for data URLs when fetching remote bundles list ([#816](https://github.com/climateinteractive/SDEverywhere/issues/816)) ([0179dbb](https://github.com/climateinteractive/SDEverywhere/commit/0179dbb512e2658c6a29d6494e6a61febe4f2309)), closes [#815](https://github.com/climateinteractive/SDEverywhere/issues/815)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.9 to ^0.1.10
+
+## [0.2.21](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.20...check-ui-shell-v0.2.21) (2026-05-01)
+
+
+### Bug Fixes
+
+* update SuiteRunner to correctly handle task errors + display errors in CLI and UI ([#813](https://github.com/climateinteractive/SDEverywhere/issues/813)) ([f0da024](https://github.com/climateinteractive/SDEverywhere/commit/f0da024d0be8bd56cf22f655448f979884b6aca1)), closes [#812](https://github.com/climateinteractive/SDEverywhere/issues/812)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.8 to ^0.1.9
+
+## [0.2.20](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.19...check-ui-shell-v0.2.20) (2026-04-14)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.7 to ^0.1.8
+
 ## [0.2.19](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.18...check-ui-shell-v0.2.19) (2026-02-17)
 
 

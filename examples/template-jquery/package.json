@@ -6,15 +6,15 @@
   "scripts": {
     "clean": "rm -rf ./sde-prep",
     "dev": "sde dev",
-    "build": "sde bundle",
-    "save-baseline": "sde-check baseline --save"
+    "build": "sde bundle"
   },
   "workspaces": [
     "packages/core",
     "packages/app"
   ],
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
+    "@eslint/js": "^10.0.1",
     "@sdeverywhere/build": "^0.3.7",
     "@sdeverywhere/check-core": "^0.1.5",
     "@sdeverywhere/cli": "^0.7.34",
@@ -23,11 +23,10 @@
     "@sdeverywhere/plugin-vite": "^0.2.0",
     "@sdeverywhere/plugin-wasm": "^0.2.6",
     "@sdeverywhere/plugin-worker": "^0.2.11",
-    "@typescript-eslint/eslint-plugin": "^8.46.0",
-    "@typescript-eslint/parser": "^8.46.0",
-    "eslint": "^9.37.0",
+    "@typescript-eslint/eslint-plugin": "^8.67.0",
+    "@typescript-eslint/parser": "^8.67.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-eslint-comments": "^3.2.0",
     "globals": "^16.4.0",
     "npm-run-all2": "^8.0.4",
     "prettier": "^3.6.2",

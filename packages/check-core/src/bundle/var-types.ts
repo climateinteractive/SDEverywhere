@@ -16,14 +16,11 @@ export interface RelatedItem {
 export type InputId = string
 
 /**
- * Holds information about an input variable used in the model.
+ * Holds information about an input variable that is controlled by a continuous range/slider.
  */
-export interface InputVar {
-  /**
-   * Whether this input is controlled by a continuous range/slider or a discrete on/off switch.
-   * If undefined, 'slider' will be assumed.
-   */
-  kind?: 'slider' | 'switch'
+export interface SliderInputVar {
+  /** Indicates that this input is controlled by a continuous range/slider. */
+  kind: 'slider'
   /**
    * A unique, stable identifier string for this input.
    *
@@ -49,6 +46,39 @@ export interface InputVar {
   /** The metadata for the related input control. */
   relatedItem?: RelatedItem
 }
+
+/**
+ * Holds information about an input variable that is controlled by a discrete on/off switch.
+ */
+export interface SwitchInputVar {
+  /** Indicates that this input is controlled by a discrete on/off switch. */
+  kind: 'switch'
+  /**
+   * A unique, stable identifier string for this input.
+   *
+   * This can be used to identify an input variable in a way that is resilient
+   * to the variable's name being changed between two versions of the model.
+   */
+  inputId: InputId
+  /** The variable identifier (typically a simplified/canonical ID, like the form used in SDE). */
+  varId: VarId
+  /** The full variable name as used in the modeling tool. */
+  varName: string
+  /** The default value of the input. */
+  defaultValue: number
+  /** The value of the variable when this switch is in an "off" state. */
+  offValue: number
+  /** The value of the variable when this switch is in an "on" state. */
+  onValue: number
+  /** The metadata for the related input control. */
+  relatedItem?: RelatedItem
+}
+
+/**
+ * Holds information about an input variable used in the model.  This is a discriminated
+ * union; use the `kind` field to determine the underlying variant.
+ */
+export type InputVar = SliderInputVar | SwitchInputVar
 
 /**
  * Holds information about an output variable used in the model.

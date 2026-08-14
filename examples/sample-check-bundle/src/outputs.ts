@@ -126,7 +126,15 @@ export function getOutputs(modelVersion: number): Outputs {
   }
   const datasetGroups: Map<DatasetGroupName, DatasetKey[]> = new Map([
     ['All Outputs', keysForVarsWithSource(undefined)],
-    ['Basic Outputs', [keyForVarWithName('Output X'), keyForVarWithName('Output Y'), keyForVarWithName('Output Z')]],
+    [
+      'Basic Outputs',
+      [
+        keyForVarWithName(`Output W v${modelVersion}`),
+        keyForVarWithName('Output X'),
+        keyForVarWithName('Output Y'),
+        keyForVarWithName('Output Z')
+      ]
+    ],
     ['Static', keysForVarsWithSource('StaticData')]
   ])
 

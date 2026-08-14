@@ -1,8 +1,5 @@
 #include "sde.h"
 
-extern double _time;
-extern double _time_step;
-
 double _epsilon = 1e-6;
 
 //
@@ -371,136 +368,77 @@ double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction) {
 }
 
 //
-// ALLOCATE AVAILABLE
+// INVERT MATRIX
 //
-// Mathematical functions for calculating the normal pdf and cdf at a point x
-double __pdf_normal(double x, double mu, double sigma) {
-  double base = 1.0 / (sigma * sqrt(2.0 * M_PI));
-  double exponent = -pow(x - mu, 2.0) / (2.0 * sigma * sigma);
-  return base * exp(exponent);
-}
-double __cdf_unit_normal_P(double x) {
-  // Zelen & Severo (1964) in Handbook Of Mathematical Functions, Abramowitz and Stegun, 26.2.17
-  double p = 0.2316419;
-  double b[5] = {0.31938153, -0.356563782, 1.781477937, -1.821255978, 1.330274429};
-  double t = 1.0 / (1.0 + p * x);
-  double y = 0.0;
-  double k = t;
-  for (size_t i = 0; i < 5; i++) {
-    y += b[i] * k;
-    k *= t;
+double* _INVERT_MATRIX(double* matrix, size_t n) {
+  // Invert the n x n matrix using Gauss-Jordan elimination with partial pivoting.
+  // The input matrix is not modified. The result buffer is reused across calls
+  // and grown as needed, so the caller must copy the values out before the next call.
+  static double* work = NULL;
+  static double* result = NULL;
+  static size_t max_n = 0;
+  if (n > max_n) {
+    work = realloc(work, n * 2 * n * sizeof(double));
+    result = realloc(result, n * n * sizeof(double));
+    max_n = n;
   }
-  return 1.0 - __pdf_normal(x, 0.0, 1.0) * y;
-}
-double __cdf_unit_normal_Q(double x) {
-  // Calculate the unit cumulative distribution function from x to +∞, often known as Q(x).
-  return x >= 0.0 ? 1.0 - __cdf_unit_normal_P(x) : __cdf_unit_normal_P(-x);
-}
-double __cdf_normal_Q(double x, double sigma) { return __cdf_unit_normal_Q(x / sigma); }
-// Access the doubly-subscripted priority profiles array by pointer.
-enum { PTYPE, PPRIORITY, PWIDTH, PEXTRA };
-double __get_pp(double* pp, size_t iProfile, size_t iElement) {
-  const int NUM_PP = PEXTRA - PTYPE + 1;
-  return *(pp + iProfile * NUM_PP + iElement);
-}
-#define ALLOCATIONS_BUFSIZE 60
-// #define PRINT_ALLOCATIONS_DEBUG_INFO
-double* _ALLOCATE_AVAILABLE(
-    double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
-  // requested_quantities points to an array of length num_requesters.
-  // priority_profiles points to an array of num_requesters arrays of length 4.
-  // The priority profiles give the mean and standard deviation of normal curves used to allocate
-  // the available resource, with a higher mean indicating a higher priority. The search space for
-  // allocations that match the available resource is the x axis with tails on both ends of the curves.
-  static double allocations[ALLOCATIONS_BUFSIZE];
-  if (num_requesters > ALLOCATIONS_BUFSIZE) {
-    fprintf(stderr, "_ALLOCATE_AVAILABLE num_requesters exceeds internal maximum size of %d\n", ALLOCATIONS_BUFSIZE);
-    return NULL;
+  // Build the augmented matrix [A | I], with each row of width 2n.
+  size_t w = 2 * n;
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      work[i * w + j] = matrix[i * n + j];
+      work[i * w + n + j] = (i == j) ? 1.0 : 0.0;
+    }
   }
-  // Limit the search to this number of steps.
-  const size_t max_steps = 100;
-  // If the available resource is more than the total requests, clamp to the total requests so we don't overallocate.
-  double total_requests = 0.0;
-  for (size_t i = 0; i < num_requesters; i++) {
-    total_requests += requested_quantities[i];
-  }
-  available_resource = fmin(available_resource, total_requests);
-#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
-  fprintf(stderr, "\n_ALLOCATE_AVAILABLE time=%g num_requesters=%zu, available_resource=%f, total_requests=%f\n", _time,
-      num_requesters, available_resource, total_requests);
-  for (size_t i = 0; i < num_requesters; i++) {
-    fprintf(stderr, "[%2zu] requested_quantities=%17f  mean=%8g  sigma=%8g\n", i, requested_quantities[i],
-        __get_pp(priority_profiles, i, PPRIORITY), __get_pp(priority_profiles, i, PWIDTH));
-  }
-#endif
-  // Find the minimum and maximum means in the priority curves.
-  double min_mean = DBL_MAX;
-  double max_mean = DBL_MIN;
-  for (size_t i = 0; i < num_requesters; i++) {
-    min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
-    max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
-  }
-  // Start the search in the midpoint of the means, with a big first jump scaled to the spread of the means.
-  double total_allocations = 0.0;
-  double x = (max_mean + min_mean) / 2.0;
-  double delta = (max_mean - min_mean) / 2.0;
-  size_t num_steps = 0;
-  double last_delta_sign = 1.0;
-  size_t num_jumps_in_same_direction = 0;
-  do {
-    // Calculate allocations for each requester.
-    for (size_t i = 0; i < num_requesters; i++) {
-      if (requested_quantities[i] > 0.0) {
-        double mean = __get_pp(priority_profiles, i, PPRIORITY);
-        double sigma = __get_pp(priority_profiles, i, PWIDTH);
-        // The allocation is the area under the requester's normal curve from x out to +∞
-        // scaled by the size of the request. We integrate over the right-hand side of the
-        // normal curve so that higher means have higher priority, that is, are allocated more.
-        // The unit cumulative distribution function integrates to one over all x,
-        // so we simply multiply by a constant to scale the area under the curve.
-        allocations[i] = requested_quantities[i] * __cdf_normal_Q(x - mean, sigma);
-      } else {
-        allocations[i] = 0.0;
+  for (size_t k = 0; k < n; k++) {
+    // Find the pivot row with the largest absolute value in column k.
+    size_t pivot = k;
+    double max = fabs(work[k * w + k]);
+    for (size_t i = k + 1; i < n; i++) {
+      double v = fabs(work[i * w + k]);
+      if (v > max) {
+        max = v;
+        pivot = i;
       }
     }
-    // Sum the allocations for comparison with the available resource.
-    total_allocations = 0.0;
-    for (size_t i = 0; i < num_requesters; i++) {
-      total_allocations += allocations[i];
+    if (max == 0.0) {
+      // The matrix is singular; fill the result with _NA_ values.
+      for (size_t i = 0; i < n * n; i++) {
+        result[i] = _NA_;
+      }
+      return result;
     }
-#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
-    fprintf(stderr, "x=%-+14g delta=%-+14g Δ=%-+14g total_allocations=%-+14g available_resource=%-+14g\n", x, delta,
-        fabs(total_allocations - available_resource), total_allocations, available_resource);
-#endif
-    if (++num_steps >= max_steps) {
-      fprintf(stderr,
-          "_ALLOCATE_AVAILABLE failed to converge at time=%g with total_allocations=%18f, available_resource=%18f\n",
-          _time, total_allocations, available_resource);
-      break;
+    if (pivot != k) {
+      for (size_t j = 0; j < w; j++) {
+        double tmp = work[k * w + j];
+        work[k * w + j] = work[pivot * w + j];
+        work[pivot * w + j] = tmp;
+      }
     }
-    // Set up the next x value by computing a new delta that is usually half the size of the
-    // previous delta, that is, do a binary search of the x axis. We may jump over the target
-    // x value, so we may need to change direction.
-    double delta_sign = total_allocations < available_resource ? -1.0 : 1.0;
-    // Too many jumps in the same direction can result in the search converging on a point
-    // that falls short of the target x value. Stop halving the delta when that happens until
-    // we jump over the target again.
-    num_jumps_in_same_direction = delta_sign == last_delta_sign ? num_jumps_in_same_direction + 1 : 0;
-    last_delta_sign = delta_sign;
-    delta = (delta_sign * fabs(delta)) / (num_jumps_in_same_direction < 3 ? 2.0 : 1.0);
-    x += delta;
-    // The search terminates when the total allocations are equal to the available resource
-    // up to a very small epsilon difference.
-  } while (fabs(total_allocations - available_resource) > _epsilon);
-#ifdef PRINT_ALLOCATIONS_DEBUG_INFO
-  fprintf(stderr, "converged with Δ=%g in %zu steps\n", fabs(total_allocations - available_resource), num_steps);
-  fprintf(stderr, "total_allocations=%f, available_resource=%f\n", total_allocations, available_resource);
-  for (size_t i = 0; i < num_requesters; i++) {
-    fprintf(stderr, "[%2zu] %f\n", i, allocations[i]);
+    // Scale the pivot row so the pivot element becomes 1.
+    double p = work[k * w + k];
+    for (size_t j = 0; j < w; j++) {
+      work[k * w + j] /= p;
+    }
+    // Eliminate column k from all other rows.
+    for (size_t i = 0; i < n; i++) {
+      if (i != k) {
+        double f = work[i * w + k];
+        if (f != 0.0) {
+          for (size_t j = 0; j < w; j++) {
+            work[i * w + j] -= f * work[k * w + j];
+          }
+        }
+      }
+    }
   }
-#endif
-  // Return a pointer to the allocations array the caller passed with the results filled in.
-  return allocations;
+  // The right half of the augmented matrix now holds the inverse.
+  for (size_t i = 0; i < n; i++) {
+    for (size_t j = 0; j < n; j++) {
+      result[i * n + j] = work[i * w + n + j];
+    }
+  }
+  return result;
 }
 
 //

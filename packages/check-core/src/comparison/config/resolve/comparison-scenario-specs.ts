@@ -52,8 +52,11 @@ function scenarioSpecFromInputs(inputs: ComparisonScenarioInput[], side: 'left' 
   for (const input of inputs) {
     const state = side === 'left' ? input.stateL : input.stateR
 
-    // If any inputs on this side could not be resolved, return undefined so that we don't try
-    // to fetch data for this side
+    // If any inputs on this side could not be resolved (i.e. fatal error like an
+    // unknown input variable), return undefined so that we don't try to fetch data
+    // for this side.  Note that non-fatal warnings (e.g. out-of-range values) still
+    // produce a resolved `inputVar`, so the scenario can still run with the
+    // requested value in that case.
     if (state.inputVar === undefined) {
       return undefined
     }

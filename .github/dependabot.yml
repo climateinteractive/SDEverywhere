@@ -1,0 +1,77 @@
+#
+# Keeps the GitHub Actions used in `.github/workflows` up to date, and shapes
+# the security update PRs that Dependabot opens for the npm dependencies
+# declared throughout the pnpm workspace.
+#
+
+version: 2
+updates:
+  # The actions in our workflows are pinned to specific commit hashes (with the
+  # version in a trailing comment) so that a moved tag can't silently change what
+  # runs CI.  Dependabot updates both the hash and the comment for us, which
+  # means the pins don't go stale.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      # Match the commit message conventions used in this repo
+      prefix: build
+    groups:
+      # Open a single PR for all action updates rather than one PR per action
+      github-actions:
+        patterns:
+          - '*'
+
+  # Dependabot reads `pnpm-workspace.yaml`, so a single entry rooted at `/`
+  # covers the root `package.json` plus every workspace package under
+  # `packages`, `examples`, `models`, and `tests`.
+  #
+  # We deliberately do NOT do routine version updates here: a dependency that
+  # is working fine gets left alone.  Setting `open-pull-requests-limit` to
+  # zero disables version updates for this ecosystem, while security update
+  # PRs -- which are exempt from the limit and don't count against it -- keep
+  # flowing.  So the only npm PRs we should ever see are ones that resolve a
+  # Dependabot alert.
+  #
+  # This entry is worth keeping even with version updates switched off,
+  # because security update PRs still pick up the commit message conventions
+  # below.  Without it they'd land with an unprefixed "Bump x from 1 to 2"
+  # subject that release-please doesn't recognize, and a security fix in a
+  # published package wouldn't cut a release.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 0
+    commit-message:
+      # Production dependency changes affect the packages we publish, so they
+      # use the `deps` prefix, which release-please recognizes as a changelog
+      # section (see `release-please-config.json`) and which causes the
+      # affected package to be released.
+      prefix: deps
+      # Development dependency changes have no effect on what we publish, so
+      # they use a prefix that release-please ignores; otherwise every tooling
+      # bump would cut a new release of the packages it touches.
+      prefix-development: build
+    # Most of our dependency ranges are caret ranges, and widening them on
+    # every release would needlessly narrow the range of versions that
+    # consumers of the published packages can resolve.  Only rewrite a range
+    # when the current one can't accommodate the new version.
+    versioning-strategy: increase-if-necessary
+    groups:
+      # Note the `applies-to` setting: grouping defaults to version updates,
+      # which are switched off above, so a group without it would never fire.
+      #
+      # When several development dependencies are covered by alerts at the
+      # same time, collect them into a single PR.  They don't affect what we
+      # publish, so they can be reviewed as a batch on green CI.
+      #
+      # Production dependencies are deliberately left ungrouped, so each one
+      # gets its own PR.  Those bumps go into the packages we publish and each
+      # warrants individual consideration.
+      dev-dependencies:
+        applies-to: security-updates
+        dependency-type: development
+        patterns:
+          - '*'

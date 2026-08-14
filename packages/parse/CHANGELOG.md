@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.4...parse-v0.1.5) (2026-08-10)
+
+
+### Bug Fixes
+
+* upgrade antlr4-vensim to correct `^` operator precedence ([#851](https://github.com/climateinteractive/SDEverywhere/issues/851)) ([f3662b5](https://github.com/climateinteractive/SDEverywhere/commit/f3662b536fb43aca6e3f6d2ad300ddf12e6976cf)), closes [#850](https://github.com/climateinteractive/SDEverywhere/issues/850)
+
+## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.3...parse-v0.1.4) (2026-04-14)
+
+
+### Bug Fixes
+
+* handle more special characters when converting variable names to canonical IDs ([#798](https://github.com/climateinteractive/SDEverywhere/issues/798)) ([3d7a470](https://github.com/climateinteractive/SDEverywhere/commit/3d7a470dca42942f0246c0edfce154e429b4d873)), closes [#794](https://github.com/climateinteractive/SDEverywhere/issues/794)
+
 ## [0.1.3](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.2...parse-v0.1.3) (2026-03-09)
 
 

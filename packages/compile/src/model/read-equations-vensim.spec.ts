@@ -3268,6 +3268,119 @@ describe('readEquations (from Vensim model)', () => {
     ])
   })
 
+  it('should work for DEMAND AT PRICE function (1D LHS, 1D demand, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300 ~~|
+      priority[d1,pprofile] = 3,1,1,0 ~~|
+      priority[d2,pprofile] = 3,2,1,0 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype], market price) ~~|
+    `)
+    expect(vars).toEqual([
+      v('market price', '5', {
+        refId: '_market_price',
+        varType: 'const'
+      }),
+      v('demand satiation[demander]', '500,300', {
+        refId: '_demand_satiation[_d1]',
+        separationDims: ['_demander'],
+        subscripts: ['_d1'],
+        varType: 'const'
+      }),
+      v('demand satiation[demander]', '500,300', {
+        refId: '_demand_satiation[_d2]',
+        separationDims: ['_demander'],
+        subscripts: ['_d2'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_d1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pextra'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_d2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'amount demanded[demander]',
+        'DEMAND AT PRICE(demand satiation[demander],priority[demander,ptype],market price)',
+        {
+          refId: '_amount_demanded',
+          referencedFunctionNames: ['__demand_at_price'],
+          references: [
+            '_demand_satiation[_d1]',
+            '_demand_satiation[_d2]',
+            '_priority[_d1,_ptype]',
+            '_priority[_d2,_ptype]',
+            '_priority[_d1,_ppriority]',
+            '_priority[_d2,_ppriority]',
+            '_priority[_d1,_pwidth]',
+            '_priority[_d2,_pwidth]',
+            '_priority[_d1,_pextra]',
+            '_priority[_d2,_pextra]',
+            '_market_price'
+          ],
+          subscripts: ['_demander']
+        }
+      )
+    ])
+  })
+
+  it('should throw error for DEMAND AT PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        demander: d1, d2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        demand satiation[demander] = 500,300 ~~|
+        priority[d1,pprofile] = 3,1,1,0 ~~|
+        priority[d2,pprofile] = 3,2,1,0 ~~|
+        amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'DEMAND AT PRICE' function call to have 3 arguments but got 2$/)
+  })
+
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
     const vars = readInlineModel(`
       dtime = 20 ~~|
@@ -3313,6 +3426,165 @@ describe('readEquations (from Vensim model)', () => {
         referencedFunctionNames: ['__depreciate_straightline']
       })
     ])
+  })
+
+  // Note that `FIND MARKET PRICE` takes two priority profile arguments (one for the demanders
+  // and one for the suppliers), so both the second and fourth arguments need the special
+  // handling that adds references to all variants of the profile variable.
+  it('should work for FIND MARKET PRICE function (non-subscripted LHS, 1D qtys, 2D profiles)', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500 ~~|
+      demand priority[d1,pprofile] = 3,1,1,0 ~~|
+      demand priority[d2,pprofile] = 3,2,1,0 ~~|
+      supply capacity[supplier] = 200 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    expect(vars).toEqual([
+      v('demand satiation[demander]', '500', {
+        refId: '_demand_satiation',
+        subscripts: ['_demander'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ptype'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('demand priority[d1,pprofile]', '3,1,1,0', {
+        refId: '_demand_priority[_d1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d1', '_pextra'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ptype'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('demand priority[d2,pprofile]', '3,2,1,0', {
+        refId: '_demand_priority[_d2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_d2', '_pextra'],
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200', {
+        refId: '_supply_capacity',
+        subscripts: ['_supplier'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ptype'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('supply priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_supply_priority[_s1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pextra'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ptype'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('supply priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_supply_priority[_s2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'market price',
+        'FIND MARKET PRICE(demand satiation[d1],demand priority[d1,ptype],supply capacity[s1],supply priority[s1,ptype])',
+        {
+          refId: '_market_price',
+          referencedFunctionNames: ['__find_market_price'],
+          references: [
+            '_demand_satiation',
+            '_demand_priority[_d1,_ptype]',
+            '_demand_priority[_d1,_ppriority]',
+            '_demand_priority[_d1,_pwidth]',
+            '_demand_priority[_d1,_pextra]',
+            '_supply_capacity',
+            '_supply_priority[_s1,_ptype]',
+            '_supply_priority[_s1,_ppriority]',
+            '_supply_priority[_s1,_pwidth]',
+            '_supply_priority[_s1,_pextra]'
+          ]
+        }
+      )
+    ])
+  })
+
+  it('should throw error for FIND MARKET PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        demander: d1, d2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        demand satiation[demander] = 500 ~~|
+        demand priority[d1,pprofile] = 3,1,1,0 ~~|
+        demand priority[d2,pprofile] = 3,2,1,0 ~~|
+        market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'FIND MARKET PRICE' function call to have 4 arguments but got 2$/)
   })
 
   it('should work for GAME function (no dimensions)', () => {
@@ -3643,6 +3915,79 @@ describe('readEquations (from Vensim model)', () => {
     ])
   })
 
+  it('should work for GET XLS CONSTANTS function (single value)', () => {
+    const vars = readInlineModel(`
+      x = GET XLS CONSTANTS('data/a.xlsx', 'a', 'B2') ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', "GET XLS CONSTANTS('data/a.xlsx','a','B2')", {
+        directConstArgs: { file: 'data/a.xlsx', tab: 'a', startCell: 'B2' },
+        refId: '_x',
+        varType: 'const'
+      })
+    ])
+  })
+
+  it('should work for GET XLS DATA function (single value)', () => {
+    const vars = readInlineModel(`
+      x = GET XLS DATA('g_data.xlsx', 'g_data', 'A', 'B13') ~~|
+      y = x * 10 ~~|
+    `)
+    expect(vars).toEqual([
+      v('x', "GET XLS DATA('g_data.xlsx','g_data','A','B13')", {
+        directDataArgs: { file: 'g_data.xlsx', tab: 'g_data', timeRowOrCol: 'A', startCell: 'B13' },
+        refId: '_x',
+        varType: 'data'
+      }),
+      v('y', 'x*10', {
+        refId: '_y',
+        references: ['_x']
+      })
+    ])
+  })
+
+  it('should work for GET XLS LOOKUPS function (single value)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      x[DimA] = GET XLS LOOKUPS('lookups.xlsx', 'lookups', '1', 'AH2') ~~|
+      y[DimA] = x[DimA](Time) ~~|
+      z = y[A2] ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('x[DimA]', "GET XLS LOOKUPS('lookups.xlsx','lookups','1','AH2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'lookups', timeRowOrCol: '1', startCell: 'AH2' },
+        refId: '_x[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('y[DimA]', 'x[DimA](Time)', {
+        refId: '_y',
+        referencedLookupVarNames: ['_x'],
+        references: ['_time'],
+        subscripts: ['_dima']
+      }),
+      v('z', 'y[A2]', {
+        refId: '_z',
+        references: ['_y']
+      })
+    ])
+  })
+
   it('should work for IF THEN ELSE function', () => {
     const vars = readInlineModel(`
       x = 100 ~~|
@@ -3735,6 +4080,110 @@ describe('readEquations (from Vensim model)', () => {
         referencedFunctionNames: ['__integ', '__abs', '__pow']
       })
     ])
+  })
+
+  it('should work for INVERT MATRIX function', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1] = 1 ~~|
+      x[A1,B2] = 2 ~~|
+      x[A2,B1] = 3 ~~|
+      x[A2,B2] = 4 ~~|
+      y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB], 2) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1,B1]', '1', {
+        refId: '_x[_a1,_b1]',
+        subscripts: ['_a1', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A1,B2]', '2', {
+        refId: '_x[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('x[A2,B1]', '3', {
+        refId: '_x[_a2,_b1]',
+        subscripts: ['_a2', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A2,B2]', '4', {
+        refId: '_x[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
+        varType: 'const'
+      }),
+      v('y[DimA,DimB]', 'INVERT MATRIX(x[DimA,DimB],2)', {
+        refId: '_y',
+        referencedFunctionNames: ['__invert_matrix'],
+        references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]'],
+        subscripts: ['_dima', '_dimb']
+      })
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with ELMCOUNT call used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[A1,B1] = 1 ~~|
+      x[A1,B2] = 2 ~~|
+      x[A2,B1] = 3 ~~|
+      x[A2,B2] = 4 ~~|
+      y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB], ELMCOUNT(DimA)) ~~|
+    `)
+    expect(vars).toEqual([
+      v('x[A1,B1]', '1', {
+        refId: '_x[_a1,_b1]',
+        subscripts: ['_a1', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A1,B2]', '2', {
+        refId: '_x[_a1,_b2]',
+        subscripts: ['_a1', '_b2'],
+        varType: 'const'
+      }),
+      v('x[A2,B1]', '3', {
+        refId: '_x[_a2,_b1]',
+        subscripts: ['_a2', '_b1'],
+        varType: 'const'
+      }),
+      v('x[A2,B2]', '4', {
+        refId: '_x[_a2,_b2]',
+        subscripts: ['_a2', '_b2'],
+        varType: 'const'
+      }),
+      v('y[DimA,DimB]', 'INVERT MATRIX(x[DimA,DimB],ELMCOUNT(DimA))', {
+        refId: '_y',
+        referencedFunctionNames: ['__invert_matrix', '__elmcount'],
+        references: ['_x[_a1,_b1]', '_x[_a1,_b2]', '_x[_a2,_b1]', '_x[_a2,_b2]'],
+        subscripts: ['_dima', '_dimb']
+      })
+    ])
+  })
+
+  it('should throw error for INVERT MATRIX function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA,DimB] = 1, 2; 3, 4; ~~|
+        y[DimA,DimB] = INVERT MATRIX(x[DimA,DimB]) ~~|
+      `)
+    ).toThrow(/^Expected 'INVERT MATRIX' function call to have 2 arguments but got 1$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when call is nested inside another function call)', () => {
+    expect(() =>
+      readInlineModel(`
+        DimA: A1, A2 ~~|
+        DimB: B1, B2 ~~|
+        x[DimA,DimB] = 1, 2; 3, 4; ~~|
+        y[DimA,DimB] = ABS(INVERT MATRIX(x[DimA,DimB], 2)) ~~|
+      `)
+    ).toThrow(
+      /^Function 'INVERT MATRIX' cannot be used inside other function calls \(it must appear directly after the '=' sign in an equation\)$/
+    )
   })
 
   it('should work for LOOKUP BACKWARD function (with lookup defined explicitly)', () => {
@@ -5089,6 +5538,119 @@ describe('readEquations (from Vensim model)', () => {
     ])
   })
 
+  it('should work for SUPPLY AT PRICE function (1D LHS, 1D supply, 2D pp, non-subscripted price)', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      supply capacity[supplier] = 200,300 ~~|
+      priority[s1,pprofile] = 3,1,1,0 ~~|
+      priority[s2,pprofile] = 3,2,1,0 ~~|
+      amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype], market price) ~~|
+    `)
+    expect(vars).toEqual([
+      v('market price', '5', {
+        refId: '_market_price',
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200,300', {
+        refId: '_supply_capacity[_s1]',
+        separationDims: ['_supplier'],
+        subscripts: ['_s1'],
+        varType: 'const'
+      }),
+      v('supply capacity[supplier]', '200,300', {
+        refId: '_supply_capacity[_s2]',
+        separationDims: ['_supplier'],
+        subscripts: ['_s2'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[s1,pprofile]', '3,1,1,0', {
+        refId: '_priority[_s1,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s1', '_pextra'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_ptype]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ptype'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_ppriority]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_ppriority'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_pwidth]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pwidth'],
+        varType: 'const'
+      }),
+      v('priority[s2,pprofile]', '3,2,1,0', {
+        refId: '_priority[_s2,_pextra]',
+        separationDims: ['_pprofile'],
+        subscripts: ['_s2', '_pextra'],
+        varType: 'const'
+      }),
+      v(
+        'amount supplied[supplier]',
+        'SUPPLY AT PRICE(supply capacity[supplier],priority[supplier,ptype],market price)',
+        {
+          refId: '_amount_supplied',
+          referencedFunctionNames: ['__supply_at_price'],
+          references: [
+            '_supply_capacity[_s1]',
+            '_supply_capacity[_s2]',
+            '_priority[_s1,_ptype]',
+            '_priority[_s2,_ptype]',
+            '_priority[_s1,_ppriority]',
+            '_priority[_s2,_ppriority]',
+            '_priority[_s1,_pwidth]',
+            '_priority[_s2,_pwidth]',
+            '_priority[_s1,_pextra]',
+            '_priority[_s2,_pextra]',
+            '_market_price'
+          ],
+          subscripts: ['_supplier']
+        }
+      )
+    ])
+  })
+
+  it('should throw error for SUPPLY AT PRICE function (when call has wrong number of arguments)', () => {
+    expect(() =>
+      readInlineModel(`
+        supplier: s1, s2 ~~|
+        pprofile: ptype, ppriority, pwidth, pextra ~~|
+        supply capacity[supplier] = 200,300 ~~|
+        priority[s1,pprofile] = 3,1,1,0 ~~|
+        priority[s2,pprofile] = 3,2,1,0 ~~|
+        amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype]) ~~|
+      `)
+    ).toThrow(/^Expected 'SUPPLY AT PRICE' function call to have 3 arguments but got 2$/)
+  })
+
   it('should work for TREND function', () => {
     const vars = readInlineModel(`
       input = 1 ~~|
@@ -6433,6 +6995,16 @@ describe('readEquations (from Vensim model)', () => {
         refId: '_a_from_tagged_xlsx',
         varType: 'const'
       }),
+      v('a from named xlsx using GET XLS', "GET XLS CONSTANTS('data/a.xlsx','a','B2')", {
+        directConstArgs: { file: 'data/a.xlsx', tab: 'a', startCell: 'B2' },
+        refId: '_a_from_named_xlsx_using_get_xls',
+        varType: 'const'
+      }),
+      v('a from tagged xlsx using GET XLS', "GET XLS CONSTANTS('?a','a','B2')", {
+        directConstArgs: { file: '?a', tab: 'a', startCell: 'B2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls',
+        varType: 'const'
+      }),
       v('b[DimB]', "GET DIRECT CONSTANTS('data/b.csv',',','b2*')", {
         directConstArgs: { file: 'data/b.csv', tab: ',', startCell: 'b2*' },
         refId: '_b',
@@ -6531,6 +7103,25 @@ describe('readEquations (from Vensim model)', () => {
       v('b[DimA]', 'a[DimA]*10', {
         refId: '_b',
         references: ['_a[_a1]', '_a[_a2]'],
+        subscripts: ['_dima']
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        directDataArgs: { file: 'data.xlsx', tab: 'A Data', timeRowOrCol: 'A', startCell: 'B2' },
+        refId: '_a_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a using GET XLS[DimA]', "GET XLS DATA('data.xlsx','A Data','A','B2')", {
+        directDataArgs: { file: 'data.xlsx', tab: 'A Data', timeRowOrCol: 'A', startCell: 'B2' },
+        refId: '_a_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('b using GET XLS[DimA]', 'a using GET XLS[DimA]*10', {
+        refId: '_b_using_get_xls',
+        references: ['_a_using_get_xls[_a1]', '_a_using_get_xls[_a2]'],
         subscripts: ['_dima']
       }),
       v('c', "GET DIRECT DATA('?data','C Data','a','b2')", {
@@ -6770,6 +7361,48 @@ describe('readEquations (from Vensim model)', () => {
         subscripts: ['_a3'],
         varType: 'data'
       }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('a from named xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('lookups.xlsx','a','1','E2')", {
+        directDataArgs: { file: 'lookups.xlsx', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_named_xlsx_using_get_xls[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a1]',
+        separationDims: ['_dima'],
+        subscripts: ['_a1'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a2]',
+        separationDims: ['_dima'],
+        subscripts: ['_a2'],
+        varType: 'data'
+      }),
+      v('a from tagged xlsx using GET XLS[DimA]', "GET XLS LOOKUPS('?lookups','a','1','E2')", {
+        directDataArgs: { file: '?lookups', tab: 'a', timeRowOrCol: '1', startCell: 'E2' },
+        refId: '_a_from_tagged_xlsx_using_get_xls[_a3]',
+        separationDims: ['_dima'],
+        subscripts: ['_a3'],
+        varType: 'data'
+      }),
       v('b', 'a[A1](Time)', {
         refId: '_b',
         referencedLookupVarNames: ['_a'],
@@ -6783,6 +7416,16 @@ describe('readEquations (from Vensim model)', () => {
       v('b from tagged xlsx', 'a from tagged xlsx[A1](Time)', {
         refId: '_b_from_tagged_xlsx',
         referencedLookupVarNames: ['_a_from_tagged_xlsx'],
+        references: ['_time']
+      }),
+      v('b from named xlsx using GET XLS', 'a from named xlsx using GET XLS[A1](Time)', {
+        refId: '_b_from_named_xlsx_using_get_xls',
+        referencedLookupVarNames: ['_a_from_named_xlsx_using_get_xls'],
+        references: ['_time']
+      }),
+      v('b from tagged xlsx using GET XLS', 'a from tagged xlsx using GET XLS[A1](Time)', {
+        refId: '_b_from_tagged_xlsx_using_get_xls',
+        referencedLookupVarNames: ['_a_from_tagged_xlsx_using_get_xls'],
         references: ['_time']
       }),
       v('c', 'LOOKUP INVERT(a[A1],0.5)', {

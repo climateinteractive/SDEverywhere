@@ -1,0 +1,36 @@
+FINAL TIME
+2000	2002
+INITIAL TIME
+2000	2000
+SAVEPER
+2000	1
+TIME STEP
+2000	1
+x value from csv
+2000	30
+2001	40
+2002	50
+x value from xlsx
+2000	30
+2001	40
+2002	50
+y value from csv
+2000	130
+2001	140
+2002	150
+y value from xlsx
+2000	130
+2001	140
+2002	150
+x from csv
+2000	30
+2002	50
+x from xlsx
+2000	30
+2002	50
+y from csv
+2000	130
+2002	150
+y from xlsx
+2000	130
+2002	150

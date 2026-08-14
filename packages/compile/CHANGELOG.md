@@ -1,5 +1,64 @@
 # Changelog
 
+## [0.7.32](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.31...compile-v0.7.32) (2026-08-10)
+
+
+### Features
+
+* add support for the INVERT MATRIX Vensim function in C and JS ([#846](https://github.com/climateinteractive/SDEverywhere/issues/846)) ([28a1968](https://github.com/climateinteractive/SDEverywhere/commit/28a1968d64a6cd751507d989c1e8f18305ea2d4b)), closes [#845](https://github.com/climateinteractive/SDEverywhere/issues/845)
+* support all ALLOCATE AVAILABLE priority curve types and add FIND MARKET PRICE / DEMAND AT PRICE / SUPPLY AT PRICE ([#840](https://github.com/climateinteractive/SDEverywhere/issues/840)) ([bf1e242](https://github.com/climateinteractive/SDEverywhere/commit/bf1e2423f2790f1ed9f86776147d61ea72d26e39)), closes [#839](https://github.com/climateinteractive/SDEverywhere/issues/839)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+* correct XLSX reader to normalize line endings + process cells with attributes ([#849](https://github.com/climateinteractive/SDEverywhere/issues/849)) ([ec260fc](https://github.com/climateinteractive/SDEverywhere/commit/ec260fcc902025ca2e931a2226bf8820625f1232)), closes [#847](https://github.com/climateinteractive/SDEverywhere/issues/847)
+* detect false cyclic dependencies and break them by separating variables automatically ([#844](https://github.com/climateinteractive/SDEverywhere/issues/844)) ([3544ce7](https://github.com/climateinteractive/SDEverywhere/commit/3544ce7cf0589976d2707becaa9fae003c6cc312)), closes [#843](https://github.com/climateinteractive/SDEverywhere/issues/843)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.4 to ^0.1.5
+
+## [0.7.31](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.30...compile-v0.7.31) (2026-06-03)
+
+
+### Bug Fixes
+
+* replace SheetJS dependency with custom XLSX file reader ([#833](https://github.com/climateinteractive/SDEverywhere/issues/833)) ([e8624ca](https://github.com/climateinteractive/SDEverywhere/commit/e8624cae31365e0851f22d64fb0bdd150a4b933c)), closes [#832](https://github.com/climateinteractive/SDEverywhere/issues/832)
+
+## [0.7.30](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.29...compile-v0.7.30) (2026-04-28)
+
+
+### Features
+
+* add support for Vensim's ALLOCATE BY PRIORITY function ([#809](https://github.com/climateinteractive/SDEverywhere/issues/809)) ([197b261](https://github.com/climateinteractive/SDEverywhere/commit/197b26155dab415e9304059b7f1ccf98982b9659)), closes [#792](https://github.com/climateinteractive/SDEverywhere/issues/792)
+
+## [0.7.29](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.28...compile-v0.7.29) (2026-04-14)
+
+
+### Bug Fixes
+
+* add --datadir option to `sde generate` to allow for resolving data file paths in their original location ([#804](https://github.com/climateinteractive/SDEverywhere/issues/804)) ([e168fd5](https://github.com/climateinteractive/SDEverywhere/commit/e168fd50be1fbe4b9221b6c43a997a195fcb726d)), closes [#303](https://github.com/climateinteractive/SDEverywhere/issues/303)
+* correct generated code for apply-to-all lookup definitions ([#805](https://github.com/climateinteractive/SDEverywhere/issues/805)) ([b6762de](https://github.com/climateinteractive/SDEverywhere/commit/b6762dec5a1b5a69bcbd50d07a6bd21d8750c2c6)), closes [#642](https://github.com/climateinteractive/SDEverywhere/issues/642)
+* correct handling of blank and non-numeric cells for `GET DIRECT DATA` and `GET DIRECT LOOKUPS` ([#799](https://github.com/climateinteractive/SDEverywhere/issues/799)) ([82066e6](https://github.com/climateinteractive/SDEverywhere/commit/82066e619859ce4b9d4f64cd155c6cdf4a16e44f)), closes [#796](https://github.com/climateinteractive/SDEverywhere/issues/796)
+* treat `GET XLS ...` function calls as synonymous with `GET DIRECT...` ([#806](https://github.com/climateinteractive/SDEverywhere/issues/806)) ([1021e65](https://github.com/climateinteractive/SDEverywhere/commit/1021e6504bbc823a2aa1fd0255273078d8d5724c)), closes [#402](https://github.com/climateinteractive/SDEverywhere/issues/402)
+* visit variable ref in lookup-call expressions to ensure that marked dimensions are detected ([#802](https://github.com/climateinteractive/SDEverywhere/issues/802)) ([65e6caf](https://github.com/climateinteractive/SDEverywhere/commit/65e6caf081e09c029a19757960612a4afc665d9a)), closes [#801](https://github.com/climateinteractive/SDEverywhere/issues/801)
+
+
+### Performance Improvements
+
+* optimize expandedRefIdsForVar to better handle large dimensions ([#800](https://github.com/climateinteractive/SDEverywhere/issues/800)) ([879d3df](https://github.com/climateinteractive/SDEverywhere/commit/879d3df2b25e7c81082bac1a42e51e35d84ee10a)), closes [#797](https://github.com/climateinteractive/SDEverywhere/issues/797)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.3 to ^0.1.4
+
 ## [0.7.28](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.27...compile-v0.7.28) (2026-03-09)
 
 

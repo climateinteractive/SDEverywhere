@@ -70,7 +70,10 @@ import { resolveComparisonSpecs } from './comparison-resolver'
 
 const errUnknownInput: ComparisonScenarioInputState = { error: { kind: 'unknown-input' } }
 const errUnknownSettingGroup: ComparisonScenarioInputState = { error: { kind: 'unknown-input-setting-group' } }
-const errInvalidValue: ComparisonScenarioInputState = { error: { kind: 'invalid-value' } }
+
+function warnOutOfRange(inputVar: InputVar, value: number): ComparisonScenarioInputState {
+  return { inputVar, value, warning: { kind: 'value-out-of-range' } }
+}
 
 function mockModelSpec(kind: 'L' | 'R'): ModelSpec {
   //
@@ -280,10 +283,14 @@ describe('resolveComparisonSpecs', () => {
           scenarioWithInputsSpec([inputAtValueSpec('id 2', 40)]),
           // Match by alias (slider name)
           scenarioWithInputsSpec([inputAtValueSpec('S3', 60)]),
-          // Error if value is out of range on both sides
+          // Warning if value is out of range on both sides; the scenario still runs
+          // with the requested value
           scenarioWithInputsSpec([inputAtValueSpec('ivarA', 500)]),
-          // Error if value is out of range on one side
-          scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)])
+          // Warning if value is out of range on one side; the scenario still runs
+          // with the requested value on each side
+          scenarioWithInputsSpec([inputAtValueSpec('id 2', 90)]),
+          // Error if input is unknown on both sides; the scenario does not run
+          scenarioWithInputsSpec([inputAtValueSpec('ivarX', 10)])
         ]
       }
 
@@ -317,24 +324,36 @@ describe('resolveComparisonSpecs', () => {
             atValSpec('_ivarc', 60),
             atValSpec('_ivard', 60)
           ),
-          scenarioWithInput(
+          // Out-of-range on both sides: scenario still runs at value 500 on each side,
+          // both states carry a `value-out-of-range` warning
+          scenarioWithInputs(
             '4',
-            'ivarA',
-            500,
-            { kind: 'invalid-value' },
-            { kind: 'invalid-value' },
-            undefined,
-            undefined
+            [
+              {
+                requestedName: 'ivarA',
+                stateL: warnOutOfRange(lVar('IVarA'), 500),
+                stateR: warnOutOfRange(rVar('IVarA'), 500)
+              }
+            ],
+            atValSpec('_ivara', 500),
+            atValSpec('_ivara', 500)
           ),
-          scenarioWithInput(
+          // Out-of-range on right side only: scenario still runs at value 90 on each
+          // side, right state carries a `value-out-of-range` warning
+          scenarioWithInputs(
             '5',
-            'id 2',
-            90,
-            lVar('IVarB'),
-            { kind: 'invalid-value' },
+            [
+              {
+                requestedName: 'id 2',
+                stateL: { inputVar: lVar('IVarB'), value: 90 },
+                stateR: warnOutOfRange(rVar('IVarB_Renamed'), 90)
+              }
+            ],
             atValSpec('_ivarb', 90),
-            undefined
-          )
+            atValSpec('_ivarb_renamed', 90)
+          ),
+          // Unknown input on both sides remains fatal: no specs produced
+          scenarioWithInput('6', 'ivarX', 10, undefined, undefined, undefined, undefined)
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -364,9 +383,11 @@ describe('resolveComparisonSpecs', () => {
           scenarioWithDistinctInputsSpec([inputAtValueSpec('S3', 60)], [inputAtValueSpec('S3', 70)]),
           // Error if input is not available on requested side
           scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 20)], [inputAtValueSpec('unknown', 600)]),
-          // Error if value is out of range on both sides
+          // Warning if value is out of range on both sides; the scenario still runs
+          // with the requested values on each side
           scenarioWithDistinctInputsSpec([inputAtValueSpec('ivarA', 500)], [inputAtValueSpec('ivarA', 600)]),
-          // Error if value is out of range on one side
+          // Warning if value is out of range on one side; the scenario still runs
+          // with the requested values on each side
           scenarioWithDistinctInputsSpec([inputAtValueSpec('id 2', 90)], [inputAtValueSpec('id 2', 600)])
         ]
       }
@@ -378,13 +399,25 @@ describe('resolveComparisonSpecs', () => {
           scenarioWithInputs('2', [], atValSpec('_ivarb', 40), atValSpec('_ivarb_renamed', 50)),
           scenarioWithInputs('3', [], atValSpec('_ivarc', 60), atValSpec('_ivard', 70)),
           scenarioWithInputs('4', [resolvedInput('unknown', {}, errUnknownInput)], undefined, undefined),
+          // Out-of-range on both sides: scenario still runs with the requested values,
+          // both states carry a `value-out-of-range` warning
           scenarioWithInputs(
             '5',
-            [resolvedInput('ivarA', errInvalidValue, {}), resolvedInput('ivarA', {}, errInvalidValue)],
-            undefined,
-            undefined
+            [
+              resolvedInput('ivarA', warnOutOfRange(lVar('IVarA'), 500), {}),
+              resolvedInput('ivarA', {}, warnOutOfRange(rVar('IVarA'), 600))
+            ],
+            atValSpec('_ivara', 500),
+            atValSpec('_ivara', 600)
           ),
-          scenarioWithInputs('6', [resolvedInput('id 2', {}, errInvalidValue)], undefined, undefined)
+          // Out-of-range on right side only: scenario still runs with the requested
+          // values, right state carries a `value-out-of-range` warning
+          scenarioWithInputs(
+            '6',
+            [resolvedInput('id 2', {}, warnOutOfRange(rVar('IVarB_Renamed'), 600))],
+            atValSpec('_ivarb', 90),
+            atValSpec('_ivarb_renamed', 600)
+          )
         ],
         scenarioGroups: [],
         viewGroups: []
@@ -434,10 +467,10 @@ describe('resolveComparisonSpecs', () => {
           // id=sg6        id=sg6      (ERROR: setting with unknown input variable)
           //   IVarZ=40      IVarZ=40
           scenarioWithSettingGroupSpec('sg6', opts('sg6')),
-          // id=sg7        id=sg7      (ERROR: setting with out-of-range value)
+          // id=sg7        id=sg7      (WARNING: setting with out-of-range value on both sides)
           //   IVarA=500    IVarA=500
           scenarioWithSettingGroupSpec('sg7', opts('sg7')),
-          // id=sg8        id=sg8      (ERROR: setting with out-of-range value on one side)
+          // id=sg8        id=sg8      (WARNING: setting with out-of-range value on one side, settings differ)
           //   IVarA=40     IVarA=500
           scenarioWithSettingGroupSpec('sg8', opts('sg8')),
           // id=sg9        id=sg9      (ERROR: setting group not found on either side)
@@ -479,14 +512,26 @@ describe('resolveComparisonSpecs', () => {
             undefined,
             opts('sg6')
           ),
+          // sg7: out-of-range on both sides; scenario runs at value 500 on each side
           scenarioWithInputs(
             '7',
-            [resolvedInput('IVarA', errInvalidValue, {}), resolvedInput('IVarA', {}, errInvalidValue)],
-            undefined,
-            undefined,
+            [
+              resolvedInput('IVarA', warnOutOfRange(lVar('IVarA'), 500), {}),
+              resolvedInput('IVarA', {}, warnOutOfRange(rVar('IVarA'), 500))
+            ],
+            atValSpec('_ivara', 500),
+            atValSpec('_ivara', 500),
             opts('sg7')
           ),
-          scenarioWithInputs('8', [resolvedInput('IVarA', {}, errInvalidValue)], undefined, undefined, opts('sg8')),
+          // sg8: out-of-range on right side only; scenario runs at value 40 on left and
+          // 500 on right, so settingsDiffer is true
+          scenarioWithInputs(
+            '8',
+            [resolvedInput('IVarA', {}, warnOutOfRange(rVar('IVarA'), 500))],
+            atValSpec('_ivara', 40),
+            atValSpec('_ivara', 500),
+            { ...opts('sg8'), settingsDiffer: true }
+          ),
           scenarioWithInputs(
             '9',
             [resolvedInput('sg9', errUnknownSettingGroup, errUnknownSettingGroup)],
