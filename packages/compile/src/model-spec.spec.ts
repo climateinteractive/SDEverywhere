@@ -127,4 +127,47 @@ describe('normalizeModelSpec', () => {
     normalizeModelSpec(spec)
     expect(spec.datFiles).toBeUndefined()
   })
+
+  it('should copy the deprecated `inputVarNames` and `outputVarNames` properties', () => {
+    const spec: ModelSpec = {
+      inputVarNames: ['Input A'],
+      outputVarNames: ['Time', 'Output X']
+    }
+    normalizeModelSpec(spec)
+    expect(spec.inputs).toEqual(['Input A'])
+    expect(spec.outputs).toEqual(['Time', 'Output X'])
+  })
+
+  it('should prefer `inputs` and `outputs` if both forms are defined', () => {
+    const spec: ModelSpec = {
+      inputs: ['Preferred Input'],
+      outputs: ['Preferred Output'],
+      inputVarNames: ['Deprecated Input'],
+      outputVarNames: ['Deprecated Output']
+    }
+    normalizeModelSpec(spec)
+    expect(spec.inputs).toEqual(['Preferred Input'])
+    expect(spec.outputs).toEqual(['Preferred Output'])
+  })
+
+  it('should leave `inputs` and `outputs` undefined if neither form is defined', () => {
+    const spec: ModelSpec = {}
+    normalizeModelSpec(spec)
+    expect(spec.inputs).toBeUndefined()
+    expect(spec.outputs).toBeUndefined()
+  })
+
+  it('should preserve an empty array for `inputs` and `outputs`', () => {
+    // Note that an empty array is meaningfully different from undefined (it disables
+    // the dead code removal step), so it must not be replaced by the deprecated value
+    const spec: ModelSpec = {
+      inputs: [],
+      outputs: [],
+      inputVarNames: ['Deprecated Input'],
+      outputVarNames: ['Deprecated Output']
+    }
+    normalizeModelSpec(spec)
+    expect(spec.inputs).toEqual([])
+    expect(spec.outputs).toEqual([])
+  })
 })
