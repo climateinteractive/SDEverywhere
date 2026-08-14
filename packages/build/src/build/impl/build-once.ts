@@ -4,6 +4,8 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { writeFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
+import type { ModelSpec as CoreModelSpec } from '@sdeverywhere/compile'
+
 import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 
@@ -70,15 +72,22 @@ export async function buildOnce(
       }
     }
 
-    // Write the spec file
-    const specJson = {
-      inputVarNames: modelSpec.inputVarNames,
-      outputVarNames: modelSpec.outputVarNames,
-      externalDatfiles: modelSpec.datFiles,
+    // Write the spec file.  Note that this is typed as the `ModelSpec` type from the
+    // compile package (which describes the `spec.json` file format), so that the type
+    // checker will flag any mismatch between what we write here and what the compile
+    // package accepts.
+    const specJson: CoreModelSpec = {
+      inputs: modelSpec.inputVarNames,
+      outputs: modelSpec.outputVarNames,
+      datFiles: modelSpec.datFiles,
       bundleListing: modelSpec.bundleListing,
-      customConstants: modelSpec.customConstants || false,
-      customLookups: modelSpec.customLookups || false,
-      customOutputs: modelSpec.customOutputs || false,
+      customConstants: modelSpec.customConstants,
+      customLookups: modelSpec.customLookups,
+      customOutputs: modelSpec.customOutputs,
+      directData: modelSpec.directData,
+      dimensionFamilies: modelSpec.dimensionFamilies,
+      specialSeparationDims: modelSpec.specialSeparationDims,
+      separateAllVarsWithDims: modelSpec.separateAllVarsWithDims,
       ...modelSpec.options
     }
     const specPath = joinPath(config.prepDir, 'spec.json')
@@ -243,6 +252,9 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
   }
 
   return {
+    // Carry through the properties (for example, `directData` and `specialSeparationDims`)
+    // that are shared with the compile package and don't need to be resolved here
+    ...modelSpec,
     inputVarNames,
     inputs: inputSpecs,
     outputVarNames,
