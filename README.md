@@ -117,8 +117,7 @@ That script will automatically copy the classic SIR model (from this repository)
 mkdir my-project-folder
 cd my-project-folder
 
-# Use `npm` to run the "create" script:
-# See below if you're using pnpm or yarn
+# Use `npm` to run the "create" script (see below if you're using pnpm or yarn):
 npm create @sdeverywhere@latest
 ```
 
