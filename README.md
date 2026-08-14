@@ -121,7 +121,7 @@ cd my-project-folder
 npm create @sdeverywhere@latest
 ```
 
-As suggested at the end of the `create`, type the following command to see the demo webapp and the quality control tests:
+As suggested at the end of the `create` script, type the following command to see the web application (and quality control tests) for the SIR model in your browser:
 
 ```sh
 npm run dev
