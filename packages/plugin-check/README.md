@@ -22,7 +22,172 @@ yarn add -D @sdeverywhere/plugin-check
 
 ## Usage
 
-_TODO: This section needs to be fleshed out. In the meantime, you can refer to the API documentation below for the options used to configure this plugin._
+_Note:_ If you followed the "Quick Start" instructions above and/or are using one of the standard project templates provided by SDEverywhere, the `sde.config.js` file should already be set up to use `plugin-check`.
+Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-check` can be integrated into your project.
+
+### What this plugin does
+
+Each time your model is built, this plugin:
+
+1. Generates a _bundle_ (`check-bundle.js`), which packages up your generated model together with metadata about its inputs, outputs, and graphs.
+2. Runs **check tests**, which assert that a single version of your model behaves as expected (for example, that a stock never goes negative).
+3. Runs **comparison tests**, which run two different versions ("bundles") of your model side by side and flag any differences. This step is skipped if no `baseline` bundle is configured.
+4. Builds an interactive **model-check report** that summarizes the results.
+
+In development mode (`sde dev`), the report is served from a local dev server and re-runs automatically as you edit your model and tests.
+In production mode (`sde bundle`), the report is written to disk, and the build fails if any check test fails.
+
+### Steps
+
+1. Add `@sdeverywhere/plugin-check` as a project "dev" dependency:
+
+```sh
+cd your-model-project
+npm install --save-dev @sdeverywhere/plugin-check
+```
+
+2. Update your `sde.config.js` file to use `checkPlugin`. This plugin runs as a `postBuild` step, so it should generally appear near the end of the `plugins` array (but before `deployPlugin`, if you use it):
+
+```js
+import { checkPlugin } from '@sdeverywhere/plugin-check'
+
+export async function config() {
+  return {
+    modelFiles: ['model/example.mdl'],
+
+    // Re-run checks when the model or the test definitions change
+    watchPaths: ['model/**'],
+
+    // ...
+
+    plugins: [
+      // ...
+
+      // Build or serve the model-check report
+      checkPlugin({
+        // There are no required options; see below for optional configuration
+      })
+    ]
+  }
+}
+```
+
+3. Write check tests in one or more YAML files (see "Defining tests" below).
+
+4. Run `sde dev` to work on your model with the report open in a browser, or `sde bundle` to build the report as part of a production build.
+
+### Defining tests
+
+By default, the plugin discovers test definitions by scanning your project directory for YAML files:
+
+- Check tests: files matching `**/checks/*.yaml`.
+- Comparison tests: files matching `**/comparisons/*.yaml`.
+
+A common layout is to keep them next to the model:
+
+```
+  model/
+  ├── example.mdl
+  ├── checks/
+  |   └── checks.yaml
+  └── comparisons/
+      └── comparisons.yaml
+```
+
+A simple `checks.yaml` file looks like this:
+
+```yaml
+# yaml-language-server: $schema=../../node_modules/@sdeverywhere/plugin-check/node_modules/@sdeverywhere/check-core/schema/check.schema.json
+
+- describe: Total inventory
+  tests:
+    - it: should be in the range [1000,1300] for all input scenarios
+      scenarios:
+        - preset: matrix
+      datasets:
+        - name: Total inventory
+      predicates:
+        - gte: 1000
+          lte: 1300
+```
+
+The `yaml-language-server` comment at the top is optional but recommended; it enables autocompletion and validation of the test definitions in editors that support the YAML language server.
+
+For the full set of scenarios, datasets, and predicates, refer to [Testing and Comparing Your Model](https://github.com/climateinteractive/SDEverywhere/wiki/Testing-and-Comparing-Your-Model) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
+
+If you prefer to define tests programmatically instead of in YAML, use the `testConfigPath` option to point at a JS file that exports a `getConfigOptions` function; when that option is set, the YAML files are not scanned.
+
+### Working locally with `sde dev`
+
+When you run `sde dev`, the plugin starts a local dev server (at `http://localhost:8081` by default) that serves the model-check report.
+As you edit your model or your test YAML files, the tests are re-run in the browser and the report refreshes automatically.
+
+Each time the model is rebuilt in development mode, the previous bundle is copied to `bundles/previous.js` in your project directory, so you can immediately compare your latest changes against the version you had a moment ago.
+Any other bundle you place in the `bundles` directory is also available for selection in the report, which makes it easy to compare against a known-good version of your model.
+
+Use the `serverPort` option to use a custom port:
+
+```js
+checkPlugin({
+  serverPort: 8082
+})
+```
+
+### Comparing against a baseline in production builds
+
+For production builds, use the `baseline` and `current` options to tell the plugin which two bundles to compare.
+The `baseline` bundle is usually the bundle that was produced by the last build of your main branch, and can be loaded from a local path or from a URL:
+
+```js
+const deployBaseUrl = 'https://your-username.github.io/your-repo'
+
+let baselineBundle
+let currentBundle
+if (process.env.NODE_ENV !== 'development') {
+  baselineBundle = {
+    name: 'main',
+    url: `${deployBaseUrl}/branch/main/extras/check-bundle.js`
+  }
+  currentBundle = {
+    name: process.env.GITHUB_REF_NAME || 'current'
+  }
+}
+
+// ...
+
+checkPlugin({
+  // The "left" bundle in comparisons; if undefined, comparison tests are skipped
+  baseline: baselineBundle,
+
+  // The "right" bundle in comparisons; if undefined, the bundle generated by this
+  // build is used
+  current: currentBundle,
+
+  // The list of bundles that can be selected in the report when running locally
+  remoteBundlesUrl: `${deployBaseUrl}/metadata/bundles.json`
+})
+```
+
+Notes on this configuration:
+
+- If the `baseline` bundle cannot be loaded (for example, the first time you build, before any bundle has been published), the build logs a warning, runs the check tests, and skips the comparisons.
+- If the `baseline` bundle was produced by a different version of SDEverywhere than the `current` bundle, comparisons are skipped as well.
+- Use `fetchRemoteBundle` if loading the baseline bundle requires custom logic, such as an authorization header.
+
+The [`@sdeverywhere/plugin-deploy`](https://github.com/climateinteractive/SDEverywhere/tree/main/packages/plugin-deploy) package publishes both `check-bundle.js` and `metadata/bundles.json` in the layout assumed above, so the two plugins are designed to be used together.
+
+### Build products
+
+In a production build (`sde bundle`), the plugin writes the following to the `sde-prep` directory:
+
+```
+  sde-prep/
+  ├── check-bundle.js    # The bundle for the current version of the model
+  └── check-report/      # The generated model-check report (a static web app)
+```
+
+Use the `reportPath` option to write the report somewhere else.
+If any check test fails, `sde bundle` exits with a non-zero status, which causes the build to fail in CI.
 
 ## Documentation
 
