@@ -160,7 +160,7 @@ After running the `create` script, type the following command to start a local w
 npm run dev
 ```
 
-For either Option, the `create` script will ask you a few questions.
+For either option, the `create` script will ask you a few questions.
 The default answers have been chosen to get you up and running quickly.
 If at any step you are unsure of the best option, simply hit the "enter" key to select the default answer.
 You can always change the configuration for your project after it has been created by editing the `sde.config.js` file and the other files in the `config` directory.
