@@ -475,6 +475,9 @@ importers:
 
   packages/build:
     dependencies:
+      '@sdeverywhere/compile':
+        specifier: ^0.7.32
+        version: link:../compile
       '@sdeverywhere/parse':
         specifier: ^0.1.5
         version: link:../parse
