@@ -25,7 +25,7 @@ yarn add -D @sdeverywhere/plugin-check
 _Note:_ If you followed the "Quick Start" instructions above and/or are using one of the standard project templates provided by SDEverywhere, the `sde.config.js` file should already be set up to use `plugin-check`.
 Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-check` can be integrated into your project.
 
-### What this plugin does
+### Why use this plugin?
 
 Each time your model is built, this plugin:
 

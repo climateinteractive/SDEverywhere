@@ -25,7 +25,7 @@ yarn add -D @sdeverywhere/plugin-wasm
 _Note:_ If you followed the "Quick Start" instructions above and/or are using one of the standard project templates provided by SDEverywhere, the `sde.config.js` file should already be set up to use `plugin-wasm`.
 Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-wasm` can be integrated into your project.
 
-### Do you need this plugin?
+### Why use this plugin?
 
 SDEverywhere can generate your model as either JavaScript or C code, which is controlled by the `genFormat` property in your `sde.config.js` file:
 
