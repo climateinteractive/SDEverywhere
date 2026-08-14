@@ -188,9 +188,8 @@ export interface ModelSpec {
   /**
    * The `dat` files that provide the data for exogenous data variables in the model.
    *
-   * @deprecated Use `datFiles` instead.  This property is still honored (and takes
-   * precedence over `datFiles` if both are provided) but will be removed in a future
-   * release.
+   * @deprecated Use `datFiles` instead.  This property is still honored (but is ignored
+   * if `datFiles` is also provided) and will be removed in a future release.
    */
   externalDatfiles?: DatFileSpec[]
 
@@ -218,3 +217,20 @@ export interface ModelSpec {
    */
   outputVars?: VarId[]
 }
+
+/**
+ * Normalize the given model spec so that only the preferred property names need to be
+ * consulted afterwards.
+ *
+ * For each property that has been renamed over time, this copies the value from the
+ * deprecated property to the preferred one, unless the preferred property is already
+ * defined (in which case the preferred one wins).  The deprecated properties are left
+ * in place.
+ *
+ * Note that the given spec object is modified in place (and returned for convenience).
+ * This function is idempotent, so it is safe to call it more than once on the same spec.
+ *
+ * @param spec The model spec to normalize, or undefined.
+ * @returns The same spec object that was provided.
+ */
+export function normalizeModelSpec<T extends ModelSpec | undefined>(spec: T): T
