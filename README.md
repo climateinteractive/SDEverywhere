@@ -104,11 +104,13 @@ https://github.com/climateinteractive/SDEverywhere/assets/438425/c0c81bcd-f5a5-4
 
 As shown in the video above, the quickest way to get started with SDEverywhere is to open your terminal emulator ("Terminal" on macOS or Linux, or "Command Prompt" on Windows) and type the commands explained below.
 
-### Option 1: "Hello World" with SIR
+### Option 1: "Hello World" with an SIR model
 
-The easiest way to get started is to do the SDEverywhere version of `Hello World`.
-Simply create a new folder and run the `create` command to make your first web app using the SIR model.
-After the folder is created, no additional setup is required -- just run the following commands in your terminal, which will copy the SIR model from the `examples` directory of this repository and guide you through the other setup steps:
+With this option, you can evaluate SDEverywhere without providing a model of your own.
+
+First, create a new folder.
+After the folder is created, no additional setup is required — just type the following commands in your terminal to run the `create` script.
+That script will automatically copy the classic SIR model (from this repository) into your folder and will guide you through the other setup steps.
 
 ```sh
 # Create an empty directory and change to that directory:
