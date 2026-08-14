@@ -19,6 +19,8 @@ function readInlineModelAndGenerateJS(
     modelDir?: string
     extData?: ExtData
     directDataSpec?: DirectDataSpec
+    inputs?: string[]
+    outputs?: string[]
     inputVarNames?: string[]
     outputVarNames?: string[]
     bundleListing?: boolean
@@ -33,6 +35,8 @@ function readInlineModelAndGenerateJS(
   Model.resetModelState()
 
   const spec = {
+    inputs: opts?.inputs,
+    outputs: opts?.outputs,
     inputVarNames: opts?.inputVarNames,
     outputVarNames: opts?.outputVarNames,
     bundleListing: opts?.bundleListing,
@@ -967,6 +971,42 @@ export default async function () {
 // Model variables
 let _x;
 let _y;`)
+  })
+
+  it('should generate the same code when the preferred `inputs` and `outputs` properties are used', () => {
+    const mdl = `
+      x = 10 ~~|
+      y = x + 1 ~~|
+    `
+    const codeWithDeprecatedNames = readInlineModelAndGenerateJS(mdl, {
+      inputVarNames: ['x'],
+      outputVarNames: ['y']
+    })
+    const codeWithPreferredNames = readInlineModelAndGenerateJS(mdl, {
+      inputs: ['x'],
+      outputs: ['y']
+    })
+    expect(codeWithPreferredNames).toEqual(codeWithDeprecatedNames)
+  })
+
+  it('should prefer the `inputs` and `outputs` properties over the deprecated ones', () => {
+    const mdl = `
+      x = 10 ~~|
+      y = x + 1 ~~|
+    `
+    const expectedCode = readInlineModelAndGenerateJS(mdl, {
+      inputs: ['x'],
+      outputs: ['y']
+    })
+    // Note that the deprecated properties refer to variables that don't exist in the
+    // model, so an error would be thrown if they were used instead of the preferred ones
+    const code = readInlineModelAndGenerateJS(mdl, {
+      inputs: ['x'],
+      outputs: ['y'],
+      inputVarNames: ['bogus input'],
+      outputVarNames: ['bogus output']
+    })
+    expect(code).toEqual(expectedCode)
   })
 
   it('should work when valid input variable name with subscript (referenced by output variable) is provided in spec file', () => {
