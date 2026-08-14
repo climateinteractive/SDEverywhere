@@ -154,7 +154,7 @@ pnpm create @sdeverywhere@latest
 yarn create @sdeverywhere
 ```
 
-Again, run the following to start a local web server and see the resulting web app:
+After running the `create` script, type the following command to start a local web server and see the resulting web application running in your browser:
 
 ```sh
 npm run dev
