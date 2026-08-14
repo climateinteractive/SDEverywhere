@@ -2,7 +2,6 @@
   "name": "@sdeverywhere/plugin-check",
   "version": "0.3.35",
   "files": [
-    "bin/**",
     "dist/**",
     "template-bundle/**",
     "template-report/**",
@@ -18,9 +17,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
-  },
-  "bin": {
-    "sde-check": "bin/sde-check.js"
   },
   "scripts": {
     "clean": "rm -rf dist",
