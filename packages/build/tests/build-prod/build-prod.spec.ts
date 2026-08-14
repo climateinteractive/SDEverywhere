@@ -1,6 +1,6 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
-import { existsSync, rmSync } from 'node:fs'
+import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join as joinPath, resolve as resolvePath } from 'node:path'
 
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -188,6 +188,78 @@ describe('build in production mode', () => {
     expect(resolvedModelSpec!.customConstants).toEqual(true)
     expect(resolvedModelSpec!.customLookups).toEqual(true)
     expect(resolvedModelSpec!.customOutputs).toEqual(true)
+  })
+
+  it('should write the spec.json file using the preferred property names', async () => {
+    const prepDir = resolvePath(__dirname, 'sde-prep')
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir,
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        return {
+          inputs: ['Y'],
+          outputs: ['Z'],
+          datFiles: [],
+          bundleListing: true,
+          customLookups: ['lookup1'],
+          // Note that these model analysis properties previously had to be provided
+          // through the untyped `options` bag
+          dimensionFamilies: { DimA: 'DimA' },
+          specialSeparationDims: { _a: '_dima' },
+          separateAllVarsWithDims: ['_dimb']
+        }
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    const specJson = JSON.parse(readFileSync(joinPath(prepDir, 'spec.json'), 'utf8'))
+    expect(specJson).toEqual({
+      inputs: ['Y'],
+      outputs: ['Z'],
+      datFiles: [],
+      bundleListing: true,
+      customConstants: false,
+      customLookups: ['lookup1'],
+      customOutputs: false,
+      dimensionFamilies: { DimA: 'DimA' },
+      specialSeparationDims: { _a: '_dima' },
+      separateAllVarsWithDims: ['_dimb']
+    })
+  })
+
+  it('should merge the deprecated options bag into the spec.json file', async () => {
+    const prepDir = resolvePath(__dirname, 'sde-prep')
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir,
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        return {
+          inputs: ['Y'],
+          outputs: ['Z'],
+          options: {
+            specialSeparationDims: { _a: '_dima' }
+          }
+        }
+      }
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    const specJson = JSON.parse(readFileSync(joinPath(prepDir, 'spec.json'), 'utf8'))
+    expect(specJson.specialSeparationDims).toEqual({ _a: '_dima' })
   })
 
   it('should write listing.json file (when absolute path is provided)', async () => {
