@@ -140,7 +140,7 @@ cd my-project-folder
 ```
 
 Once you are in the correct folder, run the `create` script.
-Below are several variations depending your specific Node.js setup, but only use one.
+Below are several variations depending on your preferred package manager, but only use one.
 If you're not sure, try the first one starting with `npm`.
 
 ```sh
