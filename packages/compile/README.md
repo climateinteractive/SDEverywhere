@@ -32,7 +32,13 @@ More usage details will be included here at a later time when the interfaces sta
 ## Documentation
 
 The `compile` package is currently treated as an implementation detail of the `cli` package.
-As such, there is no public API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
+As such, there is no generated API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
+
+In the meantime, the package ships TypeScript declarations for its public API in [`src/index.d.ts`](./src/index.d.ts).
+Of particular note, the [`ModelSpec`](./src/model-spec.d.ts) type is the authoritative definition of the JSON "spec file" format that is passed to the `sde generate` command using the `--spec` argument, and every supported property is documented there.
+For a summary of those properties in prose form, see the ["Configuration files"](../cli/README.md#configuration-files) section of the `cli` package README.
+
+Note that the `ModelSpec` type in the [`@sdeverywhere/build`](../build/README.md) package (which describes the `modelSpec` section of an `sde.config.js` file) is derived from the `ModelSpec` type in this package, so the two formats share a single definition for the properties they have in common.
 
 ## License
 
