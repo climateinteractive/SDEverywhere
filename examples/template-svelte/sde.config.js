@@ -88,7 +88,7 @@ export async function config() {
     // Specify the format of the generated code, either 'js' or 'c'
     genFormat,
 
-    // Specify the Vensim model to read
+    // Specify the model file to read
     modelFiles: ['model/MODEL_NAME.mdl'],
 
     // The following files will be hashed to determine whether the model needs

@@ -60,7 +60,7 @@ const corePath = (...parts) => joinPath(__dirname, 'packages', 'core', ...parts)
 
 export async function config() {
   return {
-    // Specify the Vensim model to read
+    // Specify the model file to read
     modelFiles: ['model/example.mdl'],
 
     // Rebuild when the config files are changed

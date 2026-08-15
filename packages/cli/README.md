@@ -2,7 +2,7 @@
 
 This package contains the `sde` command line interface for the [SDEverywhere](https://github.com/climateinteractive/SDEverywhere) suite of tools.
 
-SDEverywhere can be used to translate System Dynamics models from Vensim to C and WebAssembly.
+SDEverywhere can be used to translate System Dynamics models from Vensim or Stella format to JavaScript, C, and WebAssembly.
 
 For more details on the full suite of tools and libraries provided in SDEverywhere, refer to the top-level [README](https://github.com/climateinteractive/SDEverywhere) in the SDEverywhere repository.
 
@@ -46,10 +46,10 @@ Use `sde -h` to see a list of all commands.
 
 Use `sde {command}` to see options for a command.
 
-It is usually easiest to run these commands from the directory where the `.mdl` file is located.
+It is usually easiest to run these commands from the directory where the model file (for example, a Vensim `.mdl` file or a Stella `.stmx` file) is located.
 The `{model}` placeholder can be the model filename, for instance `arrays.mdl`, or simply the model name `arrays`.
 
-If you are not running from the model directory, you can give a full pathname to locate the `.mdl` file anywhere on the system.
+If you are not running from the model directory, you can give a full pathname to locate the model file anywhere on the system.
 
 By default, SDEverywhere will create a `build` directory in your model directory to hold the generated code and the compiled model.
 If you run the model, it will also create an `output` directory by default.
@@ -70,9 +70,9 @@ sde generate --genc --spec {model}_spec.json {model}
 #### Start a local development builder/server
 
 The `sde dev` command is great for local development of a web application.
-It will start a builder process that rebuilds your app and runs QA checks against your model any time you save changes to your `mdl` file.
-You can leave the builder running while developing your model in Vensim.
-The app and model-check tabs in your browser will refresh automatically whenever you save changes in Vensim or make edits to your application code.
+It will start a builder process that rebuilds your app and runs QA checks against your model any time you save changes to your model file.
+You can leave the builder running while developing your model in Vensim or Stella.
+The app and model-check tabs in your browser will refresh automatically whenever you save changes in your modeling tool or make edits to your application code.
 
 See [`examples/hello-world`](https://github.com/climateinteractive/SDEverywhere/tree/main/examples/hello-world) for a simple example of an `sde.config.js` file.
 You can also follow the [Quick Start](https://github.com/climateinteractive/SDEverywhere/tree/main/examples/sir#quick-start) instructions for `examples/sir`, which will generate a more complete example of an `sde.config.js` file.
