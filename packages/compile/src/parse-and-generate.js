@@ -73,8 +73,8 @@ export async function parseAndGenerate(input, modelKind, spec, operations, model
   normalizeModelSpec(spec)
 
   // Read time series from external DAT files into a single object.
-  // datFiles is an array of either filenames or objects
-  // giving a variable name prefix as the key and a filename as the value.
+  // `datFiles` is an array of either filenames or objects giving a variable
+  // name prefix as the key and a filename as the value.
   let extData = new Map()
   if (spec.datFiles) {
     for (let datfile of spec.datFiles) {
