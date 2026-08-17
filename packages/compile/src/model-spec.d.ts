@@ -38,9 +38,9 @@ export type DatFileSpec = string | { [varNamePrefix: string]: string }
  * to the `sde generate` command using the `--spec` argument) and that is accepted by
  * the `parseAndGenerate` function.
  *
- * All properties are optional.  If neither `inputs` nor `outputs` is provided, the
- * generated model will include all variables from the model and will not allow any
- * inputs to be set at runtime.
+ * All properties are optional.  If neither `inputVarNames` nor `outputVarNames` is
+ * provided, the generated model will include all variables from the model and will not
+ * allow any inputs to be set at runtime.
  */
 export interface ModelSpec {
   /**
@@ -48,10 +48,10 @@ export interface ModelSpec {
    * the modeling tool.
    *
    * When this is provided, only the listed variables can be set at runtime, and any
-   * variables that are not needed to compute the configured `outputs` will be pruned
-   * from the generated model.
+   * variables that are not needed to compute the configured `outputVarNames` will be
+   * pruned from the generated model.
    */
-  inputs?: VarName[]
+  inputVarNames?: VarName[]
 
   /**
    * The output variables for the model, using the variable names as they appear in
@@ -62,7 +62,7 @@ export interface ModelSpec {
    * When this is provided, only the listed variables (plus the variables needed to
    * compute them) will be included in the generated model.
    */
-  outputs?: VarName[]
+  outputVarNames?: VarName[]
 
   /**
    * The `dat` files that provide the data for exogenous data variables in the model.
@@ -154,7 +154,7 @@ export interface ModelSpec {
 
   /**
    * Whether to allow for capturing the data for arbitrary variables at runtime (including
-   * variables that are not configured in the `outputs` array).
+   * variables that are not configured in the `outputVarNames` array).
    *
    * If undefined or false, the generated model will implement `storeOutput` as a no-op,
    * meaning that the data for arbitrary variables cannot be captured at runtime.
@@ -166,24 +166,6 @@ export interface ModelSpec {
    * be captured at runtime.
    */
   customOutputs?: boolean | VarName[]
-
-  /**
-   * The input variables for the model.
-   *
-   * @deprecated Use `inputs` instead.  This property is still honored (and takes
-   * precedence over `inputs` if both are provided) but will be removed in a future
-   * release.
-   */
-  inputVarNames?: VarName[]
-
-  /**
-   * The output variables for the model.
-   *
-   * @deprecated Use `outputs` instead.  This property is still honored (and takes
-   * precedence over `outputs` if both are provided) but will be removed in a future
-   * release.
-   */
-  outputVarNames?: VarName[]
 
   /**
    * The `dat` files that provide the data for exogenous data variables in the model.
@@ -204,16 +186,16 @@ export interface ModelSpec {
   /**
    * The input variable identifiers for the model, in canonical form.
    *
-   * @hidden This is derived from `inputs` (or `inputVarNames`) while the model is being
-   * read, and is not intended to be set in a `spec.json` file.
+   * @hidden This is derived from `inputVarNames` while the model is being read, and is
+   * not intended to be set in a `spec.json` file.
    */
   inputVars?: VarId[]
 
   /**
    * The output variable identifiers for the model, in canonical form.
    *
-   * @hidden This is derived from `outputs` (or `outputVarNames`) while the model is being
-   * read, and is not intended to be set in a `spec.json` file.
+   * @hidden This is derived from `outputVarNames` while the model is being read, and is
+   * not intended to be set in a `spec.json` file.
    */
   outputVars?: VarId[]
 }

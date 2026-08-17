@@ -221,8 +221,8 @@ describe('build in production mode', () => {
     expect(result.value.exitCode).toBe(0)
     const specJson = JSON.parse(readFileSync(joinPath(prepDir, 'spec.json'), 'utf8'))
     expect(specJson).toEqual({
-      inputs: ['Y'],
-      outputs: ['Z'],
+      inputVarNames: ['Y'],
+      outputVarNames: ['Z'],
       datFiles: [],
       bundleListing: true,
       customConstants: false,

@@ -177,7 +177,8 @@ sde which
 _NOTE:_ The following sections refer to "model specification files" (or "spec files" as a shorthand).
 These JSON spec files are generally used by the lower-level `sde` commands, such as `sde generate`.
 The higher-level `sde dev` and `sde bundle` commands use a more flexible configuration file format (`sde.config.js`) that also allows for defining plugins.
-The two formats share the same property definitions where they overlap, so the properties documented below are also available in the `modelSpec` section of an `sde.config.js` file (see related issue [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)).
+The two formats share the same property definitions where they overlap, so most of the properties documented below are also available in the `modelSpec` section of an `sde.config.js` file (see related issue [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)).
+The exception is the input and output variables: a spec file takes plain variable names in `inputVarNames` and `outputVarNames`, whereas an `sde.config.js` file uses higher-level `inputs` and `outputs` properties that also accept objects carrying additional information about each variable.
 
 #### Specify input and output variables
 
@@ -191,8 +192,8 @@ Be sure to include `Time` first among the output variables.
 
 ```json
 {
-  "inputs": ["Reference predators", "Reference prey"],
-  "outputs": ["Time", "Predators Y", "Prey X"]
+  "inputVarNames": ["Reference predators", "Reference prey"],
+  "outputVarNames": ["Time", "Predators Y", "Prey X"]
 }
 ```
 
@@ -222,8 +223,8 @@ The table below is a summary.
 
 | Property                  | Type                     | Description                                                                                                                           |
 | ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `inputs`                  | `string[]`               | The input variables, using the names as they appear in the modeling tool.                                                             |
-| `outputs`                 | `string[]`               | The output variables, using the names as they appear in the modeling tool. It is customary to list `Time` first.                      |
+| `inputVarNames`           | `string[]`               | The input variables, using the names as they appear in the modeling tool.                                                             |
+| `outputVarNames`          | `string[]`               | The output variables, using the names as they appear in the modeling tool. It is customary to list `Time` first.                      |
 | `datFiles`                | `(string \| object)[]`   | The `dat` files that provide data for exogenous data variables, resolved relative to the model directory.                             |
 | `directData`              | `object`                 | Maps the data tag used in a `GET DIRECT {DATA,CONSTANTS,LOOKUPS}` call (for example, `?data`) to an `xlsx` file name.                 |
 | `dimensionFamilies`       | `object`                 | Maps a dimension name to its family name, for cases where the family cannot be inferred from the model alone.                         |
@@ -239,8 +240,6 @@ They are still honored (and are ignored if the preferred property is also provid
 
 | Deprecated property | Preferred property | Notes                                              |
 | ------------------- | ------------------ | -------------------------------------------------- |
-| `inputVarNames`     | `inputs`           |                                                    |
-| `outputVarNames`    | `outputs`          |                                                    |
 | `externalDatfiles`  | `datFiles`         |                                                    |
 | `name`              | _(none)_           | This property has never been used by SDEverywhere. |
 
@@ -275,7 +274,7 @@ There is a `setInputs` implementation in the generated code that gets called at 
 It takes a string with serialized input values and sets variable values from it.
 The serialization format depends on the needs of your application.
 You can replace `setInputs` if you want to use a different serialization form.
-The input variables are listed in the `inputs` section of the spec file.
+The input variables are listed in the `inputVarNames` section of the spec file.
 Look at the `arrays` model for an example.
 
 The generated format minimizes the amount of data on the wire for web applications.

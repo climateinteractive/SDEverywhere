@@ -3,7 +3,6 @@ import * as R from 'ramda'
 import { asort, canonicalVensimName, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
-import { normalizeModelSpec } from '../model-spec.js'
 
 import { generateEquation } from './gen-equation.js'
 import { expandVarNames } from './expand-var-names.js'
@@ -14,13 +13,10 @@ export function generateC(parsedModel, opts) {
 
 let codeGenerator = (parsedModel, opts) => {
   const { spec, operations, extData, directData, modelDirname } = opts
-  // Resolve any deprecated property names in the spec so that the steps below only
-  // need to consult the preferred names
-  normalizeModelSpec(spec)
   // Set to 'decl', 'init-lookups', 'eval', etc depending on the section being generated.
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
-  let outputAllVars = spec.outputs === undefined || spec.outputs.length === 0
+  let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
   // Function to generate a section of the code
   let generateSection = R.map(v => {
     return generateEquation(v, mode, extData, directData, modelDirname, 'c')
@@ -198,7 +194,7 @@ ${setLookupImpl(Model.varIndexInfo(), spec.customLookups)}
 
     // Configure the output variables that appear in the generated `getHeader`
     // and `storeOutputData` functions
-    let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputs
+    let headerVarNames = outputAllVars ? expandedVarNames(true) : spec.outputVarNames
     let outputVarIds = outputAllVars ? expandedVarNames() : spec.outputVars
 
     // Configure the body of the `storeOutput` function depending on the value

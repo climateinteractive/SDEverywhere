@@ -22,16 +22,6 @@ export function normalizeModelSpec(spec) {
     return spec
   }
 
-  // The `inputVarNames` property was renamed to `inputs`
-  if (spec.inputs === undefined && spec.inputVarNames !== undefined) {
-    spec.inputs = spec.inputVarNames
-  }
-
-  // The `outputVarNames` property was renamed to `outputs`
-  if (spec.outputs === undefined && spec.outputVarNames !== undefined) {
-    spec.outputs = spec.outputVarNames
-  }
-
   // The `externalDatfiles` property was renamed to `datFiles`
   if (spec.datFiles === undefined && spec.externalDatfiles !== undefined) {
     spec.datFiles = spec.externalDatfiles

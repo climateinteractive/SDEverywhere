@@ -61,12 +61,12 @@ async function prepareForBuild(
 
 const specJson1 = `\
 {
-  "inputs": [
+  "inputVarNames": [
     "Input A",
     "Input B",
     "Input C"
   ],
-  "outputs": [
+  "outputVarNames": [
     "Var 1"
   ],
   "datFiles": [
@@ -82,12 +82,12 @@ const specJson1 = `\
 
 const specJson2 = `\
 {
-  "inputs": [
+  "inputVarNames": [
     "Input A",
     "Input B",
     "Input C"
   ],
-  "outputs": [
+  "outputVarNames": [
     "Var 1"
   ],
   "datFiles": [
@@ -107,10 +107,10 @@ const specJson2 = `\
 
 const specJson3 = `\
 {
-  "inputs": [
+  "inputVarNames": [
     "Input A"
   ],
-  "outputs": [
+  "outputVarNames": [
     "Var 1"
   ],
   "datFiles": [],

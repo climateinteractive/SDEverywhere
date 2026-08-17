@@ -16,7 +16,6 @@ import {
   subscriptFamilies
 } from '../_shared/subscript.js'
 import { cName } from '../_shared/var-names.js'
-import { normalizeModelSpec } from '../model-spec.js'
 
 import { separationCandidatesForCycles } from './analyze-cycles.js'
 import { expandVar } from './expand-var-instances.js'
@@ -80,10 +79,6 @@ function resetModelState() {
  * @param {*} [opts] An optional object used by tests to stop the read process after a specific phase.
  */
 function read(parsedModel, spec, extData, directData, modelDirname, opts) {
-  // Resolve any deprecated property names in the spec so that the steps below only
-  // need to consult the preferred names
-  normalizeModelSpec(spec)
-
   const maxAttempts = 20
   for (let attempt = 1; ; attempt++) {
     try {
@@ -246,13 +241,13 @@ function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
   }
 
   if (spec) {
-    // If the spec file contains `inputs`/`outputs`, convert the full Vensim variable
+    // If the spec file contains `input/outputVarNames`, convert the full Vensim variable
     // names to C names first so that later phases only need to work with canonical names
-    if (spec.inputs) {
-      spec.inputVars = R.map(cName, spec.inputs)
+    if (spec.inputVarNames) {
+      spec.inputVars = R.map(cName, spec.inputVarNames)
     }
-    if (spec.outputs) {
-      spec.outputVars = R.map(cName, spec.outputs)
+    if (spec.outputVarNames) {
+      spec.outputVars = R.map(cName, spec.outputVarNames)
     }
     // Save the input vars locally so that they can be referenced by `isInputVar`.
     if (spec.inputVars) {

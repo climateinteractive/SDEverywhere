@@ -44,14 +44,15 @@ export interface OutputSpec {
  * The model spec properties that are shared with (and passed through unchanged to) the
  * `ModelSpec` type from the compile package.
  *
- * The `inputs` and `outputs` properties are excluded because this package accepts richer
- * `InputSpec` and `OutputSpec` forms in addition to plain variable names.  The deprecated
- * and derived properties from the compile package are excluded because a `sde.config.js`
- * file should only use the preferred names.
+ * The `inputVarNames` and `outputVarNames` properties are excluded because this package
+ * declares higher-level `inputs` and `outputs` properties in their place, which accept
+ * richer `InputSpec` and `OutputSpec` forms in addition to plain variable names.  The
+ * deprecated and derived properties from the compile package are excluded because a
+ * `sde.config.js` file should only use the preferred names.
  */
 type CommonModelSpecProps = Omit<
   CoreModelSpec,
-  'inputs' | 'outputs' | 'inputVarNames' | 'outputVarNames' | 'externalDatfiles' | 'inputVars' | 'outputVars' | 'name'
+  'inputVarNames' | 'outputVarNames' | 'externalDatfiles' | 'inputVars' | 'outputVars' | 'name'
 >
 
 /**

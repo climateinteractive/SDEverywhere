@@ -213,7 +213,7 @@ be overridden.
 > `optional` **customOutputs?**: `boolean` \| `string`[]
 
 Whether to allow for capturing the data for arbitrary variables at runtime (including
-variables that are not configured in the `outputs` array).
+variables that are not configured in the `outputVarNames` array).
 
 If undefined or false, the generated model will implement `storeOutput` as a no-op,
 meaning that the data for arbitrary variables cannot be captured at runtime.
