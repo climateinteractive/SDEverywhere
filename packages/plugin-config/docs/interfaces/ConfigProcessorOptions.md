@@ -28,3 +28,15 @@ If a single string is provided, the following subdirectories will be used:
         generated/
     strings/
 ```
+
+***
+
+### spec?
+
+> `optional` **spec?**: [`ConfigProcessorSpec`](../type-aliases/ConfigProcessorSpec.md)
+
+Additional model spec properties that cannot be derived from the CSV config files.
+
+These are merged into the `ModelSpec` returned by the processor, which allows for
+configuring settings like `directData` for which there is currently no
+representation in the config files.
