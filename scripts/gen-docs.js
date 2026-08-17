@@ -9,7 +9,11 @@
 import { execSync } from 'child_process'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { resolve as resolvePath } from 'path'
+import { fileURLToPath } from 'url'
 import fastGlob from 'fast-glob'
+
+// The absolute path to the directory containing this script
+const scriptDir = fileURLToPath(new URL('.', import.meta.url))
 
 // By default, replace all links to the typedoc-generated `entry.md` with a link to our
 // own customized `index.md`.  More replacements can be defined on a per-project basis
@@ -49,6 +53,9 @@ function main() {
   //     breadcrumbs on each page, which we don't want.
   //   * We also pass `parametersFormat table` because 4.x renders each parameter as its
   //     own heading by default, whereas we prefer the more compact table that 3.x produced.
+  //   * We include our own small plugin that drops the "Inherited from" sections that
+  //     refer to internal (undocumented) helper types.
+  const inheritancePlugin = resolvePath(scriptDir, 'typedoc-plugin-hide-internal-inheritance.js')
   const typedocCmd = `typedoc \
 --tsconfig ./tsconfig-build.json \
 --sort source-order \
@@ -58,6 +65,7 @@ function main() {
 --readme none \
 --githubPages false \
 --plugin typedoc-plugin-markdown \
+--plugin ${inheritancePlugin} \
 --entryFileName entry.md \
 --outputFileStrategy members \
 --typeDeclarationFormat list \
