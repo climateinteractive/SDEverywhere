@@ -156,10 +156,10 @@
  * DEPRECATED: Use `datFiles` instead.  This property is still honored (but is ignored if
  * `datFiles` is also provided) and will be removed in a future release.
  *
- * @property {string} [name] A descriptive name for the model.
+ * @property {string} [name] An optional descriptive name for the model.
  *
- * DEPRECATED: This property is ignored by SDEverywhere and will be removed in a future
- * release.
+ * This is not currently used by SDEverywhere, but is allowed (and is included in many
+ * existing `spec.json` files) as a way to document what the model is.
  *
  * @property {VarId[]} [inputVars] The input variable identifiers for the model, in
  * canonical form.
