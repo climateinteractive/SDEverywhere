@@ -143,6 +143,25 @@ describe('ResolvedModelSpec', () => {
     expect(Object.values(assertions).every(v => v === true)).toBe(true)
   })
 
+  it('should not expose the deprecated options bag', () => {
+    // Note that `resolveModelSpec` merges `options` into the normal structure, so a
+    // resolved spec never needs to carry the bag itself
+    const resolvedModelSpec: ResolvedModelSpec = {
+      inputVarNames: [],
+      inputs: [],
+      outputVarNames: [],
+      outputs: [],
+      datFiles: [],
+      bundleListing: false,
+      customConstants: false,
+      customLookups: false,
+      customOutputs: false,
+      // @ts-expect-error The `options` bag is merged in when the spec is resolved
+      options: { bundleListing: true }
+    }
+    expect(resolvedModelSpec).toBeDefined()
+  })
+
   it('should reject a spec that is missing a required property', () => {
     // @ts-expect-error The `bundleListing` property is required
     const resolvedModelSpec: ResolvedModelSpec = {

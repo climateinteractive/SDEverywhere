@@ -47,8 +47,9 @@ Additional properties to include in the generated `spec.json` file.
 
 All properties that are supported in a `spec.json` file are now declared
 directly on this interface, so it is no longer necessary to use this escape hatch.
-Any properties provided here will be merged into the generated `spec.json` file, but
-this property will be removed in a future release.
+Any properties provided here will be merged into the resolved model spec (a property
+that is configured directly on this interface takes precedence over the same property
+provided here), but this property will be removed in a future release.
 
 ***
 
