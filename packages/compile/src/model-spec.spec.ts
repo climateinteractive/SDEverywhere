@@ -11,22 +11,28 @@ describe('ModelSpec', () => {
     expect(spec).toEqual({})
   })
 
-  it('should allow for the preferred input and output properties', () => {
+  it('should allow for the input and output variable name properties', () => {
     const spec: ModelSpec = {
-      inputs: ['Input A', 'Input B'],
-      outputs: ['Time', 'Output X']
+      inputVarNames: ['Input A', 'Input B'],
+      outputVarNames: ['Time', 'Output X']
     }
-    expect(spec.inputs).toEqual(['Input A', 'Input B'])
-    expect(spec.outputs).toEqual(['Time', 'Output X'])
+    expect(spec.inputVarNames).toEqual(['Input A', 'Input B'])
+    expect(spec.outputVarNames).toEqual(['Time', 'Output X'])
   })
 
-  it('should allow for the deprecated input and output properties', () => {
-    const spec: ModelSpec = {
-      inputVarNames: ['Input A'],
-      outputVarNames: ['Time']
+  it('should not allow for the higher-level input and output spec properties', () => {
+    // Note that a `spec.json` file only allows for plain variable names; the richer
+    // `inputs` and `outputs` properties are specific to the build package
+    const specWithInputs: ModelSpec = {
+      // @ts-expect-error The `inputs` property is not supported in a `spec.json` file
+      inputs: ['Input A']
     }
-    expect(spec.inputVarNames).toEqual(['Input A'])
-    expect(spec.outputVarNames).toEqual(['Time'])
+    const specWithOutputs: ModelSpec = {
+      // @ts-expect-error The `outputs` property is not supported in a `spec.json` file
+      outputs: ['Time']
+    }
+    expect(specWithInputs).toBeDefined()
+    expect(specWithOutputs).toBeDefined()
   })
 
   it('should allow for the preferred dat file property', () => {
@@ -84,8 +90,8 @@ describe('ModelSpec', () => {
 
   it('should reject an incorrectly typed property', () => {
     const spec: ModelSpec = {
-      // @ts-expect-error The `inputs` property should be an array of strings
-      inputs: 'Input A'
+      // @ts-expect-error The `inputVarNames` property should be an array of strings
+      inputVarNames: 'Input A'
     }
     expect(spec).toBeDefined()
   })
@@ -128,46 +134,15 @@ describe('normalizeModelSpec', () => {
     expect(spec.datFiles).toBeUndefined()
   })
 
-  it('should copy the deprecated `inputVarNames` and `outputVarNames` properties', () => {
+  it('should leave the input and output variable name properties untouched', () => {
+    // Note that these properties have not been renamed, so they should pass through
+    // the normalization step unchanged
     const spec: ModelSpec = {
       inputVarNames: ['Input A'],
       outputVarNames: ['Time', 'Output X']
     }
     normalizeModelSpec(spec)
-    expect(spec.inputs).toEqual(['Input A'])
-    expect(spec.outputs).toEqual(['Time', 'Output X'])
-  })
-
-  it('should prefer `inputs` and `outputs` if both forms are defined', () => {
-    const spec: ModelSpec = {
-      inputs: ['Preferred Input'],
-      outputs: ['Preferred Output'],
-      inputVarNames: ['Deprecated Input'],
-      outputVarNames: ['Deprecated Output']
-    }
-    normalizeModelSpec(spec)
-    expect(spec.inputs).toEqual(['Preferred Input'])
-    expect(spec.outputs).toEqual(['Preferred Output'])
-  })
-
-  it('should leave `inputs` and `outputs` undefined if neither form is defined', () => {
-    const spec: ModelSpec = {}
-    normalizeModelSpec(spec)
-    expect(spec.inputs).toBeUndefined()
-    expect(spec.outputs).toBeUndefined()
-  })
-
-  it('should preserve an empty array for `inputs` and `outputs`', () => {
-    // Note that an empty array is meaningfully different from undefined (it disables
-    // the dead code removal step), so it must not be replaced by the deprecated value
-    const spec: ModelSpec = {
-      inputs: [],
-      outputs: [],
-      inputVarNames: ['Deprecated Input'],
-      outputVarNames: ['Deprecated Output']
-    }
-    normalizeModelSpec(spec)
-    expect(spec.inputs).toEqual([])
-    expect(spec.outputs).toEqual([])
+    expect(spec.inputVarNames).toEqual(['Input A'])
+    expect(spec.outputVarNames).toEqual(['Time', 'Output X'])
   })
 })

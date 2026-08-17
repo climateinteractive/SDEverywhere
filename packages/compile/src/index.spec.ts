@@ -8,10 +8,10 @@ import { canonicalName, parseModel } from './index'
 describe('public API type declarations', () => {
   it('should export the ModelSpec type', () => {
     const spec: ModelSpec = {
-      inputs: ['Input A'],
-      outputs: ['Time']
+      inputVarNames: ['Input A'],
+      outputVarNames: ['Time']
     }
-    expect(spec.inputs).toEqual(['Input A'])
+    expect(spec.inputVarNames).toEqual(['Input A'])
   })
 
   it('should declare the canonicalName signature', () => {

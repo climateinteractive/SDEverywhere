@@ -1,5 +1,5 @@
 {
   "name": "Except (with explicit set of output variables)",
-  "inputs": ["input"],
-  "outputs": ["Time", "z total"]
+  "inputVarNames": ["input"],
+  "outputVarNames": ["Time", "z total"]
 }
