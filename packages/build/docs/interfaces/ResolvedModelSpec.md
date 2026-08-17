@@ -149,13 +149,12 @@ this property will be removed in a future release.
 
 > `optional` **directData?**: `object`
 
-The mapping of data tag to Excel workbook file name, used to resolve the data for
-`GET DIRECT DATA`, `GET DIRECT CONSTANTS`, and `GET DIRECT LOOKUPS` calls in the
-model.
+The mapping of data tag to
+Excel workbook file name, used to resolve the data for `GET DIRECT DATA`,
+`GET DIRECT CONSTANTS`, and `GET DIRECT LOOKUPS` calls in the model.
 
-Each key is the tag that appears in the model equation (for example, `?data`), and
-each value is the name of an `xlsx` file that is resolved relative to the model
-directory.
+Each key is the tag that appears in the model equation (for example, `?data`), and each
+value is the name of an `xlsx` file that is resolved relative to the model directory.
 
 #### Index Signature
 
@@ -171,11 +170,12 @@ directory.
 
 > `optional` **dimensionFamilies?**: `object`
 
-The mapping of dimension name to family name, used when SDEverywhere cannot infer
-the family for a dimension from the model alone.
+The mapping of dimension
+name to family name, used when SDEverywhere cannot infer the family for a dimension
+from the model alone.
 
-Both the keys and the values use the dimension names as they appear in the modeling
-tool (they are converted to canonical form when the spec file is read).
+Both the keys and the values use the dimension names as they appear in the modeling tool
+(they are converted to canonical form when the spec file is read).
 
 #### Index Signature
 
@@ -191,8 +191,9 @@ tool (they are converted to canonical form when the spec file is read).
 
 > `optional` **specialSeparationDims?**: `object`
 
-The mapping of variable identifier to the dimension(s) on which that variable should
-be separated into one variable instance per subscript.
+The mapping of
+variable identifier to the dimension(s) on which that variable should be separated
+into one variable instance per subscript.
 
 Separating a variable is sometimes necessary to break a dependency cycle that would
 otherwise prevent the model from being evaluated.  Each value can be either a single
@@ -212,13 +213,13 @@ dimension identifier or an array of dimension identifiers.
 
 > `optional` **separateAllVarsWithDims?**: (`string` \| `string`[])[]
 
-The dimensions for which all variables should be separated into one variable instance
-per subscript.
+The dimensions for which all
+variables should be separated into one variable instance per subscript.
 
 This is a convenience alternative to `specialSeparationDims` that avoids the need to
-list each affected variable.  Each entry can be either a single dimension identifier
-or an array of dimension identifiers; a variable is separated only if every dimension
-in the entry appears on the left-hand side of its equation.
+list each affected variable.  Each entry can be either a single dimension identifier or
+an array of dimension identifiers; a variable is separated only if every dimension in
+the entry appears on the left-hand side of its equation.
 
 #### Inherited from
 

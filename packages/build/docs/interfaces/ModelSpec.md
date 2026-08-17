@@ -56,11 +56,12 @@ this property will be removed in a future release.
 
 > `optional` **datFiles?**: `DatFileSpec`[]
 
-The `dat` files that provide the data for exogenous data variables in the model.
+The `dat` files that provide the data for exogenous
+data variables in the model.
 
-Each entry is resolved relative to the model directory (i.e., the directory that
-is passed using the `--datadir` argument, which defaults to the directory that
-contains the model file).
+Each entry is resolved relative to the model directory (i.e., the directory that is
+passed using the `--datadir` argument, which defaults to the directory that contains the
+model file).
 
 #### Inherited from
 
@@ -72,13 +73,12 @@ contains the model file).
 
 > `optional` **directData?**: `object`
 
-The mapping of data tag to Excel workbook file name, used to resolve the data for
-`GET DIRECT DATA`, `GET DIRECT CONSTANTS`, and `GET DIRECT LOOKUPS` calls in the
-model.
+The mapping of data tag to
+Excel workbook file name, used to resolve the data for `GET DIRECT DATA`,
+`GET DIRECT CONSTANTS`, and `GET DIRECT LOOKUPS` calls in the model.
 
-Each key is the tag that appears in the model equation (for example, `?data`), and
-each value is the name of an `xlsx` file that is resolved relative to the model
-directory.
+Each key is the tag that appears in the model equation (for example, `?data`), and each
+value is the name of an `xlsx` file that is resolved relative to the model directory.
 
 #### Index Signature
 
@@ -94,11 +94,12 @@ directory.
 
 > `optional` **dimensionFamilies?**: `object`
 
-The mapping of dimension name to family name, used when SDEverywhere cannot infer
-the family for a dimension from the model alone.
+The mapping of dimension
+name to family name, used when SDEverywhere cannot infer the family for a dimension
+from the model alone.
 
-Both the keys and the values use the dimension names as they appear in the modeling
-tool (they are converted to canonical form when the spec file is read).
+Both the keys and the values use the dimension names as they appear in the modeling tool
+(they are converted to canonical form when the spec file is read).
 
 #### Index Signature
 
@@ -114,8 +115,9 @@ tool (they are converted to canonical form when the spec file is read).
 
 > `optional` **specialSeparationDims?**: `object`
 
-The mapping of variable identifier to the dimension(s) on which that variable should
-be separated into one variable instance per subscript.
+The mapping of
+variable identifier to the dimension(s) on which that variable should be separated
+into one variable instance per subscript.
 
 Separating a variable is sometimes necessary to break a dependency cycle that would
 otherwise prevent the model from being evaluated.  Each value can be either a single
@@ -135,13 +137,13 @@ dimension identifier or an array of dimension identifiers.
 
 > `optional` **separateAllVarsWithDims?**: (`string` \| `string`[])[]
 
-The dimensions for which all variables should be separated into one variable instance
-per subscript.
+The dimensions for which all
+variables should be separated into one variable instance per subscript.
 
 This is a convenience alternative to `specialSeparationDims` that avoids the need to
-list each affected variable.  Each entry can be either a single dimension identifier
-or an array of dimension identifiers; a variable is separated only if every dimension
-in the entry appears on the left-hand side of its equation.
+list each affected variable.  Each entry can be either a single dimension identifier or
+an array of dimension identifiers; a variable is separated only if every dimension in
+the entry appears on the left-hand side of its equation.
 
 #### Inherited from
 
@@ -153,14 +155,15 @@ in the entry appears on the left-hand side of its equation.
 
 > `optional` **bundleListing?**: `boolean`
 
-Whether to bundle a model listing with the generated model.
+Whether to bundle a model listing with the generated
+model.
 
 If undefined, defaults to false.
 
-When this is true, a model listing will be bundled with the generated model to allow
-the `runtime` package to resolve variables that are referenced by name or identifier.
-This listing will increase the size of the generated model, so it is recommended to
-set this to true only if it is needed.
+When this is true, a model listing will be bundled with the generated model to allow the
+`runtime` package to resolve variables that are referenced by name or identifier.  This
+listing will increase the size of the generated model, so it is recommended to set this
+to true only if it is needed.
 
 #### Inherited from
 
@@ -172,15 +175,16 @@ set this to true only if it is needed.
 
 > `optional` **customConstants?**: `boolean` \| `string`[]
 
-Whether to allow constants to be overridden at runtime using `setConstant`.
+Whether to allow constants to be
+overridden at runtime using `setConstant`.
 
 If undefined or false, the generated model will implement `setConstant` as a no-op,
 meaning that constants cannot be overridden at runtime.
 
 If true, all constants in the generated model will be available to be overridden.
 
-If an array is provided, only those variable names in the array will be available to
-be overridden.
+If an array is provided, only those variable names in the array will be available to be
+overridden.
 
 #### Inherited from
 
@@ -192,15 +196,16 @@ be overridden.
 
 > `optional` **customLookups?**: `boolean` \| `string`[]
 
-Whether to allow lookups to be overridden at runtime using `setLookup`.
+Whether to allow lookups to be
+overridden at runtime using `setLookup`.
 
 If undefined or false, the generated model will implement `setLookup` as a no-op,
 meaning that lookups cannot be overridden at runtime.
 
 If true, all lookups in the generated model will be available to be overridden.
 
-If an array is provided, only those variable names in the array will be available to
-be overridden.
+If an array is provided, only those variable names in the array will be available to be
+overridden.
 
 #### Inherited from
 
@@ -212,8 +217,9 @@ be overridden.
 
 > `optional` **customOutputs?**: `boolean` \| `string`[]
 
-Whether to allow for capturing the data for arbitrary variables at runtime (including
-variables that are not configured in the `outputVarNames` array).
+Whether to allow for capturing the data
+for arbitrary variables at runtime (including variables that are not configured in the
+`outputVarNames` array).
 
 If undefined or false, the generated model will implement `storeOutput` as a no-op,
 meaning that the data for arbitrary variables cannot be captured at runtime.
@@ -221,8 +227,8 @@ meaning that the data for arbitrary variables cannot be captured at runtime.
 If true, all variables in the generated model will be available to be captured at
 runtime.
 
-If an array is provided, only those variable names in the array will be available to
-be captured at runtime.
+If an array is provided, only those variable names in the array will be available to be
+captured at runtime.
 
 #### Inherited from
 
