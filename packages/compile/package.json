@@ -4,8 +4,10 @@
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
   "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig-build.json",
     "lint": "eslint . --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
@@ -14,7 +16,7 @@
     "test": "vitest run",
     "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
-    "ci:build": "run-s lint prettier:check type-check test:ci"
+    "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },
   "dependencies": {
     "@sdeverywhere/parse": "^0.1.5",

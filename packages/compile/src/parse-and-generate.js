@@ -15,6 +15,34 @@ import { generateCode } from './generate/gen-code.js'
 import { normalizeModelSpec } from './model-spec.js'
 
 /**
+ * The kind of model that is being parsed.
+ *
+ * @typedef {'vensim' | 'xmile'} ModelKind
+ */
+
+/**
+ * A parsed tree representation of a model, along with the kind of model that was parsed.
+ *
+ * @typedef {Object} ParsedModel
+ * @property {ModelKind} kind The kind of model that was parsed.
+ * @property {import('@sdeverywhere/parse').Model} root The root of the parsed model AST.
+ */
+
+/**
+ * An operation that can be performed by `parseAndGenerate`.
+ *
+ * - `generateC` writes the generated C code to the build directory.
+ * - `generateJS` writes the generated JS code to the build directory.
+ * - `printVarList` writes variables and subscripts to txt and json files under the build
+ *   directory.
+ * - `printRefIdTest` prints reference identifiers to the console.
+ * - `printRefGraph` prints the variable dependency graph to the console.
+ * - `convertNames` generates no output, but makes the results of model analysis available.
+ *
+ * @typedef {'generateC' | 'generateJS' | 'printVarList' | 'printRefIdTest' | 'printRefGraph' | 'convertNames'} GenerateOperation
+ */
+
+/**
  * Parse a Vensim or XMILE model and generate C code.
  *
  * This is the primary entrypoint for the `sde generate` command.
@@ -28,17 +56,16 @@ import { normalizeModelSpec } from './model-spec.js'
  *   analysis will be available.
  *
  * @param {string} input The preprocessed Vensim or XMILE model text.
- * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
+ * @param {ModelKind} modelKind The kind of model to parse.
  * @param {import('./model-spec.js').ModelSpec} spec The model spec (from the JSON file).
- * @param {string[]} operations The set of operations to perform; can include 'generateC', 'generateJS',
- * 'printVarList', 'printRefIdTest', 'convertNames'.  If the array is empty, the model will be
- * read but no operation will be performed.
+ * @param {GenerateOperation[]} operations The set of operations to perform.  If the array is
+ * empty, the model will be read but no operation will be performed.
  * @param {string} modelDirname The absolute path to the directory containing data (dat, xlsx, csv)
  * files that are referenced by the model.  These files will be resolved relative to this directory.
  * @param {string} modelName The model name (without the mdl extension).
  * @param {string} buildDir The output directory where the C or list files will be written.
  * @param {string} [varname] The variable name passed to the 'sde causes' command.
- * @return A string containing the generated C code.
+ * @return {Promise<string>} A promise that resolves with the generated C or JS code.
  */
 export async function parseAndGenerate(input, modelKind, spec, operations, modelDirname, modelName, buildDir, varname) {
   // Resolve any deprecated property names in the spec so that we only need to
@@ -115,8 +142,9 @@ export async function parseAndGenerate(input, modelKind, spec, operations, model
  *
  * This is used only to implement the `sde names` command.
  *
- * @param namesPathname The path to the file containing variables names.
- * @param operation Either 'to-c' or 'to-vensim'.
+ * @param {string} namesPathname The path to the file containing variables names.
+ * @param {'to-c' | 'to-vensim'} operation The conversion to perform.
+ * @return {void}
  */
 export function printNames(namesPathname, operation) {
   let lines = B.lines(B.read(namesPathname))
@@ -135,15 +163,13 @@ export function printNames(namesPathname, operation) {
 /**
  * Read and parse the given model text and return the parsed model structure.
  *
- * TODO: Fix return type
- *
  * @param {string} input The string containing the model text.
- * @param {string} modelKind The kind of model to parse, either 'vensim' or 'xmile'.
- * @param {string} modelDir The absolute path to the directory containing data (dat, xlsx, csv)
+ * @param {ModelKind} modelKind The kind of model to parse.
+ * @param {string} [modelDir] The absolute path to the directory containing data (dat, xlsx, csv)
  * files that are referenced by the model.  These files will be resolved relative to this directory.
  * @param {Object} [options] The options that control parsing.
- * @param {boolean} options.sort Whether to sort definitions alphabetically in the preprocess step.
- * @return {*} A parsed tree representation of the model.
+ * @param {boolean} [options.sort] Whether to sort definitions alphabetically in the preprocess step.
+ * @return {ParsedModel} A parsed tree representation of the model.
  */
 export function parseModel(input, modelKind, modelDir, options) {
   if (modelKind === 'vensim') {
