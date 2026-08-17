@@ -44,9 +44,9 @@ export function resetHelperState() {
  * (e.g., 'Variable name[DimA,B2]'), use `canonicalVensimName` to convert the base
  * variable name and subscript/dimension parts to canonical form indepdendently.
  *
- * @param {import('../model-spec.js').VarName} name The variable name as used in the
+ * @param {import('./model-spec.js').VarName} name The variable name as used in the
  * modeling tool.
- * @return {import('../model-spec.js').VarId} The canonical variable identifier.
+ * @return {import('./model-spec.js').VarId} The canonical variable identifier.
  */
 export let canonicalName = name => {
   return canonicalId(name)

@@ -5,11 +5,11 @@
 // alongside the code that uses them (as JSDoc typedefs) and are re-exported here so
 // that they are visible to consumers of this package.
 //
-/** @typedef {import('./model-spec.js').VarName} VarName */
-/** @typedef {import('./model-spec.js').VarId} VarId */
-/** @typedef {import('./model-spec.js').DimId} DimId */
-/** @typedef {import('./model-spec.js').DatFileSpec} DatFileSpec */
-/** @typedef {import('./model-spec.js').ModelSpec} ModelSpec */
+/** @typedef {import('./_shared/model-spec.js').VarName} VarName */
+/** @typedef {import('./_shared/model-spec.js').VarId} VarId */
+/** @typedef {import('./_shared/model-spec.js').DimId} DimId */
+/** @typedef {import('./_shared/model-spec.js').DatFileSpec} DatFileSpec */
+/** @typedef {import('./_shared/model-spec.js').ModelSpec} ModelSpec */
 /** @typedef {import('./parse-and-generate.js').ModelKind} ModelKind */
 /** @typedef {import('./parse-and-generate.js').ParsedModel} ParsedModel */
 /** @typedef {import('./parse-and-generate.js').GenerateOperation} GenerateOperation */

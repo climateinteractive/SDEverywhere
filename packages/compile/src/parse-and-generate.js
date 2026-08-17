@@ -12,7 +12,7 @@ import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
-import { normalizeModelSpec } from './model-spec.js'
+import { normalizeModelSpec } from './_shared/model-spec.js'
 
 /**
  * The kind of model that is being parsed.
@@ -57,7 +57,7 @@ import { normalizeModelSpec } from './model-spec.js'
  *
  * @param {string} input The preprocessed Vensim or XMILE model text.
  * @param {ModelKind} modelKind The kind of model to parse.
- * @param {import('./model-spec.js').ModelSpec} spec The model spec (from the JSON file).
+ * @param {import('./_shared/model-spec.js').ModelSpec} spec The model spec (from the JSON file).
  * @param {GenerateOperation[]} operations The set of operations to perform.  If the array is
  * empty, the model will be read but no operation will be performed.
  * @param {string} modelDirname The absolute path to the directory containing data (dat, xlsx, csv)

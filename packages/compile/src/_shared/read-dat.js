@@ -9,7 +9,7 @@ import { canonicalVensimName } from './helpers.js'
  * The datasets read from external `dat` files, keyed by variable identifier.  Each
  * dataset is a map of time to value.
  *
- * @typedef {Map<import('../model-spec.js').VarId, Map<number, number>>} ExtData
+ * @typedef {Map<import('./model-spec.js').VarId, Map<number, number>>} ExtData
  */
 
 /**
