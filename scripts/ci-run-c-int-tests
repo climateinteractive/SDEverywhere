@@ -9,15 +9,18 @@ set -x # include all commands in logs
 cd "$PROJ_DIR"
 
 # Build the subset of packages that are required for running the C-level
-# integration tests.  (The model tests do also depend on the `compile` and `cli`
-# packages, but those don't currently have a build step since they are pure
-# JavaScript.)  We use `--workspace-concurrency=0` to use all available CPUs,
-# but let pnpm handle the topological sorting.
+# integration tests.  (The model tests do also depend on the `cli` package, but
+# that doesn't currently have a build step since it is pure JavaScript.  The
+# `compile` package is included because its build step emits the type
+# declarations that the `build` package compiles against.)  We use
+# `--workspace-concurrency=0` to use all available CPUs, but let pnpm handle
+# the topological sorting.
 pnpm \
 --aggregate-output \
 --reporter=append-only \
 --workspace-concurrency=0 \
 -F parse \
+-F compile \
 -F build \
 -r build
 

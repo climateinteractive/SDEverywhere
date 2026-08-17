@@ -1,5 +1,20 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+//
+// Re-export the types that are part of the public API.  Note that these are defined
+// alongside the code that uses them (as JSDoc typedefs) and are re-exported here so
+// that they are visible to consumers of this package.
+//
+/** @typedef {import('./model-spec.js').VarName} VarName */
+/** @typedef {import('./model-spec.js').VarId} VarId */
+/** @typedef {import('./model-spec.js').DimId} DimId */
+/** @typedef {import('./model-spec.js').DatFileSpec} DatFileSpec */
+/** @typedef {import('./model-spec.js').ModelSpec} ModelSpec */
+/** @typedef {import('./parse-and-generate.js').ModelKind} ModelKind */
+/** @typedef {import('./parse-and-generate.js').ParsedModel} ParsedModel */
+/** @typedef {import('./parse-and-generate.js').GenerateOperation} GenerateOperation */
+/** @typedef {import('./_shared/read-dat.js').ExtData} ExtData */
+
 // XXX: For now we re-export the preprocess function from the parse package
 // mainly for use by the cli package (so that we don't need to have the cli
 // package directly depend on the parse package)
@@ -29,8 +44,12 @@ export function resetState() {
 /**
  * @hidden This is not yet part of the public API; it is exposed only for use
  * in the experimental playground app.
+ *
+ * @param {string} mdlContent The string containing the Vensim model text.
+ * @param {string} [modelDir] The absolute path to the directory containing data files.
+ * @return {ParsedModel} A parsed tree representation of the model.
  */
-export function parseInlineVensimModel(mdlContent /*: string*/, modelDir /*?: string*/) /*: ParsedModel*/ {
+export function parseInlineVensimModel(mdlContent, modelDir) {
   // For tests that parse inline model text, in the case of the legacy parser, don't run
   // the preprocess step, and in the case of the new parser (which implicitly runs the
   // preprocess step), don't sort the definitions.  This makes it easier to do apples
@@ -41,8 +60,12 @@ export function parseInlineVensimModel(mdlContent /*: string*/, modelDir /*?: st
 /**
  * @hidden This is not yet part of the public API; it is exposed only for use
  * in the experimental playground app.
+ *
+ * @param {string} mdlContent The string containing the XMILE model text.
+ * @param {string} [modelDir] The absolute path to the directory containing data files.
+ * @return {ParsedModel} A parsed tree representation of the model.
  */
-export function parseInlineXmileModel(mdlContent /*: string*/, modelDir /*?: string*/) /*: ParsedModel*/ {
+export function parseInlineXmileModel(mdlContent, modelDir) {
   return parseModel(mdlContent, 'xmile', modelDir)
 }
 
@@ -50,6 +73,6 @@ export function parseInlineXmileModel(mdlContent /*: string*/, modelDir /*?: str
  * @hidden This is not yet part of the public API; it is exposed only for use
  * in the experimental playground app.
  */
-export function getModelListing() /*: string*/ {
+export function getModelListing() {
   return Model.jsonList()
 }
