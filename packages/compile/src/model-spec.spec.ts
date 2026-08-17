@@ -49,6 +49,13 @@ describe('ModelSpec', () => {
     expect(spec.externalDatfiles).toEqual(['data.dat', { 'prefix ': 'other.dat' }])
   })
 
+  it('should allow for an optional model name', () => {
+    const spec: ModelSpec = {
+      name: 'My test model'
+    }
+    expect(spec.name).toBe('My test model')
+  })
+
   it('should allow for the direct data property', () => {
     const spec: ModelSpec = {
       directData: { '?data': 'data.xlsx' }

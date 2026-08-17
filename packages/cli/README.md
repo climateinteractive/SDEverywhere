@@ -234,14 +234,14 @@ The table below is a summary.
 | `customConstants`         | `boolean \| string[]`    | Whether (or which) constants can be overridden at runtime using `setConstant`.                                                        |
 | `customLookups`           | `boolean \| string[]`    | Whether (or which) lookups can be overridden at runtime using `setLookup`.                                                            |
 | `customOutputs`           | `boolean \| string[]`    | Whether (or which) variables can be captured at runtime using `storeOutput`.                                                          |
+| `name`                    | `string`                 | An optional descriptive name for the model. This is not currently used by SDEverywhere.                                               |
 
 The following properties are deprecated.
 They are still honored (and are ignored if the preferred property is also provided), but will be removed in a future release.
 
-| Deprecated property | Preferred property | Notes                                              |
-| ------------------- | ------------------ | -------------------------------------------------- |
-| `externalDatfiles`  | `datFiles`         |                                                    |
-| `name`              | _(none)_           | This property has never been used by SDEverywhere. |
+| Deprecated property | Preferred property |
+| ------------------- | ------------------ |
+| `externalDatfiles`  | `datFiles`         |
 
 #### Generating, compiling, running, and testing the C code
 

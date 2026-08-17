@@ -80,6 +80,17 @@ describe('ModelSpec', () => {
     expect(modelSpec).toBeDefined()
   })
 
+  it('should reject the spec.json model name property', () => {
+    // Note that `name` is only meaningful in a `spec.json` file; it is not exposed here
+    const modelSpec: ModelSpec = {
+      inputs: [],
+      outputs: [],
+      // @ts-expect-error The `name` property is not part of the `sde.config.js` format
+      name: 'My test model'
+    }
+    expect(modelSpec).toBeDefined()
+  })
+
   it('should reject the lower-level spec.json variable name properties', () => {
     // Note that the `sde.config.js` format uses the higher-level `inputs` and `outputs`
     // properties; the plain variable name properties are specific to `spec.json`
