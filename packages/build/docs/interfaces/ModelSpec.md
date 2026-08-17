@@ -10,10 +10,6 @@ and `OutputSpec` forms here), the properties of this interface are shared with t
 `ModelSpec` type from the compile package, which describes the `spec.json` file format
 used by the lower-level `sde` commands.
 
-## Extends
-
-- `CommonModelSpecProps`
-
 ## Properties
 
 ### inputs
@@ -64,10 +60,6 @@ Each entry is resolved relative to the model directory (i.e., the directory that
 passed using the `--datadir` argument, which defaults to the directory that contains the
 model file).
 
-#### Inherited from
-
-`CommonModelSpecProps.datFiles`
-
 ***
 
 ### directData?
@@ -85,10 +77,6 @@ value is the name of an `xlsx` file that is resolved relative to the model direc
 
 \[`dataTag`: `string`\]: `string`
 
-#### Inherited from
-
-`CommonModelSpecProps.directData`
-
 ***
 
 ### dimensionFamilies?
@@ -105,10 +93,6 @@ Both the keys and the values use the dimension names as they appear in the model
 #### Index Signature
 
 \[`dimName`: `string`\]: `string`
-
-#### Inherited from
-
-`CommonModelSpecProps.dimensionFamilies`
 
 ***
 
@@ -128,10 +112,6 @@ dimension identifier or an array of dimension identifiers.
 
 \[`varId`: `string`\]: `string` \| `string`[]
 
-#### Inherited from
-
-`CommonModelSpecProps.specialSeparationDims`
-
 ***
 
 ### separateAllVarsWithDims?
@@ -145,10 +125,6 @@ This is a convenience alternative to `specialSeparationDims` that avoids the nee
 list each affected variable.  Each entry can be either a single dimension identifier or
 an array of dimension identifiers; a variable is separated only if every dimension in
 the entry appears on the left-hand side of its equation.
-
-#### Inherited from
-
-`CommonModelSpecProps.separateAllVarsWithDims`
 
 ***
 
@@ -165,10 +141,6 @@ When this is true, a model listing will be bundled with the generated model to a
 `runtime` package to resolve variables that are referenced by name or identifier.  This
 listing will increase the size of the generated model, so it is recommended to set this
 to true only if it is needed.
-
-#### Inherited from
-
-`CommonModelSpecProps.bundleListing`
 
 ***
 
@@ -187,10 +159,6 @@ If true, all constants in the generated model will be available to be overridden
 If an array is provided, only those variable names in the array will be available to be
 overridden.
 
-#### Inherited from
-
-`CommonModelSpecProps.customConstants`
-
 ***
 
 ### customLookups?
@@ -207,10 +175,6 @@ If true, all lookups in the generated model will be available to be overridden.
 
 If an array is provided, only those variable names in the array will be available to be
 overridden.
-
-#### Inherited from
-
-`CommonModelSpecProps.customLookups`
 
 ***
 
@@ -230,7 +194,3 @@ runtime.
 
 If an array is provided, only those variable names in the array will be available to be
 captured at runtime.
-
-#### Inherited from
-
-`CommonModelSpecProps.customOutputs`

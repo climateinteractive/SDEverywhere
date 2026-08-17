@@ -9,10 +9,6 @@ fully resolved (paths have been validated, input and output variables have
 been checked, etc).  This is the spec object that will be passed to plugin
 functions.
 
-## Extends
-
-- `ResolvedModelSpecProps`
-
 ## Properties
 
 ### inputVarNames
@@ -145,10 +141,6 @@ value is the name of an `xlsx` file that is resolved relative to the model direc
 
 \[`dataTag`: `string`\]: `string`
 
-#### Inherited from
-
-`ResolvedModelSpecProps.directData`
-
 ***
 
 ### dimensionFamilies?
@@ -165,10 +157,6 @@ Both the keys and the values use the dimension names as they appear in the model
 #### Index Signature
 
 \[`dimName`: `string`\]: `string`
-
-#### Inherited from
-
-`ResolvedModelSpecProps.dimensionFamilies`
 
 ***
 
@@ -188,10 +176,6 @@ dimension identifier or an array of dimension identifiers.
 
 \[`varId`: `string`\]: `string` \| `string`[]
 
-#### Inherited from
-
-`ResolvedModelSpecProps.specialSeparationDims`
-
 ***
 
 ### separateAllVarsWithDims?
@@ -205,7 +189,3 @@ This is a convenience alternative to `specialSeparationDims` that avoids the nee
 list each affected variable.  Each entry can be either a single dimension identifier or
 an array of dimension identifiers; a variable is separated only if every dimension in
 the entry appears on the left-hand side of its equation.
-
-#### Inherited from
-
-`ResolvedModelSpecProps.separateAllVarsWithDims`
