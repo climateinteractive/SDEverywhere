@@ -234,6 +234,45 @@ describe('build in production mode', () => {
     })
   })
 
+  it('should merge the deprecated options bag into the resolved model spec', async () => {
+    let resolvedModelSpec: ResolvedModelSpec
+    const userConfig: UserConfig = {
+      genFormat: 'c',
+      rootDir: resolvePath(__dirname, '..'),
+      prepDir: resolvePath(__dirname, 'sde-prep'),
+      modelFiles: [resolvePath(__dirname, '..', '_shared', 'sample.mdl')],
+      modelSpec: async () => {
+        return {
+          inputs: ['Y'],
+          outputs: ['Z'],
+          // Note that `bundleListing` is configured directly here, so it should take
+          // precedence over the value provided in the deprecated `options` bag
+          bundleListing: true,
+          options: {
+            bundleListing: false,
+            specialSeparationDims: { _a: '_dima' }
+          }
+        }
+      },
+      plugins: [
+        {
+          preGenerate: async (_context, modelSpec) => {
+            resolvedModelSpec = modelSpec
+          }
+        }
+      ]
+    }
+
+    const result = await build('production', buildOptions(userConfig))
+    if (result.isErr()) {
+      throw new Error('Expected ok result but got: ' + result.error.message)
+    }
+
+    expect(result.value.exitCode).toBe(0)
+    expect(resolvedModelSpec!.specialSeparationDims).toEqual({ _a: '_dima' })
+    expect(resolvedModelSpec!.bundleListing).toBe(true)
+  })
+
   it('should merge the deprecated options bag into the spec.json file', async () => {
     const prepDir = resolvePath(__dirname, 'sde-prep')
     const userConfig: UserConfig = {

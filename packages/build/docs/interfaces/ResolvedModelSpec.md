@@ -130,21 +130,6 @@ be available to be captured at runtime.
 
 ***
 
-### ~~options?~~
-
-> `optional` **options?**: `ModelSpec`
-
-Additional properties to include in the generated `spec.json` file.
-
-#### Deprecated
-
-All properties that are supported in a `spec.json` file are now declared
-directly on this interface, so it is no longer necessary to use this escape hatch.
-Any properties provided here will be merged into the generated `spec.json` file, but
-this property will be removed in a future release.
-
-***
-
 ### directData?
 
 > `optional` **directData?**: `object`

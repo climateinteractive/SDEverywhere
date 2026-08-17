@@ -87,8 +87,7 @@ export async function buildOnce(
       directData: modelSpec.directData,
       dimensionFamilies: modelSpec.dimensionFamilies,
       specialSeparationDims: modelSpec.specialSeparationDims,
-      separateAllVarsWithDims: modelSpec.separateAllVarsWithDims,
-      ...modelSpec.options
+      separateAllVarsWithDims: modelSpec.separateAllVarsWithDims
     }
     const specPath = joinPath(config.prepDir, 'spec.json')
     await writeFile(specPath, JSON.stringify(specJson, null, 2))
@@ -181,9 +180,16 @@ export async function buildOnce(
 /**
  * Convert a `ModelSpec` instance to a `ResolvedModelSpec` instance.
  *
- * @param modelSpec The `ModelSpec` instance returned by the `UserConfig`.
+ * @param userModelSpec The `ModelSpec` instance returned by the `UserConfig`.
  */
-function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
+function resolveModelSpec(userModelSpec: ModelSpec): ResolvedModelSpec {
+  // Merge the properties from the deprecated `options` bag into the normal structure so
+  // that the rest of this function (and everything downstream) only needs to look at the
+  // normal properties.  Note that a property that is configured directly on the
+  // `ModelSpec` takes precedence over the same property provided in `options`.
+  const { options, ...configuredProps } = userModelSpec
+  const modelSpec: ModelSpec = { ...options, ...configuredProps }
+
   let inputVarNames: VarName[]
   let inputSpecs: InputSpec[]
   if (modelSpec.inputs.length > 0) {
@@ -263,7 +269,6 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
     bundleListing: modelSpec.bundleListing === true,
     customConstants,
     customLookups,
-    customOutputs,
-    options: modelSpec.options
+    customOutputs
   }
 }
