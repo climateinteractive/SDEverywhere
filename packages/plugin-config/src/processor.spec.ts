@@ -502,3 +502,43 @@ export const inputSpecs: InputSpec[] = [
     expect(await readFile(configSpecsFile, 'utf8')).toEqual(expectedConfigSpecs)
   })
 })
+
+describe('ConfigProcessorOptions.spec', () => {
+  it('should allow the model analysis properties', () => {
+    const options: ConfigProcessorOptions = {
+      config: 'config',
+      spec: {
+        directData: { '?data': 'data.xlsx' },
+        dimensionFamilies: { DimA: 'DimA' },
+        specialSeparationDims: { _a: '_dima' },
+        separateAllVarsWithDims: ['_dimb']
+      }
+    }
+    expect(options.spec?.directData).toEqual({ '?data': 'data.xlsx' })
+  })
+
+  it('should reject the properties that are determined by the config files', () => {
+    // Note that these assertions are verified by the type checker (see the `type-check`
+    // script) and not at runtime, so this function is intentionally never called
+    function invalidUsage() {
+      const spec = (s: ConfigProcessorOptions['spec']) => s
+      // @ts-expect-error `inputs` is derived from `inputs.csv`
+      spec({ inputs: ['Input A'] })
+      // @ts-expect-error `outputs` is derived from `graphs.csv`
+      spec({ outputs: ['Var 1'] })
+      // @ts-expect-error `datFiles` is derived from `model.csv`
+      spec({ datFiles: ['data.dat'] })
+      // @ts-expect-error `bundleListing` is derived from `model.csv`
+      spec({ bundleListing: true })
+      // @ts-expect-error `customConstants` is derived from `model.csv`
+      spec({ customConstants: true })
+      // @ts-expect-error `customLookups` is derived from `model.csv`
+      spec({ customLookups: true })
+      // @ts-expect-error `customOutputs` is derived from `model.csv`
+      spec({ customOutputs: true })
+      // @ts-expect-error the deprecated `options` bag is not accepted here
+      spec({ options: {} })
+    }
+    expect(invalidUsage).toBeDefined()
+  })
+})
