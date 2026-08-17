@@ -218,7 +218,7 @@ There is an example in the `directdata` sample model.
 
 #### Supported spec file properties
 
-The full set of supported properties is defined by the `ModelSpec` type in the [`@sdeverywhere/compile`](https://github.com/climateinteractive/SDEverywhere/blob/main/packages/compile/src/model-spec.js) package, which is the authoritative reference.
+The full set of supported properties is defined by the `ModelSpec` type in the [`@sdeverywhere/compile`](https://github.com/climateinteractive/SDEverywhere/blob/main/packages/compile/src/_shared/model-spec.js) package, which is the authoritative reference.
 The table below is a summary.
 
 | Property                  | Type                     | Description                                                                                                                           |

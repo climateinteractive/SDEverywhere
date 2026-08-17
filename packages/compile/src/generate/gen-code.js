@@ -6,7 +6,7 @@ import { generateJS } from './gen-code-js.js'
  *
  * @param {import('../parse-and-generate.js').ParsedModel} parsedModel The parsed model structure.
  * @param {Object} opts The options that control code generation.
- * @param {import('../model-spec.js').ModelSpec} opts.spec The parsed `spec.json` object.
+ * @param {import('../_shared/model-spec.js').ModelSpec} opts.spec The parsed `spec.json` object.
  * @param {import('../parse-and-generate.js').GenerateOperation[]} opts.operations The array
  * of operations to perform.
  * @param {import('../_shared/read-dat.js').ExtData} [opts.extData] The map of datasets from
