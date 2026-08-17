@@ -174,33 +174,6 @@
  * to be set in a `spec.json` file.
  */
 
-/**
- * Normalize the given model spec so that the rest of the compile package only needs
- * to work with the preferred property names.
- *
- * Some `spec.json` properties have been renamed over time.  For each renamed property,
- * this copies the value from the deprecated property to the preferred one, unless the
- * preferred property is already defined (in which case the preferred one wins).  The
- * deprecated properties are left in place so that the spec object is unchanged from
- * the caller's point of view.
- *
- * Note that the given spec object is modified in place (and returned for convenience),
- * which is consistent with how the spec object is treated elsewhere in this package.
- * This function is idempotent, so it is safe to call it more than once on the same spec.
- *
- * @template {ModelSpec | undefined} T
- * @param {T} spec The model spec to normalize, or undefined.
- * @return {T} The same spec object that was provided.
- */
-export function normalizeModelSpec(spec) {
-  if (spec === undefined) {
-    return spec
-  }
-
-  // The `externalDatfiles` property was renamed to `datFiles`
-  if (spec.datFiles === undefined && spec.externalDatfiles !== undefined) {
-    spec.datFiles = spec.externalDatfiles
-  }
-
-  return spec
-}
+// Note that this module only declares types (as JSDoc typedefs), so this empty export
+// is needed to make it a module (otherwise the typedefs would be declared globally).
+export {}

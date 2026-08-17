@@ -12,7 +12,7 @@ import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
-import { normalizeModelSpec } from './_shared/model-spec.js'
+import { normalizeModelSpec } from './_shared/normalize-model-spec.js'
 
 /**
  * The kind of model that is being parsed.

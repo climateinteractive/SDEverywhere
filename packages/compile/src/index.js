@@ -1,19 +1,11 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 //
-// Re-export the types that are part of the public API.  Note that these are defined
-// alongside the code that uses them (as JSDoc typedefs) and are re-exported here so
-// that they are visible to consumers of this package.
+// Note that the types below are declared (as JSDoc typedefs) alongside the code that
+// defines and uses them.  We use `export *` here rather than re-declaring each typedef
+// so that the generated declarations refer to a single definition of each type.
 //
-/** @typedef {import('./_shared/model-spec.js').VarName} VarName */
-/** @typedef {import('./_shared/model-spec.js').VarId} VarId */
-/** @typedef {import('./_shared/model-spec.js').DimId} DimId */
-/** @typedef {import('./_shared/model-spec.js').DatFileSpec} DatFileSpec */
-/** @typedef {import('./_shared/model-spec.js').ModelSpec} ModelSpec */
-/** @typedef {import('./parse-and-generate.js').ModelKind} ModelKind */
-/** @typedef {import('./parse-and-generate.js').ParsedModel} ParsedModel */
-/** @typedef {import('./parse-and-generate.js').GenerateOperation} GenerateOperation */
-/** @typedef {import('./_shared/read-dat.js').ExtData} ExtData */
+export * from './_shared/model-spec.js'
 
 // XXX: For now we re-export the preprocess function from the parse package
 // mainly for use by the cli package (so that we don't need to have the cli
@@ -21,9 +13,9 @@
 export { preprocessVensimModel } from '@sdeverywhere/parse'
 
 export { canonicalName } from './_shared/helpers.js'
-export { readDat } from './_shared/read-dat.js'
+export * from './_shared/read-dat.js'
 export { generateCode } from './generate/gen-code.js'
-export { parseAndGenerate, parseModel, printNames } from './parse-and-generate.js'
+export * from './parse-and-generate.js'
 
 import { resetHelperState } from './_shared/helpers.js'
 import { resetSubscriptsAndDimensions } from './_shared/subscript.js'
@@ -47,7 +39,7 @@ export function resetState() {
  *
  * @param {string} mdlContent The string containing the Vensim model text.
  * @param {string} [modelDir] The absolute path to the directory containing data files.
- * @return {ParsedModel} A parsed tree representation of the model.
+ * @return {import('./parse-and-generate.js').ParsedModel} A parsed tree representation of the model.
  */
 export function parseInlineVensimModel(mdlContent, modelDir) {
   // For tests that parse inline model text, in the case of the legacy parser, don't run
@@ -63,7 +55,7 @@ export function parseInlineVensimModel(mdlContent, modelDir) {
  *
  * @param {string} mdlContent The string containing the XMILE model text.
  * @param {string} [modelDir] The absolute path to the directory containing data files.
- * @return {ParsedModel} A parsed tree representation of the model.
+ * @return {import('./parse-and-generate.js').ParsedModel} A parsed tree representation of the model.
  */
 export function parseInlineXmileModel(mdlContent, modelDir) {
   return parseModel(mdlContent, 'xmile', modelDir)

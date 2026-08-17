@@ -1,14 +1,7 @@
-// This contains the TypeScript configuration used to emit type declarations for
-// the public API.  Note that this package publishes its JavaScript sources directly,
-// so this only emits `.d.ts` files (generated from the JSDoc comments in the sources)
-// and does not transpile any code.
+// This contains the TypeScript configuration for production builds.  Note that this
+// package publishes its JavaScript sources directly, so the build only emits the type
+// declarations that are generated from the JSDoc comments in those sources.
 {
   "extends": "./tsconfig-base.json",
-  "compilerOptions": {
-    "emitDeclarationOnly": true,
-    // The test files are not part of the published API, so they don't need declarations
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
-  },
   "include": ["src/**/*.js"]
 }
