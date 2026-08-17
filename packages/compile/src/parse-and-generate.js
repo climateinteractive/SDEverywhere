@@ -6,13 +6,13 @@ import { parseVensimModel, parseXmileModel } from '@sdeverywhere/parse'
 
 import B from './_shared/bufx.js'
 import { readXlsx } from './_shared/helpers.js'
+import { normalizeModelSpec } from './_shared/normalize-model-spec.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts } from './_shared/subscript.js'
 import { cName } from './_shared/var-names.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
-import { normalizeModelSpec } from './_shared/normalize-model-spec.js'
 
 /**
  * The kind of model that is being parsed.
