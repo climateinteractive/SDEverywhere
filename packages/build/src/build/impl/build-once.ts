@@ -77,8 +77,8 @@ export async function buildOnce(
     // checker will flag any mismatch between what we write here and what the compile
     // package accepts.
     const specJson: CoreModelSpec = {
-      inputs: modelSpec.inputVarNames,
-      outputs: modelSpec.outputVarNames,
+      inputVarNames: modelSpec.inputVarNames,
+      outputVarNames: modelSpec.outputVarNames,
       datFiles: modelSpec.datFiles,
       bundleListing: modelSpec.bundleListing,
       customConstants: modelSpec.customConstants,

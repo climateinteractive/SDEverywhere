@@ -79,6 +79,25 @@ describe('ModelSpec', () => {
     }
     expect(modelSpec).toBeDefined()
   })
+
+  it('should reject the lower-level spec.json variable name properties', () => {
+    // Note that the `sde.config.js` format uses the higher-level `inputs` and `outputs`
+    // properties; the plain variable name properties are specific to `spec.json`
+    const specWithInputVarNames: ModelSpec = {
+      inputs: [],
+      outputs: [],
+      // @ts-expect-error The `sde.config.js` format uses `inputs` rather than `inputVarNames`
+      inputVarNames: ['Input A']
+    }
+    const specWithOutputVarNames: ModelSpec = {
+      inputs: [],
+      outputs: [],
+      // @ts-expect-error The `sde.config.js` format uses `outputs` rather than `outputVarNames`
+      outputVarNames: ['Output X']
+    }
+    expect(specWithInputVarNames).toBeDefined()
+    expect(specWithOutputVarNames).toBeDefined()
+  })
 })
 
 describe('ResolvedModelSpec', () => {
