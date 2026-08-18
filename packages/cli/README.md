@@ -177,7 +177,7 @@ sde which
 _NOTE:_ The following sections refer to "model specification files" (or "spec files" as a shorthand).
 These JSON spec files are generally used by the lower-level `sde` commands, such as `sde generate`.
 The higher-level `sde dev` and `sde bundle` commands use a more flexible configuration file format (`sde.config.js`) that also allows for defining plugins.
-The two formats share the same property definitions where they overlap, so most of the properties documented below are also available in the `modelSpec` section of an `sde.config.js` file (see related issue [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)).
+The two formats share the same property definitions where they overlap, so most of the properties documented below are also available in the `modelSpec` section of an `sde.config.js` file.
 The exception is the input and output variables: a spec file takes plain variable names in `inputVarNames` and `outputVarNames`, whereas an `sde.config.js` file uses higher-level `inputs` and `outputs` properties that also accept objects carrying additional information about each variable.
 
 #### Specify input and output variables
@@ -218,7 +218,7 @@ There is an example in the `directdata` sample model.
 
 #### Supported spec file properties
 
-The full set of supported properties is defined by the `ModelSpec` type in the [`@sdeverywhere/compile`](https://github.com/climateinteractive/SDEverywhere/blob/main/packages/compile/src/_shared/model-spec.js) package, which is the authoritative reference.
+The full set of supported properties is defined by the [`ModelSpec`](https://github.com/climateinteractive/SDEverywhere/blob/main/packages/compile/src/_shared/model-spec.js) type in the `@sdeverywhere/compile` package, which is the authoritative reference.
 The table below is a summary.
 
 | Property                  | Type                     | Description                                                                                                                           |
@@ -234,14 +234,6 @@ The table below is a summary.
 | `customConstants`         | `boolean \| string[]`    | Whether (or which) constants can be overridden at runtime using `setConstant`.                                                        |
 | `customLookups`           | `boolean \| string[]`    | Whether (or which) lookups can be overridden at runtime using `setLookup`.                                                            |
 | `customOutputs`           | `boolean \| string[]`    | Whether (or which) variables can be captured at runtime using `storeOutput`.                                                          |
-| `name`                    | `string`                 | An optional descriptive name for the model. This is not currently used by SDEverywhere.                                               |
-
-The following properties are deprecated.
-They are still honored (and are ignored if the preferred property is also provided), but will be removed in a future release.
-
-| Deprecated property | Preferred property |
-| ------------------- | ------------------ |
-| `externalDatfiles`  | `datFiles`         |
 
 #### Generating, compiling, running, and testing the C code
 
