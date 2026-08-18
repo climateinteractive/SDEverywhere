@@ -57,8 +57,7 @@ export interface ConfigProcessorOptions {
  * `ConfigProcessorOptions`.
  *
  * This is the full `ModelSpec` type from the build package, minus the properties that
- * are determined by the CSV config files (and would therefore be overwritten), and minus
- * the deprecated `options` escape hatch.
+ * are determined by the CSV config files (and would therefore be overwritten).
  */
 export type ConfigProcessorSpec = Omit<
   ModelSpec,
