@@ -204,8 +204,6 @@ describe('build in production mode', () => {
           datFiles: [],
           bundleListing: true,
           customLookups: ['lookup1'],
-          // Note that these model analysis properties previously had to be provided
-          // through the untyped `options` bag
           dimensionFamilies: { DimA: 'DimA' },
           specialSeparationDims: { _a: '_dima' },
           separateAllVarsWithDims: ['_dimb']
