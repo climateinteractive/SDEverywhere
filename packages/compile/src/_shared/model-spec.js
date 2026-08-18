@@ -46,11 +46,6 @@
  * provided, the generated model will include all variables from the model and will not
  * allow any inputs to be set at runtime.
  *
- * Note that the properties below must all be declared with `@property` tags; adding any
- * other block tag (for example, `@deprecated`) in the middle of this comment will cause
- * TypeScript to silently drop every property that follows it.  Deprecations are therefore
- * noted in the property description instead.
- *
  * @typedef {Object} ModelSpec
  *
  * @property {VarName[]} [inputVarNames] The input variables for the model, using the
