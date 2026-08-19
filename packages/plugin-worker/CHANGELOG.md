@@ -15,8 +15,6 @@
   * dependencies
     * @sdeverywhere/runtime bumped from ^0.2.9 to ^0.2.10
     * @sdeverywhere/runtime-async bumped from ^0.2.9 to ^0.2.10
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.15
 
 ## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.13...plugin-worker-v0.2.14) (2026-08-10)
 

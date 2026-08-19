@@ -14,13 +14,6 @@
 * replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
 * update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
 
-
-### Dependencies
-
-* The following workspace dependencies were updated
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.15
-
 ## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-13)
 
 
