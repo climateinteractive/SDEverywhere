@@ -176,8 +176,9 @@ sde which
 
 _NOTE:_ The following sections refer to "model specification files" (or "spec files" as a shorthand).
 These JSON spec files are generally used by the lower-level `sde` commands, such as `sde generate`.
-We are gradually adding support for a more flexible configuration file format (`sde.config.js`) that works with newer commands such as `sde dev` and `sde bundle`.
-We hope to unify these configuration file formats soon to eliminate any confusion about which file format can be used with which command (see related issue [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)).
+The higher-level `sde dev` and `sde bundle` commands use a more flexible configuration file format (`sde.config.js`) that also allows for defining plugins.
+The two formats share the same property definitions where they overlap, so most of the properties documented below are also available in the `modelSpec` section of an `sde.config.js` file.
+The exception is the input and output variables: a spec file takes plain variable names in `inputVarNames` and `outputVarNames`, whereas an `sde.config.js` file uses higher-level `inputs` and `outputs` properties that also accept objects carrying additional information about each variable.
 
 #### Specify input and output variables
 
@@ -198,6 +199,14 @@ Be sure to include `Time` first among the output variables.
 
 #### Specify external data sources
 
+Add a `datFiles` section to the spec file to have SDEverywhere read data for exogenous data variables from one or more Vensim `dat` files.
+Each entry can either be a plain file name, or an object that maps a variable name prefix to a file name.
+There are examples in the `extdata` and `getdata` sample models.
+
+```json
+"datFiles": ["data.dat", { "prefix ": "other.dat" }]
+```
+
 Add a `directData` section to the spec file to have SDEverywhere read data from an Excel file into lookups with a variable name prefix.
 There is an example in the `directdata` sample model.
 
@@ -206,6 +215,25 @@ There is an example in the `directdata` sample model.
   "?data": "data.xlsx"
 }
 ```
+
+#### Supported spec file properties
+
+The full set of supported properties is defined by the [`ModelSpec`](https://github.com/climateinteractive/SDEverywhere/blob/main/packages/compile/src/_shared/model-spec.js) type in the `@sdeverywhere/compile` package, which is the authoritative reference.
+The table below is a summary.
+
+| Property                  | Type                     | Description                                                                                                                           |
+| ------------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `inputVarNames`           | `string[]`               | The input variables, using the names as they appear in the modeling tool.                                                             |
+| `outputVarNames`          | `string[]`               | The output variables, using the names as they appear in the modeling tool. It is customary to list `Time` first.                      |
+| `datFiles`                | `(string \| object)[]`   | The `dat` files that provide data for exogenous data variables, resolved relative to the model directory.                             |
+| `directData`              | `object`                 | Maps the data tag used in a `GET DIRECT {DATA,CONSTANTS,LOOKUPS}` call (for example, `?data`) to an `xlsx` file name.                 |
+| `dimensionFamilies`       | `object`                 | Maps a dimension name to its family name, for cases where the family cannot be inferred from the model alone.                         |
+| `specialSeparationDims`   | `object`                 | Maps a variable identifier to the dimension(s) on which that variable should be separated, which can be used to break a cycle.        |
+| `separateAllVarsWithDims` | `(string \| string[])[]` | The dimensions for which all variables should be separated, as an alternative to listing each variable in `specialSeparationDims`.    |
+| `bundleListing`           | `boolean`                | Whether to bundle a model listing with the generated model so that the `runtime` package can resolve variables by name or identifier. |
+| `customConstants`         | `boolean \| string[]`    | Whether (or which) constants can be overridden at runtime using `setConstant`.                                                        |
+| `customLookups`           | `boolean \| string[]`    | Whether (or which) lookups can be overridden at runtime using `setLookup`.                                                            |
+| `customOutputs`           | `boolean \| string[]`    | Whether (or which) variables can be captured at runtime using `storeOutput`.                                                          |
 
 #### Generating, compiling, running, and testing the C code
 
@@ -238,7 +266,7 @@ There is a `setInputs` implementation in the generated code that gets called at 
 It takes a string with serialized input values and sets variable values from it.
 The serialization format depends on the needs of your application.
 You can replace `setInputs` if you want to use a different serialization form.
-The input variables are listed in the `inputVars` section of the spec file.
+The input variables are listed in the `inputVarNames` section of the spec file.
 Look at the `arrays` model for an example.
 
 The generated format minimizes the amount of data on the wire for web applications.
