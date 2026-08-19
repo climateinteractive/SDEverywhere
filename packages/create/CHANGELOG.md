@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.41](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.40...create-v0.2.41) (2026-08-19)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.32 to ^0.7.33
+
 ## [0.2.40](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.39...create-v0.2.40) (2026-08-13)
 
 
