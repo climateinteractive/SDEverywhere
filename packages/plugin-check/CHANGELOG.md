@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.3.36](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.35...plugin-check-v0.3.36) (2026-08-19)
+
+
+### Bug Fixes
+
+* remove sde-check script ([#887](https://github.com/climateinteractive/SDEverywhere/issues/887)) ([99e9215](https://github.com/climateinteractive/SDEverywhere/commit/99e921553b88a1967bfd507285ae02f05f9ba4ff)), closes [#885](https://github.com/climateinteractive/SDEverywhere/issues/885)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.9 to ^0.2.10
+    * @sdeverywhere/runtime-async bumped from ^0.2.9 to ^0.2.10
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.15
+
 ## [0.3.35](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.34...plugin-check-v0.3.35) (2026-08-13)
 
 

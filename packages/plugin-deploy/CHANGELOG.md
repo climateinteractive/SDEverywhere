@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-deploy-v0.1.1...plugin-deploy-v0.1.2) (2026-08-19)
+
+
+### Documentation Updates
+
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.15
+
 ## [0.1.1](https://github.com/climateinteractive/SDEverywhere/compare/plugin-deploy-v0.1.0...plugin-deploy-v0.1.1) (2026-02-04)
 
 

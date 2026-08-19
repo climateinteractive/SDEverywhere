@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.8...plugin-wasm-v0.2.9) (2026-08-19)
+
+
+### Bug Fixes
+
+* clarify format of `-s` parameters in `emccArgs` in plugin-wasm options ([#879](https://github.com/climateinteractive/SDEverywhere/issues/879)) ([2075f3e](https://github.com/climateinteractive/SDEverywhere/commit/2075f3e2e87ac6d063f07131627ce661d7bfa023)), closes [#523](https://github.com/climateinteractive/SDEverywhere/issues/523)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.15
+
 ## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.7...plugin-wasm-v0.2.8) (2026-08-10)
 
 
