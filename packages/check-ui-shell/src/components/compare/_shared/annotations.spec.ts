@@ -510,19 +510,7 @@ describe('getAnnotationsForScenario', () => {
     // - ! {min/max} value changed for input {var} ({left val} | {right val})
   })
 
-  // it('should return correct annotation when max value has changed for an input', () => {})
-
   // it('should return correct annotation when an input has been renamed', () => {
   //   // - ! input variable renamed: {left var} -> {right var}
-  // })
-
-  // it('should return correct annotation when a value is out of range on left side', () => {
-  //   // - x value out of range for input {var} in {bundle}
-  // })
-
-  // it('should return correct annotation when a value is out of range on right side', () => {})
-
-  // it('should return correct annotation when a value is out of range on both sides', () => {
-  //   // - x value out of range for input {var}
   // })
 })
