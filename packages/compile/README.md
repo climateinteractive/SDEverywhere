@@ -32,7 +32,7 @@ More usage details will be included here at a later time when the interfaces sta
 ## Documentation
 
 The `compile` package is currently treated as an implementation detail of the `cli` package.
-As such, there is no public API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
+As such, there is no generated API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
 
 ## License
 

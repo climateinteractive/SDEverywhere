@@ -2,17 +2,13 @@ import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { Model } from '@sdeverywhere/parse'
-
 import { canonicalName } from '../_shared/helpers'
 import { parseModel } from '../parse-and-generate'
 
-export interface ParsedVensimModel {
-  kind: 'vensim'
-  root: Model
-}
-
-export type ParsedModel = ParsedVensimModel
+// Note that the `ParsedModel` type is defined (as a JSDoc typedef) alongside the
+// `parseModel` function, so we simply re-export it here for use in tests
+import type { ParsedModel } from '../parse-and-generate'
+export type { ParsedModel }
 
 export type DimModelName = string
 export type DimCName = string
