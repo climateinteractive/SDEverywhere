@@ -1,8 +1,7 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.35",
+  "version": "0.3.36",
   "files": [
-    "bin/**",
     "dist/**",
     "template-bundle/**",
     "template-report/**",
@@ -18,9 +17,6 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
-  },
-  "bin": {
-    "sde-check": "bin/sde-check.js"
   },
   "scripts": {
     "clean": "rm -rf dist",
@@ -41,8 +37,8 @@
     "@rollup/plugin-replace": "^6.0.3",
     "@sdeverywhere/check-core": "^0.1.13",
     "@sdeverywhere/check-ui-shell": "^0.2.25",
-    "@sdeverywhere/runtime": "^0.2.9",
-    "@sdeverywhere/runtime-async": "^0.2.9",
+    "@sdeverywhere/runtime": "^0.2.10",
+    "@sdeverywhere/runtime-async": "^0.2.10",
     "assert-never": "^1.2.1",
     "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",

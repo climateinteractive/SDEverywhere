@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.5...parse-v0.1.6) (2026-08-19)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
 ## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.4...parse-v0.1.5) (2026-08-10)
 
 

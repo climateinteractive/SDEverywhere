@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.32...compile-v0.7.33) (2026-08-19)
+
+
+### Bug Fixes
+
+* add `ModelSpec` type in compile package that documents all supported `spec.json` properties ([#890](https://github.com/climateinteractive/SDEverywhere/issues/890)) ([5bc5d0b](https://github.com/climateinteractive/SDEverywhere/commit/5bc5d0b51ce14000725f60f10685be507b2fc5fa)), closes [#765](https://github.com/climateinteractive/SDEverywhere/issues/765)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.5 to ^0.1.6
+
 ## [0.7.32](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.31...compile-v0.7.32) (2026-08-10)
 
 

@@ -22,7 +22,96 @@ yarn add -D @sdeverywhere/plugin-worker
 
 ## Usage
 
-_TODO: This section needs to be fleshed out. In the meantime, you can refer to the API documentation below for the options used to configure this plugin._
+_Note:_ If you followed the "Quick Start" instructions above and/or are using one of the standard project templates provided by SDEverywhere, the `sde.config.js` file should already be set up to use `plugin-worker`.
+Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-worker` can be integrated into your project.
+
+### Why use this plugin?
+
+Running an SDEverywhere-generated model can take long enough to make an application feel unresponsive if the model runs on the main (UI) thread.
+This plugin bundles your generated model together with the `@sdeverywhere/runtime-async` glue code into a single, self-contained `worker.js` file.
+When your application spawns that worker, model runs happen on a separate thread, which keeps sliders and other controls responsive.
+
+The generated worker works in both web browser and Node.js environments without any changes on your part: it uses a Web Worker in a browser, and a worker thread in Node.js.
+
+### Steps
+
+1. Add `@sdeverywhere/plugin-worker` as a project "dev" dependency:
+
+```sh
+cd your-model-project
+npm install --save-dev @sdeverywhere/plugin-worker
+```
+
+2. Update your `sde.config.js` file to use `workerPlugin`. Make sure that `workerPlugin` runs after any plugin that produces the generated model (for example, `plugin-wasm`):
+
+```js
+import { dirname, join as joinPath } from 'path'
+import { fileURLToPath } from 'url'
+
+import { workerPlugin } from '@sdeverywhere/plugin-worker'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const corePath = (...parts) => joinPath(__dirname, 'packages', 'core', ...parts)
+
+export async function config() {
+  return {
+    modelFiles: ['model/example.mdl'],
+
+    // ...
+
+    plugins: [
+      // Generate a `worker.js` file that runs the model asynchronously on a
+      // worker thread for improved responsiveness
+      workerPlugin({
+        // If `outputPaths` is undefined, `worker.js` is written to the `sde-prep`
+        // directory.  More commonly, you will write it into your app or library
+        // source tree so that it can be imported directly.
+        outputPaths: [corePath('src', 'model', 'generated', 'worker.js')]
+      })
+    ]
+  }
+}
+```
+
+3. Run `sde bundle` (or `sde dev`); the plugin writes a `worker.js` file to each configured output path.
+
+_Note:_ If you set `genFormat` to `'c'` in your `sde.config.js` file, add `wasmPlugin()` before `workerPlugin()` so that the C code is compiled to a WebAssembly module first.
+If `genFormat` is `'js'` (the default), `workerPlugin` can pick up the generated JavaScript model directly and no additional plugin is needed.
+
+### Using the generated worker
+
+The generated `worker.js` is a self-contained bundle, so the recommended approach is to import its source and pass it to `spawnAsyncModelRunner` from `@sdeverywhere/runtime-async`.
+This avoids having to serve or resolve a separate worker file at runtime.
+In a Vite-based project, you can use the `?raw` suffix to import the file as a string:
+
+```js
+import { spawnAsyncModelRunner } from '@sdeverywhere/runtime-async'
+
+import workerJs from './generated/worker.js?raw'
+
+export async function createModelRunner() {
+  return spawnAsyncModelRunner({ source: workerJs })
+}
+```
+
+Alternatively, if you serve `worker.js` as a static asset, you can spawn it by path instead:
+
+```js
+const runner = await spawnAsyncModelRunner({ path: './worker.js' })
+```
+
+The resulting `ModelRunner` can be used directly, or can be passed to a higher-level scheduler such as `ModelScheduler`.
+See the [`@sdeverywhere/runtime`](https://github.com/climateinteractive/SDEverywhere/tree/main/packages/runtime) and [`@sdeverywhere/runtime-async`](https://github.com/climateinteractive/SDEverywhere/tree/main/packages/runtime-async) packages for more details.
+
+### Writing to multiple locations
+
+The `outputPaths` option accepts more than one path, which is useful if the same worker is needed by more than one package in a monorepo:
+
+```js
+workerPlugin({
+  outputPaths: [corePath('src', 'model', 'generated', 'worker.js'), appPath('src', 'model', 'generated', 'worker.js')]
+})
+```
 
 ## Documentation
 

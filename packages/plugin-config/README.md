@@ -25,7 +25,16 @@ yarn add -D @sdeverywhere/plugin-config
 _Note:_ If you followed the "Quick Start" instructions above, the `create` script will have already performed the following steps for you.
 Reading these instructions can still be helpful if you are setting up a project manually or want to understand how `plugin-config` can be integrated into your project.
 
-To get started:
+### Why use this plugin?
+
+Every SDEverywhere project needs a `modelSpec` that declares which model variables are exposed as inputs and outputs.
+For a small model, it is fine to write that specification by hand in `sde.config.js`.
+
+For a larger model, and especially for one that drives a full application with sliders, graphs, and translated labels, keeping all of that in a JavaScript file becomes unwieldy.
+This plugin lets you describe those things in a set of CSV files instead, which can be edited in a spreadsheet program by people who don't work in the code.
+It reads those CSV files and produces both the `modelSpec` needed by the build process and a set of generated source files that your application can use directly.
+
+### Steps
 
 1. Copy the included template config files to your local project:
 
@@ -35,22 +44,34 @@ npm install --save-dev @sdeverywhere/plugin-config
 cp -rf "./node_modules/@sdeverywhere/plugin-config/template-config" ./config
 ```
 
-2. Replace the placeholder values in the CSV files with values that are suitable for your model.
+2. Replace the placeholder values in the CSV files with values that are suitable for your model (see "The config files" below).
 
-3. Add a line to your `sde.config.js` file that uses the `configProcessor` function supplied by this package:
+3. Add a line to your `sde.config.js` file that uses the `configProcessor` function supplied by this package. Note that `configProcessor` is used as the value of the `modelSpec` property; it is not added to the `plugins` array:
 
 ```js
+import { dirname, join as joinPath } from 'path'
+import { fileURLToPath } from 'url'
+
 import { configProcessor } from '@sdeverywhere/plugin-config'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const configDir = joinPath(__dirname, 'config')
+const corePath = (...parts) => joinPath(__dirname, 'packages', 'core', ...parts)
 
 export async function config() {
   return {
-    // Specify the Vensim model to read
-    modelFiles: ['example.mdl'],
+    // Specify the model file to read
+    modelFiles: ['model/example.mdl'],
 
-    // Read csv files from `config` directory and write to the recommended output
-    // directory structure.  See `ConfigProcessorOptions` for more details.
+    // Rebuild when the config files are changed
+    watchPaths: ['config/**', 'model/example.mdl'],
+
+    // Read csv files from the `config` directory and write generated files to the
+    // recommended output directory structure under the `core` package.  See
+    // `ConfigProcessorOptions` for more details.
     modelSpec: configProcessor({
-      config: 'config'
+      config: configDir,
+      out: corePath()
     }),
 
     plugins: [
@@ -61,6 +82,63 @@ export async function config() {
 ```
 
 4. Run `sde bundle` or `sde dev`; your config files will be used to drive the build process.
+
+### The config files
+
+The `config` directory contains the following CSV files:
+
+| File          | Purpose                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `model.csv`   | Basic model settings: default graph time range, `.dat` files, and flags such as `bundle listing`.          |
+| `inputs.csv`  | One row per input (slider or switch), including the model variable name, range, default value, and labels. |
+| `outputs.csv` | One row per model variable that should be included in the model outputs.                                   |
+| `graphs.csv`  | One row per graph, including the title, axis settings, and up to 15 plotted variables with their styles.   |
+| `colors.csv`  | Named colors that can be referenced by ID from `graphs.csv`.                                               |
+| `strings.csv` | User-visible strings that are gathered from the other config files, for use in translation.                |
+
+Because the files are plain CSV, they can be edited in a spreadsheet program (or in a shared spreadsheet that is exported to CSV), which makes it practical for modelers and designers to adjust the app configuration without touching any code.
+
+### Generated files
+
+If `out` is set to a single directory, the plugin writes the following files:
+
+```
+  <out-dir>/
+  ├── src/
+  |   ├── config/
+  |   |   └── generated/
+  |   |       ├── config-specs.ts    # Input, graph, and color specs derived from the config files
+  |   |       └── spec-types.ts      # Types (e.g., `InputId`, `OutputVarId`) for the above
+  |   └── model/
+  |       └── generated/
+  |           └── model-spec.ts      # Input/output variable IDs for the generated model
+  └── strings/
+      └── en.js                      # The base (English) strings gathered from the config files
+```
+
+These files are intended to be imported by the application or library that wraps your model, for example:
+
+```ts
+import { graphSpecs, inputSpecs } from '../config/generated/config-specs'
+import type { InputId, OutputVarId } from '../config/generated/spec-types'
+```
+
+If you need finer control over where each group of files is written, pass a `ConfigProcessorOutputPaths` object instead of a single path:
+
+```js
+modelSpec: configProcessor({
+  config: configDir,
+  out: {
+    modelSpecsDir: corePath('src', 'model', 'generated'),
+    configSpecsDir: corePath('src', 'config', 'generated'),
+    stringsDir: corePath('strings')
+  }
+})
+```
+
+Omitting one of these paths causes that group of files to be skipped; omitting `out` entirely causes no files to be written, in which case the plugin only supplies the `modelSpec` used by the build process.
+
+For more guidance on building an application around these generated files, refer to [Creating a Web Application](https://github.com/climateinteractive/SDEverywhere/wiki/Creating-a-Web-Application) in the [SDEverywhere wiki](https://github.com/climateinteractive/SDEverywhere/wiki).
 
 ## Documentation
 

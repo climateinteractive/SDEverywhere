@@ -1,0 +1,7 @@
+// This contains the TypeScript configuration for production builds.  Note that this
+// package publishes its JavaScript sources directly, so the build only emits the type
+// declarations that are generated from the JSDoc comments in those sources.
+{
+  "extends": "./tsconfig-base.json",
+  "include": ["src/**/*.js"]
+}

@@ -6,13 +6,20 @@ import B from './bufx.js'
 import { canonicalVensimName } from './helpers.js'
 
 /**
+ * The datasets read from external `dat` files, keyed by variable identifier.  Each
+ * dataset is a map of time to value.
+ *
+ * @typedef {Map<import('./model-spec.js').VarId, Map<number, number>>} ExtData
+ */
+
+/**
  * Read a Vensim `dat` file with static data and return a Map.
  * Each dataset consists of a key (the variable name in the canonical
  * format used by SDE) and a map of time/value pairs.
  *
- * @param pathname The absolute path to the dat file.
- * @param prefix An optional prefix string prepended to var names.
- * @return A Map containing the datasets.
+ * @param {string} pathname The absolute path to the dat file.
+ * @param {string} [prefix] An optional prefix string prepended to var names.
+ * @return {Promise<ExtData>} A promise that resolves with a Map containing the datasets.
  */
 export async function readDat(pathname, prefix = '') {
   let log = new Map()

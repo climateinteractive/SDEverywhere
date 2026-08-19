@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.9...runtime-v0.2.10) (2026-08-19)
+
+
+### Documentation Updates
+
+* clarify format of Emscripten `-s` parameters ([#881](https://github.com/climateinteractive/SDEverywhere/issues/881)) ([2ce959a](https://github.com/climateinteractive/SDEverywhere/commit/2ce959a2835e179d4a4cbca7769aa4d158bd2160)), closes [#878](https://github.com/climateinteractive/SDEverywhere/issues/878)
+
 ## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/runtime-v0.2.8...runtime-v0.2.9) (2026-08-10)
 
 

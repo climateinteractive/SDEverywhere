@@ -1,6 +1,6 @@
 # @sdeverywhere/compile
 
-This package contains the core [SDEverywhere](https://github.com/climateinteractive/SDEverywhere) compiler that takes a Vensim model as input and generates C code as output.
+This package contains the core [SDEverywhere](https://github.com/climateinteractive/SDEverywhere) compiler that takes a Vensim or Stella model as input and generates JavaScript or C code as output.
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ More usage details will be included here at a later time when the interfaces sta
 ## Documentation
 
 The `compile` package is currently treated as an implementation detail of the `cli` package.
-As such, there is no public API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
+As such, there is no generated API documentation at this time, but we hope to expose a public API once the interfaces stabilize.
 
 ## License
 

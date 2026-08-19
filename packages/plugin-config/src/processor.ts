@@ -43,15 +43,33 @@ export interface ConfigProcessorOptions {
   out?: string | ConfigProcessorOutputPaths
 
   /**
-   * Additional options included with the SDE `spec.json` file.
-   * @hidden This is not part of the public API because we are aiming to merge
-   * the `spec.json` file format with the `sde.config.js` format.  This is exposed
-   * temporarily to allow for configuring additional settings like `directData`
-   * for which we don't currently have a way to configure via config files.
+   * Additional model spec properties that cannot be derived from the CSV config files.
+   *
+   * These are merged into the `ModelSpec` returned by the processor, which allows for
+   * configuring settings like `directData` for which there is currently no
+   * representation in the config files.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  spec?: { [key: string]: any }
+  spec?: ConfigProcessorSpec
 }
+
+/**
+ * The model spec properties that can be provided using the `spec` field of
+ * `ConfigProcessorOptions`.
+ *
+ * This is the full `ModelSpec` type from the build package, minus the properties that
+ * are determined by the CSV config files (and would therefore be overwritten).
+ */
+export type ConfigProcessorSpec = Omit<
+  ModelSpec,
+  | 'inputs'
+  | 'outputs'
+  | 'datFiles'
+  | 'bundleListing'
+  | 'customConstants'
+  | 'customLookups'
+  | 'customOutputs'
+  | 'options'
+>
 
 /**
  * Returns a function that can be passed as the `modelSpec` function for the SDEverywhere
@@ -131,13 +149,14 @@ async function processModelConfig(buildContext: BuildContext, options: ConfigPro
   context.log('info', `Done generating files (${elapsed}s)`)
 
   return {
+    // Include any additional properties that cannot be derived from the config files
+    ...options.spec,
     inputs: context.getOrderedInputs(),
     outputs: context.getOrderedOutputs(),
     datFiles: modelOptions.datFiles,
     bundleListing: modelOptions.bundleListing,
     customConstants: modelOptions.customConstants,
     customLookups: modelOptions.customLookups,
-    customOutputs: modelOptions.customOutputs,
-    options: options.spec
+    customOutputs: modelOptions.customOutputs
   }
 }

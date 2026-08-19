@@ -11,7 +11,7 @@ const generatedFilePath = (...parts) => appPath('src', 'model', 'generated', ...
 
 export async function config() {
   return {
-    // Specify the Vensim model to read
+    // Specify the model file to read
     modelFiles: ['model/houses.mdl'],
 
     // Specify the input and output variables

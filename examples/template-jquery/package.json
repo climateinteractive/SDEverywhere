@@ -6,8 +6,7 @@
   "scripts": {
     "clean": "rm -rf ./sde-prep",
     "dev": "sde dev",
-    "build": "sde bundle",
-    "save-baseline": "sde-check baseline --save"
+    "build": "sde bundle"
   },
   "workspaces": [
     "packages/core",

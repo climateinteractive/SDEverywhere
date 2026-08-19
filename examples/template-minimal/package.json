@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf sde-prep",
-    "build": "sde bundle",
     "dev": "sde dev",
-    "save-baseline": "sde-check baseline --save"
+    "build": "sde bundle"
   },
   "dependencies": {
     "@sdeverywhere/build": "^0.3.7",

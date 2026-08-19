@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.14...plugin-worker-v0.2.15) (2026-08-19)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.9 to ^0.2.10
+    * @sdeverywhere/runtime-async bumped from ^0.2.9 to ^0.2.10
+
 ## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.13...plugin-worker-v0.2.14) (2026-08-10)
 
 

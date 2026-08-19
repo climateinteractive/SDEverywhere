@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.11...plugin-config-v0.2.12) (2026-08-19)
+
+
+### Bug Fixes
+
+* retrofit `ModelSpec` type from build package on top of `ModelSpec` type from compile package ([#891](https://github.com/climateinteractive/SDEverywhere/issues/891)) ([db5a4d0](https://github.com/climateinteractive/SDEverywhere/commit/db5a4d00cb15f90765e24b5e5868fb4d8d87bb00)), closes [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
 ## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-13)
 
 
