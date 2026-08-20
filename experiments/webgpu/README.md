@@ -20,6 +20,9 @@ fastest backend SDEverywhere ships; it is itself 2–8× faster than the JS back
 - For an En-ROADS-scale model, how much you win depends mostly on **how many variables you
   capture**: 4000 runs capturing all 350 outputs is 5.7× faster than WASM, but capturing the
   10 an objective function needs is 14.3× — and readback drops from 99 ms to 2.8 ms.
+- The one single run that does win is an **EPS-scale model with full 8760-hour detail** —
+  31 time steps, 2.8 M cell evaluations per step, 98% of them in wide layers. It beats WASM
+  by **1.2×**, with f32 error of 2.1e-3. See the EPS section in RESULTS.md.
 - The practical opportunity is therefore batch work — calibration, sensitivity analysis,
   scenario sweeps, `plugin-check` — not the interactive slider path.
 
@@ -40,8 +43,10 @@ validate.mjs       compare the flat-buffer JS model against SDE's production JS 
 validate-all.mjs   run that comparison over every model in `models/`
 debug-model.mjs    per-output diff, plus `DUMP_JS=1` / `DUMP_WGSL=1` source dumps
 bench.mjs          shape/ensemble benchmark sweep
+bench-eps.mjs      the EPS 8760-hour case from issue #319
 memory.mjs         memory + readback experiment at En-ROADS scale
-bench/             shared harness, browser-side benchmark, and WebGPU driver
+inspect.mjs        measure a real model's layer/width profile (used to build the EPS stand-in)
+bench/             shared harness, synthetic models, browser-side benchmark, WebGPU driver
 ```
 
 ## Running it
@@ -59,6 +64,12 @@ ONLY=sir VERBOSE=1 node bench.mjs      # one case, with browser console output
 
 # Memory and readback at En-ROADS scale (350 outputs x 111 save points x N runs)
 node memory.mjs
+
+# The EPS case from issue #319 (full 8760-hour detail)
+node bench-eps.mjs
+
+# Measure any real model's dependency-layer width profile
+node inspect.mjs /path/to/Model.mdl /path/to/model/dir
 ```
 
 The WASM baseline needs an Emscripten SDK. The scripts look for one at `../../../emsdk`

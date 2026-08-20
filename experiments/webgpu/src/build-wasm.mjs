@@ -55,12 +55,21 @@ function findEmcc() {
  * @param {string[]} [opts.inputVarNames] The Vensim names of the input variables.
  * @param {string} [opts.modelDir] The directory used to resolve external data files.
  * @param {string} [opts.optLevel] The optimization level to pass to `emcc`.
+ * @param {number} [opts.initialMemoryMB] The initial wasm heap size.  A model whose globals
+ * exceed the default 16 MB will not link without this.
  * @return {string} The generated JavaScript module text (with the wasm binary inlined).
  */
-export function buildWasmModel({ mdlText, outputVarNames, inputVarNames = [], modelDir, optLevel = '-O3' }) {
+export function buildWasmModel({
+  mdlText,
+  outputVarNames,
+  inputVarNames = [],
+  modelDir,
+  optLevel = '-O3',
+  initialMemoryMB = 16
+}) {
   const key = createHash('sha256')
     .update(mdlText)
-    .update(JSON.stringify({ outputVarNames, inputVarNames, optLevel }))
+    .update(JSON.stringify({ outputVarNames, inputVarNames, optLevel, initialMemoryMB }))
     .digest('hex')
     .slice(0, 16)
   const cacheDir = resolve(here, '../.wasm-cache')
@@ -107,6 +116,7 @@ export function buildWasmModel({ mdlText, outputVarNames, inputVarNames = [], mo
     // `ALLOW_MEMORY_GROWTH` is needed because an ensemble allocates one output buffer per
     // run up front, which can be far larger than the default 16 MB heap
     '-sALLOW_MEMORY_GROWTH=1',
+    `-sINITIAL_MEMORY=${initialMemoryMB * 1024 * 1024}`,
     `-sENVIRONMENT='web,webview,worker'`,
     `-sEXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`,
     `-sEXPORTED_RUNTIME_METHODS=['cwrap']`

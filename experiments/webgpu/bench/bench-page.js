@@ -153,12 +153,24 @@ async function best(reps, fn) {
   return bestMs
 }
 
-/** Compare two output arrays and return the maximum relative difference. */
-function maxRelDiff(a, b, length) {
+/**
+ * Compare two output arrays and return the maximum relative difference.
+ *
+ * The two arrays may interleave a different number of ensemble members, so each is walked
+ * with its own stride; only the first member is compared when the strides differ.
+ *
+ * @param {ArrayLike<number>} a The reference values.
+ * @param {ArrayLike<number>} b The values under test.
+ * @param {number} strideA The ensemble stride of `a`.
+ * @param {number} strideB The ensemble stride of `b`.
+ * @param {number} length The number of reference values to compare.
+ * @return {number} The maximum relative difference.
+ */
+function maxRelDiff(a, b, strideA, strideB, length) {
   let maxRel = 0
   for (let i = 0; i < length; i++) {
-    const e = a[i]
-    const d = Math.abs(b[i] - e)
+    const e = a[i * strideA]
+    const d = Math.abs(b[i * strideB] - e)
     const rel = Math.abs(e) > 1e-9 ? d / Math.abs(e) : d
     if (rel > maxRel) {
       maxRel = rel
@@ -211,13 +223,27 @@ async function main() {
         entry.prodJsMs = await best(c.reps, () => prod(inputs))
       }
 
-      const jsF64 = factory(c.numRuns, Int32Array.from(c.lookupDir), Float64Array.from(c.lookupData), Float64Array)
-      entry.jsF64Ms = await best(c.reps, () => jsF64.runAll(inputs))
-      const reference = Float64Array.from(jsF64.OUT)
+      // The flat-buffer JS model is both a CPU data point and the f64 correctness reference.
+      // For very large models it is far too slow to time (it calls one function per subscript
+      // cell), so `referenceOnly` runs it once, for a single ensemble member, purely as the
+      // reference.
+      let reference
+      let referenceStride
+      if (c.referenceOnly) {
+        const ref = factory(1, Int32Array.from(c.lookupDir), Float64Array.from(c.lookupData), Float64Array)
+        ref.runAll(inputs.subarray(0, c.numInputs))
+        reference = Float64Array.from(ref.OUT)
+        referenceStride = 1
+      } else {
+        const jsF64 = factory(c.numRuns, Int32Array.from(c.lookupDir), Float64Array.from(c.lookupData), Float64Array)
+        entry.jsF64Ms = await best(c.reps, () => jsF64.runAll(inputs))
+        reference = Float64Array.from(jsF64.OUT)
+        referenceStride = c.numRuns
 
-      const jsF32 = factory(c.numRuns, Int32Array.from(c.lookupDir), Float32Array.from(c.lookupData), Float32Array)
-      entry.jsF32Ms = await best(c.reps, () => jsF32.runAll(inputs))
-      entry.jsF32MaxRel = maxRelDiff(reference, jsF32.OUT, reference.length)
+        const jsF32 = factory(c.numRuns, Int32Array.from(c.lookupDir), Float32Array.from(c.lookupData), Float32Array)
+        entry.jsF32Ms = await best(c.reps, () => jsF32.runAll(inputs))
+        entry.jsF32MaxRel = maxRelDiff(reference, jsF32.OUT, 1, 1, reference.length)
+      }
 
       // GPU
       const gpu = await createGpuModel(device, {
@@ -241,7 +267,13 @@ async function main() {
         // Warm up (the first submit includes lazy pipeline work inside the driver) and
         // check correctness against the f64 CPU result
         const warm = await gpu.run(strategy, true)
-        const check = maxRelDiff(reference, warm.outputs, reference.length)
+        const check = maxRelDiff(
+          reference,
+          warm.outputs,
+          referenceStride,
+          c.numRuns,
+          reference.length / referenceStride
+        )
         let lastEncode = 0
         let lastGpu = 0
         const totalMs = await best(c.reps, async () => {

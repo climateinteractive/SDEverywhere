@@ -6,7 +6,7 @@
 //
 
 import http from 'node:http'
-import { readFileSync, existsSync } from 'node:fs'
+import { appendFileSync, readFileSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -37,7 +37,9 @@ export function buildCase({
   meta,
   modelDir,
   prodBaseline = true,
-  wasmBaseline = true
+  wasmBaseline = true,
+  wasmInitialMemoryMB,
+  referenceOnly = false
 }) {
   const compiled = compileModel({ mdlText, outputVarNames, inputVarNames, numRuns, modelDir })
 
@@ -62,7 +64,14 @@ export function buildCase({
   // plugin's default -Os
   let wasmJsCode
   if (wasmBaseline) {
-    wasmJsCode = buildWasmModel({ mdlText, outputVarNames, inputVarNames, modelDir, optLevel: '-O3' })
+    wasmJsCode = buildWasmModel({
+      mdlText,
+      outputVarNames,
+      inputVarNames,
+      modelDir,
+      optLevel: '-O3',
+      initialMemoryMB: wasmInitialMemoryMB
+    })
   }
   return {
     label,
@@ -95,7 +104,8 @@ export function buildCase({
     numSteps: compiled.wgsl.numSteps,
     stepsPerSave: compiled.wgsl.stepsPerSave,
     reps,
-    strategies
+    strategies,
+    referenceOnly
   }
 }
 
@@ -176,6 +186,11 @@ export async function runInBrowser(cases) {
       }
       const r = results[results.length - 1]
       console.log(`  [${i + 1}/${cases.length}] ${r.label}${r.error ? ` ERROR: ${r.error}` : ''}`)
+      // Persist each result as it arrives, so a failure late in a long sweep does not throw
+      // away the cases that already succeeded
+      if (process.env.BENCH_JSON) {
+        appendFileSync(process.env.BENCH_JSON, `${JSON.stringify(r)}\n`)
+      }
     }
   } finally {
     await browser.close()

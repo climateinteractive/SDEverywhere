@@ -262,6 +262,126 @@ So an implementation must either query the device limits and chunk the ensemble,
 the captured output set. Chunking is straightforward (the state buffer is small, so batches
 are cheap to set up) but it has to exist.
 
+## The EPS case from issue #319 (all 8760 hours per year)
+
+jrissman's comment describes a specific hope: the EPS has many non-time subscripts that do
+not interact — 12 vehicle types, ~25 industry categories, up to 8760 hours per annual time
+step — and "even if we can only accelerate operations by parallelizing calculations for
+non-interacting subscript elements or non-interacting variables, that would be enough to
+allow the EPS to run many times faster."
+
+None of the models above were representative of that. The width sweep used one homogeneous
+dimension with a stock per element, ran 200 time steps, and had 9 dependency layers. So this
+section measures the real thing.
+
+### What the real EPS actually looks like
+
+`inspect.mjs` runs SDE's parser and variable reader over the exact revision jrissman linked
+(eps-us @ `2e3acf8`, the all-8760-hours version) and measures its structure:
+
+|                                           |                                                        |
+| ----------------------------------------- | ------------------------------------------------------ |
+| Equations / variable instances            | 3,411 / 30,203                                         |
+| Variables evaluated every time step       | 1,799                                                  |
+| Simulation window                         | 2020–2050, `TIME STEP = 1` → **31 time steps**         |
+| Dependency layers per time step           | **77**                                                 |
+| Cell evaluations per time step            | **2,790,056**                                          |
+| Layer width (cells evaluable in parallel) | min 1, p25 172, median 2,607, p90 157,398, max 376,099 |
+| Work in layers narrower than 4096 cells   | **2.0%**                                               |
+
+Two things stand out, and both are good news for a GPU:
+
+1. **Only 31 time steps.** Every other model in this study runs 200–3200 steps. Per-time-step
+   overhead — the thing that dominated the `layered` strategy everywhere else — is 100× less
+   important here.
+2. **98% of the work is in layers wide enough to fill a GPU.** The hourly detail really is
+   there: `Electricity Source[17] × Day[365] × Hour[24]` is 148,920 cells, and the widest
+   layer is 376,099 cells.
+
+The "8760 hours" is expressed as `Day[365] × Hour[24]`, not a single 8760-element dimension.
+
+Note that SDE cannot currently compile this revision at all — it uses `VECTOR RANK`, which the
+compiler does not implement — so the measurement stops after the variable-reading phase and
+derives dependency depth from the parsed ASTs directly.
+
+### A stand-in with the same work profile
+
+`bench/eps-shaped-model.mjs` generates a Vensim model that reproduces that profile: the same
+77 layers with the same measured width at each layer, built from variables over the real EPS
+dimension sizes, with the same 2020–2050 window and `SUM` roll-ups over the hourly dimensions
+at the end. It reproduces _how much independent work exists at each point in the dependency
+chain_, which is what decides whether a GPU can help. It does not reproduce the EPS's actual
+equations, its lookups, or its allocation functions — its arithmetic per cell is simpler, so
+absolute times here are optimistic for both backends.
+
+```
+case                    cells     instr  lyr  dispatch     wasm-O3   layered     perWG  vs wasm  maxRel
+eps 8760h runs=1        3,176,895 1346   81   2606          155.60    125.30    280.00     1.2x  2.1e-3
+eps width=1/24 runs=1   149,220   950    81   2606            5.32     23.97     16.87   (3.2x)  1.1e-4
+eps width=1/8 runs=1    433,486   1003   81   2606           19.27     35.85     37.55   (1.9x)  3.8e-4
+eps width=1/2 runs=1    1,781,641 1271   81   2606           59.10    121.90    196.90   (2.1x)  1.9e-3
+eps 8760h runs=4        3,176,895 1346   81   2606          307.40    180.20         -     1.7x  2.1e-3
+```
+
+(`width=1/24` scales every layer down by 24×, which is roughly the "representative timeslices
+instead of 8760 hours" version the EPS ships today.)
+
+### The answer: yes, WebGPU finally wins here — by 1.2×
+
+This is the first single-run case in the whole study where WebGPU beats the WASM backend.
+It wins because the EPS has exactly the two properties that were missing everywhere else:
+very few time steps and very wide layers.
+
+But 1.2× is not "many times faster", and the trend explains why. Comparing the half-width and
+full-width rows:
+
+|             | cells/step | wasm-O3  | GPU (`layered`) |
+| ----------- | ---------- | -------- | --------------- |
+| half detail | 1.78 M     | 59.1 ms  | 121.9 ms        |
+| full detail | 3.18 M     | 155.6 ms | 125.3 ms        |
+| ratio       | 1.8×       | **2.6×** | **1.03×**       |
+
+The GPU barely notices the extra 1.4 M cells per step — it is running into a fixed cost of
+~20–24 ms (2606 dispatches plus per-layer setup) and has spare throughput above that. WASM
+scales worse than linearly (2.6× time for 1.8× work, i.e. it is falling out of cache). So the
+crossover happens right around full EPS detail, and past it the GPU's advantage would keep
+growing.
+
+Measured throughput on the incremental work between the `1/24` and full rows:
+
+|                      | cell evaluations per second |
+| -------------------- | --------------------------- |
+| WASM `-O3`, one core | 551 M/s                     |
+| WebGPU, `layered`    | 818 M/s                     |
+
+A 3072-ALU GPU achieving only 1.5× the throughput of one CPU core is the real finding. The
+work is a shallow chain of cheap element-wise operations with one read and one write per
+cell; there is not enough arithmetic per byte moved for the GPU's advantage to show, and 21
+of the 77 layers are narrower than 256 cells and cannot fill the machine at all.
+
+### Caveats specific to this case
+
+- **f32 error reaches 2.1e-3** — about two to three correct significant digits. That is the
+  worst in this study, and it comes from the `SUM` roll-ups over ~149,000 single-precision
+  values. Hourly-detail models are exactly the ones where f32 hurts most.
+- **The real EPS would likely do worse than 1.2×**, not better. Its equations use lookups
+  (this prototype's shader does a linear scan, with no cached last-hit index), `ALLOCATE
+AVAILABLE`, `VECTOR RANK`, and other constructs that map poorly to a GPU, while the
+  synthetic model only uses multiply/add/`SQRT`/`ABS`.
+- **Ensembles hit memory limits fast at this scale.** Model state alone is 12.1 MB per run,
+  so 4 runs is 48.5 MB and 100 runs would be 1.2 GB — well past WebGPU's guaranteed 128 MiB
+  storage-buffer minimum. A 16-run ensemble did not complete within a 15-minute budget.
+- Only `layered` and `perWorkgroup` were run. `perThread` gives a single GPU lane the entire
+  model, which at this size takes minutes.
+
+### What this suggests instead
+
+The EPS's hourly dimension is genuinely parallel, and that parallelism is worth exploiting —
+but a GPU is not the cheapest way to exploit it. The same independence would let a WASM build
+use SIMD (`-msimd128`, four f64 lanes or eight f32) or split the hour dimension across worker
+threads. On this machine's 10 cores, either would comfortably beat 1.2× for far less
+engineering than a WebGPU backend, and without the f32 precision loss.
+
 ## What this means for SDEverywhere
 
 **Not an interactive-speed play.** For "user moves a slider, one model run", WebGPU is 3–120×
@@ -305,9 +425,13 @@ will also speed up the JS/C backends" remains unproven.
   last-hit index. Lookup-heavy models would look worse than these results suggest.
 - **One GPU tested**, with unified memory. A discrete GPU would likely show a larger ensemble
   win (more ALUs) and a larger readback cost.
-- **The WASM baseline runs on one thread.** A worker pool would improve it by up to ~10× on
-  this machine; that comparison was not run.
+- **The WASM baseline runs on one thread, without SIMD.** A worker pool or `-msimd128` would
+  improve it substantially on this machine; neither comparison was run, and both would eat
+  into the GPU's advantage in every case measured here.
 - **`storeOutputs` in the `layered` strategy** assumes `SAVEPER` is an exact multiple of
   `TIME STEP`.
-- The synthetic models are deliberately regular. A real model of the EPS's or En-ROADS's
-  messiness (lookups everywhere, deep chains, subscripted stocks) was not measured.
+- The synthetic models are deliberately regular. The EPS stand-in reproduces the real model's
+  measured per-layer work profile but not its equations, lookups, or allocation functions, so
+  its absolute times are optimistic for both backends.
+- **SDE cannot compile the EPS revision referenced in the issue** (it uses `VECTOR RANK`), so
+  no end-to-end run of the real model was possible.
