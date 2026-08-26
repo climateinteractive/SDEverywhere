@@ -10,6 +10,14 @@ extern "C" {
 #define _NA_ (-DBL_MAX)
 #define bool_cond(cond) ((double)(cond) != 0.0)
 
+// The tolerance used by the functions that guard against division by zero.
+#define SDE_EPSILON 1e-6
+
+// Note: The `_time` and `_time_step` variables are declared in `sde.h`, but `sde.h` includes
+// this header, so we declare them here for use by the inline functions below.
+extern double _time;
+extern double _time_step;
+
 //
 // Vensim functions
 // See the Vensim Reference Manual for descriptions of the functions.
@@ -44,13 +52,49 @@ double* _DEMAND_AT_PRICE(double* demand_quantities, double* demand_profiles, dou
 double _FIND_MARKET_PRICE(double* demand_quantities, double* demand_profiles, double* supply_quantities,
     double* supply_profiles, size_t num_demanders, size_t num_suppliers);
 double* _INVERT_MATRIX(double* matrix, size_t n);
-double _PULSE(double start, double width);
 double _PULSE_TRAIN(double start, double width, double interval, double end);
-double _RAMP(double slope, double start_time, double end_time);
 double* _SUPPLY_AT_PRICE(double* supply_quantities, double* supply_profiles, double price, size_t num_suppliers);
 double* _VECTOR_SORT_ORDER(double* vector, size_t size, double direction);
-double _XIDZ(double a, double b, double x);
-double _ZIDZ(double a, double b);
+
+//
+// Note: The following functions are defined here as `static inline` (rather than as
+// out-of-line functions in `vensim.c`) because they are called very frequently (millions of
+// times per run for a large model).  Defining them in the header allows the compiler to
+// inline them at each call site, which avoids the call overhead and allows repeated
+// identical calls to be replaced with a single one.
+//
+
+static inline double _PULSE(double start, double width) {
+  double time_plus = _time + _time_step / 2.0;
+  if (width == 0.0) {
+    width = _time_step;
+  }
+  return (time_plus > start && time_plus < start + width) ? 1.0 : 0.0;
+}
+
+static inline double _RAMP(double slope, double start_time, double end_time) {
+  // Return 0 until the start time is exceeded.
+  // Interpolate from start time to end time.
+  // Hold at the end time value.
+  // Allow start time > end time.
+  if (_time > start_time) {
+    if (_time < end_time || start_time > end_time) {
+      return slope * (_time - start_time);
+    } else {
+      return slope * (end_time - start_time);
+    }
+  } else {
+    return 0.0;
+  }
+}
+
+static inline double _XIDZ(double a, double b, double x) {
+  return fabs(b) < SDE_EPSILON ? x : a / b;
+}
+
+static inline double _ZIDZ(double a, double b) {
+  return fabs(b) < SDE_EPSILON ? 0.0 : a / b;
+}
 
 //
 // Lookups
