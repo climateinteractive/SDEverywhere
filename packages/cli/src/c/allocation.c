@@ -24,7 +24,7 @@
 // #define PRINT_ALLOCATIONS_DEBUG_INFO
 
 // Return true if the value is near zero up to the epsilon tolerance.
-static inline bool __isZero(double value) { return fabs(value) < _epsilon; }
+static inline bool __isZero(double value) { return fabs(value) < SDE_EPSILON; }
 // Compute the absolute difference when x or y is near zero, otherwise compute
 // the relative difference, with y considered as the baseline.
 static inline double __difference(double x, double y) {
@@ -37,7 +37,7 @@ static inline double __difference(double x, double y) {
   return diff;
 }
 // Return true if the values are equal up to the tolerance.
-static inline bool __isEqual(double x, double y) { return __difference(x, y) < _epsilon; }
+static inline bool __isEqual(double x, double y) { return __difference(x, y) < SDE_EPSILON; }
 // Clamp x to the interval [0,1].
 static inline double __clamp01(double x) {
   if (x < 0.0) return 0.0;
@@ -440,7 +440,7 @@ double* _ALLOCATE_BY_PRIORITY(
 
   // Validate request values (must be non-negative)
   for (size_t i = 0; i < num_requesters; i++) {
-    if (request_quantities[i] < -_epsilon) {
+    if (request_quantities[i] < -SDE_EPSILON) {
       fprintf(stderr,
           "_ALLOCATE_BY_PRIORITY encountered negative request value at index %zu: %f\n",
           i, request_quantities[i]);
@@ -449,7 +449,7 @@ double* _ALLOCATE_BY_PRIORITY(
   }
 
   // Validate width (must not be negative)
-  if (width < -_epsilon) {
+  if (width < -SDE_EPSILON) {
     fprintf(stderr,
         "_ALLOCATE_BY_PRIORITY encountered invalid width value: %f\n"
         "Width must not be negative.\n",
@@ -458,7 +458,7 @@ double* _ALLOCATE_BY_PRIORITY(
   }
 
   // Validate supply (must not be negative)
-  if (supply < -_epsilon) {
+  if (supply < -SDE_EPSILON) {
     fprintf(stderr,
         "_ALLOCATE_BY_PRIORITY encountered invalid supply value: %f\n"
         "Supply must not be negative.\n",
@@ -472,7 +472,7 @@ double* _ALLOCATE_BY_PRIORITY(
   }
 
   // If supply = 0, all targets get allocated 0
-  if(fabs(supply) < _epsilon) {
+  if(fabs(supply) < SDE_EPSILON) {
     return allocations;
   }
 
@@ -539,7 +539,7 @@ double* _ALLOCATE_BY_PRIORITY(
   size_t c_i = 0;
 
   // Continue allocating until supply is exhausted
-  while (supply > _epsilon) {
+  while (supply > SDE_EPSILON) {
     // Check if there are any active targets left
     bool any_active = false;
     for (size_t i = 0; i < m; i++) {
