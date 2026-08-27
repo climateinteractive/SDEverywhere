@@ -213,10 +213,12 @@ export class CheckSummaryGraphBoxViewModel {
 
       if (opRef.dataRef.op === 'sum') {
         this.resolvedData.set(op, sumPoints(pointArrays))
-      } else {
+      } else if (pointArrays.length === 1) {
         // There is a single referenced dataset, so no combining is needed
         this.resolvedData.set(op, pointArrays[0])
       }
+      // Note that if multiple datasets are referenced but the op is not recognized,
+      // we intentionally leave the data unset so that no reference line is displayed
     }
     combineOp('gt')
     combineOp('gte')
