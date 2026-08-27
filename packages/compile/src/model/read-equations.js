@@ -14,6 +14,13 @@ import { generateLookup } from './read-equation-fn-with-lookup.js'
 import { matchingRhsRefIds } from './read-equations-expand.js'
 import { readVariables } from './read-variables.js'
 
+/**
+ * The set of function IDs for functions that read the current simulation time without
+ * taking it as an explicit argument.  A variable that calls one of these has an implicit
+ * dependency on the `Time` variable, which is recorded in its list of references.
+ */
+const timeDependentFnIds = new Set(['_GAME', '_PULSE', '_PULSE_TRAIN', '_RAMP', '_STEP'])
+
 class Context {
   constructor(modelKind, eqnLhs, refId) {
     // The kind of model being read, either 'vensim' or 'xmile'
@@ -38,7 +45,7 @@ class Context {
     this.rhsNonConst = false
   }
 
-  addVarReference(varRefId) {
+  addVarReference(varRefId, allowSelfReference = false) {
     // Determine whether this is an "init" or "eval" reference
     let mode
     if (this.callStack.length > 0) {
@@ -51,10 +58,12 @@ class Context {
     }
 
     // In Vensim a variable can refer to its current value in the state.
-    // Do not add self-references to the lists of references.
+    // Do not add self-references to the lists of references, except when the caller
+    // explicitly asks for one (as in the case of `SAMPLE IF TRUE`, which holds its
+    // own value from the previous time step).
     // Do not duplicate references.
     const vars = mode === 'init' ? this.referencedInitVars : this.referencedEvalVars
-    if (varRefId !== this.refId && !vars.includes(varRefId)) {
+    if ((allowSelfReference || varRefId !== this.refId) && !vars.includes(varRefId)) {
       vars.push(varRefId)
     }
   }
@@ -811,6 +820,19 @@ function visitFunctionCall(v, callExpr, context) {
     validateStellaFunctionCall()
   } else {
     throw new Error(`Unknown model kind: ${context.modelKind}`)
+  }
+
+  // Record the implicit dependencies that are not visible in the argument list.  Without
+  // these, the reference graph makes these variables look time invariant, which can cause
+  // an analysis that trusts the graph (for example, the time-invariant aux hoisting in the
+  // code generator) to draw the wrong conclusion.
+  if (timeDependentFnIds.has(callExpr.fnId)) {
+    // These functions read the current simulation time, so the variable depends on `_time`
+    context.addVarReference('_time')
+  } else if (callExpr.fnId === '_SAMPLE_IF_TRUE') {
+    // This function holds the value of the variable from the previous time step, so the
+    // variable depends on itself
+    context.addVarReference(context.refId, /*allowSelfReference=*/ true)
   }
 
   if (unhandled) {

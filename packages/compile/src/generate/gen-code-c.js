@@ -41,6 +41,9 @@ let codeGenerator = (parsedModel, opts) => {
       let code = emitDeclCode()
       code += emitInitLookupsCode()
       code += emitInitConstantsCode()
+      // Note that `evalAuxOnce` is emitted before `initLevels` because it is called at the
+      // end of `initLevels`, and a C function must be declared before it is used.
+      code += emitEvalAuxOnceCode()
       code += emitInitLevelsCode()
       code += emitEvalCode()
       code += emitIOCode()
@@ -120,14 +123,34 @@ bool data_initialized = false;
     )
   }
 
+  function emitEvalAuxOnceCode() {
+    // Emit the aux variables whose values cannot change over the course of a run.  These
+    // are evaluated once, at the end of `initLevels`, rather than on every time step.
+    if (Model.timeInvariantAuxVars().length === 0) {
+      return ''
+    }
+    mode = 'eval'
+    return chunkedFunctions(
+      'evalAuxOnce',
+      Model.timeInvariantAuxVars(),
+      '  // Evaluate the auxiliaries that do not change over time.'
+    )
+  }
+
   function emitInitLevelsCode() {
     mode = 'init-levels'
+    // Evaluate the time invariant auxiliaries here, after the initial values have been
+    // computed.  Note that this must happen after `setInputs` is called (which is the case,
+    // since the caller applies the inputs for the run before calling `initLevels`), because
+    // a time invariant aux can depend on a constant that is overridden by an input.
+    const postStep = Model.timeInvariantAuxVars().length > 0 ? '  evalAuxOnce();' : undefined
     return chunkedFunctions(
       'initLevels',
       Model.initVars(),
       `\
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
-  _time = _initial_time;`
+  _time = _initial_time;`,
+      postStep
     )
   }
 
@@ -138,7 +161,7 @@ bool data_initialized = false;
     mode = 'eval'
 
     return `\
-${chunkedFunctions('evalAux', Model.auxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}\
+${chunkedFunctions('evalAux', Model.timeVaryingAuxVars(), '  // Evaluate auxiliaries in order from the bottom up.')}\
 ${chunkedFunctions('evalLevels', Model.levelVars(), '  // Evaluate levels.')}`
   }
 

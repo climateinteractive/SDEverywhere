@@ -3602,7 +3602,7 @@ describe('readEquations (from Vensim model)', () => {
         refId: '_y',
         referencedFunctionNames: ['__game'],
         referencedLookupVarNames: ['_y_game_inputs'],
-        references: ['_x']
+        references: ['_time', '_x']
       }),
       v('y game inputs', '', {
         refId: '_y_game_inputs',
@@ -3636,7 +3636,7 @@ describe('readEquations (from Vensim model)', () => {
         refId: '_y',
         referencedFunctionNames: ['__game'],
         referencedLookupVarNames: ['_y_game_inputs'],
-        references: ['_x[_a1]', '_x[_a2]'],
+        references: ['_time', '_x[_a1]', '_x[_a2]'],
         subscripts: ['_dima']
       }),
       v('y game inputs[DimA]', '', {
@@ -3686,7 +3686,7 @@ describe('readEquations (from Vensim model)', () => {
         refId: '_y',
         referencedFunctionNames: ['__game'],
         referencedLookupVarNames: ['_y_game_inputs'],
-        references: ['_a[_a1]', '_a[_a2]', '_b[_b1]', '_b[_b2]'],
+        references: ['_time', '_a[_a1]', '_a[_a2]', '_b[_b1]', '_b[_b2]'],
         subscripts: ['_dima', '_dimb']
       }),
       v('y game inputs[DimA,DimB]', '', {
@@ -4528,7 +4528,7 @@ describe('readEquations (from Vensim model)', () => {
       v('y', 'PULSE(start,width)', {
         refId: '_y',
         referencedFunctionNames: ['__pulse'],
-        references: ['_start', '_width']
+        references: ['_time', '_start', '_width']
       })
     ])
   })
@@ -4555,7 +4555,7 @@ describe('readEquations (from Vensim model)', () => {
       }),
       v('y', 'SAMPLE IF TRUE(Time>x,input,initial)', {
         refId: '_y',
-        references: ['_time', '_x', '_input'],
+        references: ['_y', '_time', '_x', '_input'],
         hasInitValue: true,
         initReferences: ['_initial'],
         referencedFunctionNames: ['__sample_if_true']
@@ -4572,7 +4572,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('delay', '2', {
         refId: '_delay',
@@ -4606,6 +4607,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', '3+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '2,3', {
@@ -4650,6 +4652,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', '3+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('delay', '2', {
@@ -4685,7 +4688,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('delay', '2', {
         refId: '_delay',
@@ -4745,7 +4749,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
-        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '1,2,3', {
@@ -4836,7 +4840,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
-        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '1,2,3', {
@@ -4913,7 +4917,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('delay', '2', {
         refId: '_delay',
@@ -4963,7 +4968,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('delay', '2', {
         refId: '_delay',
@@ -5016,6 +5022,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', '3+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '2,3', {
@@ -5080,6 +5087,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', '3+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('delay', '2', {
@@ -5134,7 +5142,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('delay', '2', {
         refId: '_delay',
@@ -5188,7 +5197,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input', 'x+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
-        references: ['_x']
+        references: ['_x', '_time']
       }),
       v('delay', '3', {
         refId: '_delay',
@@ -5266,7 +5275,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
-        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '1,2,3', {
@@ -5355,6 +5364,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', '3+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('delay', '2', {
@@ -5430,7 +5440,7 @@ describe('readEquations (from Vensim model)', () => {
       v('input[DimA]', 'x[DimA]+PULSE(10,10)', {
         refId: '_input',
         referencedFunctionNames: ['__pulse'],
-        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]'],
+        references: ['_x[_a1]', '_x[_a2]', '_x[_a3]', '_time'],
         subscripts: ['_dima']
       }),
       v('delay[DimA]', '1,2,3', {
@@ -5823,7 +5833,8 @@ describe('readEquations (from Vensim model)', () => {
       }),
       v('Production', '100+STEP(100,10)', {
         refId: '_production',
-        referencedFunctionNames: ['__step']
+        referencedFunctionNames: ['__step'],
+        references: ['_time']
       }),
       v('Target Capacity', 'ACTIVE INITIAL(Capacity*Utilization Adjustment,Initial Target Capacity)', {
         hasInitValue: true,
@@ -6022,7 +6033,8 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', 'STEP(10,0)-STEP(10,4)', {
         refId: '_input',
-        referencedFunctionNames: ['__step']
+        referencedFunctionNames: ['__step'],
+        references: ['_time']
       }),
       v('delay', '5', {
         refId: '_delay',
@@ -6780,7 +6792,7 @@ describe('readEquations (from Vensim model)', () => {
       v('shipping', 'STEP(reference shipping rate,10)-STEP(reference shipping rate,20)', {
         refId: '_shipping',
         referencedFunctionNames: ['__step'],
-        references: ['_reference_shipping_rate']
+        references: ['_time', '_reference_shipping_rate']
       }),
       v('shipping time', '20', {
         refId: '_shipping_time',
@@ -9210,7 +9222,7 @@ describe('readEquations (from Vensim model)', () => {
       v('stream', '-investment/TIME STEP*PULSE(start time,TIME STEP)+STEP(revenue,start time)', {
         refId: '_stream',
         referencedFunctionNames: ['__pulse', '__step'],
-        references: ['_investment', '_time_step', '_start_time', '_revenue']
+        references: ['_investment', '_time_step', '_time', '_start_time', '_revenue']
       }),
       v('discount rate', 'interest rate/12/100', {
         refId: '_discount_rate',
@@ -9854,7 +9866,7 @@ describe('readEquations (from Vensim model)', () => {
         hasInitValue: true,
         refId: '_a',
         referencedFunctionNames: ['__sample_if_true', '__modulo'],
-        references: ['_time']
+        references: ['_a', '_time']
       }),
       v('b', 'a', {
         refId: '_b',
@@ -9865,7 +9877,7 @@ describe('readEquations (from Vensim model)', () => {
         initReferences: ['_switch'],
         refId: '_f',
         referencedFunctionNames: ['__sample_if_true'],
-        references: ['_time']
+        references: ['_f', '_time']
       }),
       v('G', 'INTEG(rate,2*COS(scale))', {
         hasInitValue: true,
@@ -9877,7 +9889,8 @@ describe('readEquations (from Vensim model)', () => {
       }),
       v('rate', 'STEP(10,10)', {
         refId: '_rate',
-        referencedFunctionNames: ['__step']
+        referencedFunctionNames: ['__step'],
+        references: ['_time']
       }),
       v('scale', '1', {
         refId: '_scale',
@@ -10019,39 +10032,46 @@ describe('readEquations (from Vensim model)', () => {
     expect(vars).toEqual([
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('input 2[SubA]', '3+PULSE(10,10)', {
         refId: '_input_2[_a2]',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         separationDims: ['_suba'],
         subscripts: ['_a2']
       }),
       v('input 2[SubA]', '3+PULSE(10,10)', {
         refId: '_input_2[_a3]',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         separationDims: ['_suba'],
         subscripts: ['_a3']
       }),
       v('input 3[DimA]', '3+PULSE(10,10)', {
         refId: '_input_3',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima']
       }),
       v('input 3x3[DimA,DimB]', '3+PULSE(10,10)', {
         refId: '_input_3x3',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         subscripts: ['_dima', '_dimb']
       }),
       v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
         refId: '_input_2x3[_a2,_dimb]',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         separationDims: ['_suba'],
         subscripts: ['_a2', '_dimb']
       }),
       v('input 2x3[SubA,DimB]', '3+PULSE(10,10)', {
         refId: '_input_2x3[_a3,_dimb]',
         referencedFunctionNames: ['__pulse'],
+        references: ['_time'],
         separationDims: ['_suba'],
         subscripts: ['_a3', '_dimb']
       }),
@@ -10557,7 +10577,8 @@ describe('readEquations (from Vensim model)', () => {
       }),
       v('s3 input', '3+PULSE(10,10)', {
         refId: '_s3_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('apt', '1', {
         refId: '_apt',
@@ -10566,16 +10587,19 @@ describe('readEquations (from Vensim model)', () => {
       v('ca[A1]', '1000+RAMP(100,1,10)', {
         refId: '_ca[_a1]',
         referencedFunctionNames: ['__ramp'],
+        references: ['_time'],
         subscripts: ['_a1']
       }),
       v('ca[A2]', '1000+RAMP(300,1,10)', {
         refId: '_ca[_a2]',
         referencedFunctionNames: ['__ramp'],
+        references: ['_time'],
         subscripts: ['_a2']
       }),
       v('ca[A3]', '1000+RAMP(600,1,10)', {
         refId: '_ca[_a3]',
         referencedFunctionNames: ['__ramp'],
+        references: ['_time'],
         subscripts: ['_a3']
       }),
       v('cs[DimA]', 'MIN(SMOOTH3(sr,apt),ca[DimA]/TIME STEP)', {
@@ -10628,7 +10652,8 @@ describe('readEquations (from Vensim model)', () => {
       }),
       v('input', '3+PULSE(10,10)', {
         refId: '_input',
-        referencedFunctionNames: ['__pulse']
+        referencedFunctionNames: ['__pulse'],
+        references: ['_time']
       }),
       v('S1', 'scale*SMOOTH3(input,delay)', {
         refId: '_s1',

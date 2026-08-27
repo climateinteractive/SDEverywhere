@@ -18,6 +18,7 @@ import {
 import { cName } from '../_shared/var-names.js'
 
 import { separationCandidatesForCycles } from './analyze-cycles.js'
+import { findTimeInvariantAuxVars } from './analyze-time-invariance.js'
 import { expandVar } from './expand-var-instances.js'
 import { readEquation, resolveXmileDimensionWildcards } from './read-equations.js'
 import { readDimensionDefs } from './read-subscripts.js'
@@ -717,6 +718,32 @@ function auxVars() {
   // model has been fully read and analyzed.
   return cachedSortedVars('aux', () => sortVarsOfType('aux'))
 }
+function timeInvariantAuxVars() {
+  // Return the subset of `auxVars` whose values cannot change over the course of a run,
+  // in the same order.  The generated code evaluates these once, after the initial values
+  // have been computed and the inputs for the run have been applied.
+  // Note that this caches the result, so should only be called after the model has been
+  // fully read and analyzed.
+  return cachedSortedVars('aux-time-invariant', () => {
+    if (process.env.SDE_NONPUBLIC_HOIST_TIME_INVARIANT_AUX === '0') {
+      // Hoisting is disabled, so treat every aux var as time varying
+      return []
+    }
+    const vars = auxVars()
+    const refIds = findTimeInvariantAuxVars(vars)
+    return R.filter(v => refIds.has(v.refId), vars)
+  })
+}
+function timeVaryingAuxVars() {
+  // Return the subset of `auxVars` that must be evaluated on each time step, in the same
+  // order.  This is the complement of `timeInvariantAuxVars`.
+  // Note that this caches the result, so should only be called after the model has been
+  // fully read and analyzed.
+  return cachedSortedVars('aux-time-varying', () => {
+    const invariantRefIds = new Set(R.map(v => v.refId, timeInvariantAuxVars()))
+    return R.filter(v => !invariantRefIds.has(v.refId), auxVars())
+  })
+}
 function levelVars() {
   // Return an array of vars of type `level`, sorted according to the dependency graph.
   // Note that this caches the result, so should only be called after the
@@ -926,8 +953,12 @@ function sortVarsOfType(varType) {
     // Return a list of dependency pairs for all vars referenced by v at eval time.
     let refs = R.map(refId => varWithRefId(refId), v.references)
     // Only consider references having the correct var type.
+    // Skip self-references, which are recorded for variables that hold their own value
+    // from the previous time step (as in the case of `SAMPLE IF TRUE`).  These do not
+    // constrain the evaluation order, and treating them as edges would make the graph
+    // look cyclic.
     // Remove duplicate references.
-    refs = R.uniq(R.filter(R.propEq('varType', varType), refs))
+    refs = R.uniq(R.filter(ref => ref?.varType === varType && ref.refId !== v.refId, refs))
     // Return the list of dependencies as refId pairs.
     return R.map(ref => {
       if (v.varType === 'level' && ref.varType === 'level') {
@@ -1048,6 +1079,11 @@ function sortInitVars() {
     R.propSatisfies(varType => varType === 'const' || varType === 'lookup' || varType === 'data', 'varType'),
     sortedVars
   )
+
+  // Filter out the exogenous `Time` placeholder variable.  It has no equation of its
+  // own (`initLevels` sets `_time` to `_initial_time` before anything else), so it must
+  // not be included here even if some variable refers to it at init time.
+  sortedVars = R.reject(v => v.varName === '_time', sortedVars)
 
   // Add the ref ids to a set for faster lookup in the next step
   const sortedVarRefIds = new Set()
@@ -1479,6 +1515,8 @@ export default {
   refIdsWithName,
   resetModelState,
   splitRefId,
+  timeInvariantAuxVars,
+  timeVaryingAuxVars,
   variables,
   varIndexInfo,
   varNames,

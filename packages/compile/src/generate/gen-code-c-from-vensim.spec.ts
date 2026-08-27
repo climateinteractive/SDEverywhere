@@ -208,9 +208,26 @@ void initConstants() {
   initData();
 }
 
+void evalAuxOnce0() {
+  // x = input
+  _x = _input;
+  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
+  _w = _WITH_LOOKUP(_x, __lookup1);
+  // y = :NOT: x
+  _y = !_x;
+  // z = ABS(y)
+  _z = _ABS(_y);
+}
+
+void evalAuxOnce() {
+  // Evaluate the auxiliaries that do not change over time.
+  evalAuxOnce0();
+}
+
 void initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on.
   _time = _initial_time;
+  evalAuxOnce();
 }
 
 void evalAux0() {
@@ -226,18 +243,10 @@ void evalAux0() {
   }
   // c = c data
   _c = _LOOKUP(_c_data, _time);
-  // x = input
-  _x = _input;
-  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
-  _w = _WITH_LOOKUP(_x, __lookup1);
   // d[DimA] = GAME(x)
   for (size_t i = 0; i < 2; i++) {
   _d[i] = _GAME(_d_game_inputs[i], _x);
   }
-  // y = :NOT: x
-  _y = !_x;
-  // z = ABS(y)
-  _z = _ABS(_y);
 }
 
 void evalAux() {
@@ -336,27 +345,30 @@ void storeOutput(size_t varIndex, size_t* subIndices) {
       outputVar(_input);
       break;
     case 10:
-      outputVar(_a[subIndices[0]]);
+      outputVar(_time);
       break;
     case 11:
-      outputVar(_b[subIndices[0]][subIndices[1]]);
+      outputVar(_a[subIndices[0]]);
       break;
     case 12:
-      outputVar(_c);
+      outputVar(_b[subIndices[0]][subIndices[1]]);
       break;
     case 13:
-      outputVar(_x);
+      outputVar(_c);
       break;
     case 14:
-      outputVar(_w);
+      outputVar(_x);
       break;
     case 15:
-      outputVar(_d[subIndices[0]]);
+      outputVar(_w);
       break;
     case 16:
-      outputVar(_y);
+      outputVar(_d[subIndices[0]]);
       break;
     case 17:
+      outputVar(_y);
+      break;
+    case 18:
       outputVar(_z);
       break;
     default:

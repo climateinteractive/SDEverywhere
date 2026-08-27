@@ -412,8 +412,25 @@ function initConstants0() {
   initData();
 }
 
+function evalAuxOnce0() {
+  // x = input
+  _x = _input;
+  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
+  _w = fns.WITH_LOOKUP(_x, __lookup1);
+  // y = :NOT: x
+  _y = !_x;
+  // z = ABS(y)
+  _z = fns.ABS(_y);
+}
+
+function evalAuxOnce() {
+  // Evaluate the auxiliaries that do not change over time
+  evalAuxOnce0();
+}
+
 /*export*/ function initLevels() {
   // Initialize variables with initialization values, such as levels, and the variables they depend on
+  evalAuxOnce();
 }
 
 function evalAux0() {
@@ -429,18 +446,10 @@ function evalAux0() {
   }
   // c = c data
   _c = fns.LOOKUP(_c_data, _time);
-  // x = input
-  _x = _input;
-  // w = WITH LOOKUP(x,([(0,0)-(2,2)],(0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3)))
-  _w = fns.WITH_LOOKUP(_x, __lookup1);
   // d[DimA] = GAME(x)
   for (let i = 0; i < 2; i++) {
   _d[i] = fns.GAME(_d_game_inputs[i], _x);
   }
-  // y = :NOT: x
-  _y = !_x;
-  // z = ABS(y)
-  _z = fns.ABS(_y);
 }
 
 /*export*/ function evalAux() {
@@ -545,27 +554,30 @@ function evalAux0() {
       storeValue(_input);
       break;
     case 10:
-      storeValue(_a[subs[0]]);
+      storeValue(_time);
       break;
     case 11:
-      storeValue(_b[subs[0]][subs[1]]);
+      storeValue(_a[subs[0]]);
       break;
     case 12:
-      storeValue(_c);
+      storeValue(_b[subs[0]][subs[1]]);
       break;
     case 13:
-      storeValue(_x);
+      storeValue(_c);
       break;
     case 14:
-      storeValue(_w);
+      storeValue(_x);
       break;
     case 15:
-      storeValue(_d[subs[0]]);
+      storeValue(_w);
       break;
     case 16:
-      storeValue(_y);
+      storeValue(_d[subs[0]]);
       break;
     case 17:
+      storeValue(_y);
+      break;
+    case 18:
       storeValue(_z);
       break;
     default:
@@ -638,11 +650,15 @@ function evalAux0() {
       index: 9
     },
     {
+      id: '_time',
+      index: 10
+    },
+    {
       id: '_a',
       dimIds: [
         '_dima'
       ],
-      index: 10
+      index: 11
     },
     {
       id: '_b',
@@ -650,34 +666,34 @@ function evalAux0() {
         '_dima',
         '_dimb'
       ],
-      index: 11
-    },
-    {
-      id: '_c',
       index: 12
     },
     {
-      id: '_x',
+      id: '_c',
       index: 13
     },
     {
-      id: '_w',
+      id: '_x',
       index: 14
+    },
+    {
+      id: '_w',
+      index: 15
     },
     {
       id: '_d',
       dimIds: [
         '_dima'
       ],
-      index: 15
-    },
-    {
-      id: '_y',
       index: 16
     },
     {
-      id: '_z',
+      id: '_y',
       index: 17
+    },
+    {
+      id: '_z',
+      index: 18
     }
   ]
 }
