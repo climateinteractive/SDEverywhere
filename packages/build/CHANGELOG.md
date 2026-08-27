@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.16](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.15...build-v0.3.16) (2026-08-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.33 to ^0.7.34
+
 ## [0.3.15](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.14...build-v0.3.15) (2026-08-19)
 
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.34](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.33...compile-v0.7.34) (2026-08-27)
+
+
+### Bug Fixes
+
+* handle cycles when reducing variables ([#899](https://github.com/climateinteractive/SDEverywhere/issues/899)) ([fcb45ba](https://github.com/climateinteractive/SDEverywhere/commit/fcb45ba426ba34c0803e3f47ae47783744c97f8f)), closes [#897](https://github.com/climateinteractive/SDEverywhere/issues/897)
+
+
+### Performance Improvements
+
+* emit non-overridable constants as C `static const` values ([#898](https://github.com/climateinteractive/SDEverywhere/issues/898)) ([ae95064](https://github.com/climateinteractive/SDEverywhere/commit/ae95064eae9f5ce4c3f3b9ef712ac0b297a615f9)), closes [#896](https://github.com/climateinteractive/SDEverywhere/issues/896)
+
 ## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.32...compile-v0.7.33) (2026-08-19)
 
 
