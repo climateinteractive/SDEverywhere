@@ -163,11 +163,11 @@ treated as time varying, i.e. the previous behavior). This follows the existing
 - En-ROADS Wasm (`emcc -O2`), model-check perf comparison against the `develop` baseline
   bundle (Apple M1 Max, Chrome), three "Run" passes:
 
-  | run |  develop |  current | % change |
-  | --- | -------: | -------: | -------: |
-  | 1   |     23.9 |     23.0 |    -3.6% |
-  | 2   |     24.0 |     22.9 |    -4.5% |
-  | 3   |     23.9 |     22.8 |    -4.5% |
+  | run |  develop |  current |  % change |
+  | --- | -------: | -------: | --------: |
+  | 1   |     23.9 |     23.0 |     -3.6% |
+  | 2   |     24.0 |     22.9 |     -4.5% |
+  | 3   |     23.9 |     22.8 |     -4.5% |
   | all | **23.9** | **22.9** | **-4.2%** |
 
   (median ms per model run.)
