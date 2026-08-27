@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { actionForPredicate } from './check-action'
-import { dataRef } from './check-data-ref'
+import { dataRef, sumDataRef } from './check-data-ref'
 import type { CheckTask } from './check-planner'
 import { runCheck } from './check-runner'
 import { dataset as checkDataset } from './_mocks/mock-check-dataset'
@@ -62,6 +62,138 @@ describe('runCheck', () => {
     })
   })
 
+  it('should return correct result for passed check that references the sum of multiple datasets', () => {
+    const task: CheckTask = {
+      scenario: allAtPos('at-default'),
+      dataset: checkDataset('Model', 'X'),
+      action: actionForPredicate({
+        approx: {
+          op: 'sum',
+          datasets: ['Y', 'Z']
+        },
+        tolerance: 0.01
+      }),
+      dataRefs: new Map([['approx', sumDataRef([checkDataset('Model', 'Y'), checkDataset('Model', 'Z')])]])
+    }
+
+    const dataset = new Map([
+      [2000, 3],
+      [2050, 7],
+      [2100, 11]
+    ])
+
+    const refDatasets = new Map([
+      [
+        'all_inputs_at_default::Model_y',
+        new Map([
+          [2000, 1],
+          [2050, 3],
+          [2100, 5]
+        ])
+      ],
+      [
+        'all_inputs_at_default::Model_z',
+        new Map([
+          [2000, 2],
+          [2050, 4],
+          [2100, 6]
+        ])
+      ]
+    ])
+
+    const result = runCheck(task, dataset, refDatasets)
+    expect(result).toEqual({ status: 'passed' })
+  })
+
+  it('should return correct result for failed check that references the sum of multiple datasets', () => {
+    const task: CheckTask = {
+      scenario: allAtPos('at-default'),
+      dataset: checkDataset('Model', 'X'),
+      action: actionForPredicate({
+        approx: {
+          op: 'sum',
+          datasets: ['Y', 'Z']
+        },
+        tolerance: 0.01
+      }),
+      dataRefs: new Map([['approx', sumDataRef([checkDataset('Model', 'Y'), checkDataset('Model', 'Z')])]])
+    }
+
+    const dataset = new Map([
+      [2000, 3],
+      [2050, 7],
+      [2100, 99]
+    ])
+
+    const refDatasets = new Map([
+      [
+        'all_inputs_at_default::Model_y',
+        new Map([
+          [2000, 1],
+          [2050, 3],
+          [2100, 5]
+        ])
+      ],
+      [
+        'all_inputs_at_default::Model_z',
+        new Map([
+          [2000, 2],
+          [2050, 4],
+          [2100, 6]
+        ])
+      ]
+    ])
+
+    const result = runCheck(task, dataset, refDatasets)
+    expect(result).toEqual({
+      status: 'failed',
+      failValue: 99,
+      failOp: 'approx',
+      failRefValue: 11,
+      failTime: 2100
+    })
+  })
+
+  it('should return correct error result when one of the summed datasets cannot be resolved', () => {
+    const task: CheckTask = {
+      scenario: allAtPos('at-default'),
+      dataset: checkDataset('Model', 'X'),
+      action: actionForPredicate({
+        approx: {
+          op: 'sum',
+          datasets: ['Y', 'Unknown Z']
+        }
+      }),
+      dataRefs: new Map([['approx', sumDataRef([checkDataset('Model', 'Y'), { name: 'Unknown Z' }])]])
+    }
+
+    const dataset = new Map([
+      [2000, 3],
+      [2050, 7],
+      [2100, 11]
+    ])
+
+    const refDatasets = new Map([
+      [
+        'all_inputs_at_default::Model_y',
+        new Map([
+          [2000, 1],
+          [2050, 3],
+          [2100, 5]
+        ])
+      ]
+    ])
+
+    const result = runCheck(task, dataset, refDatasets)
+    expect(result).toEqual({
+      status: 'error',
+      errorInfo: {
+        kind: 'unknown-dataset',
+        name: 'Unknown Z'
+      }
+    })
+  })
+
   it('should return correct error result when referenced dataset cannot be resolved', () => {
     const task: CheckTask = {
       scenario: allAtPos('at-default'),
@@ -107,10 +239,14 @@ describe('runCheck', () => {
         [
           'gte',
           {
-            dataset: checkDataset('Model', 'Y'),
-            scenario: {
-              inputDescs: [{ name: 'Unknown Input' }]
-            }
+            refs: [
+              {
+                dataset: checkDataset('Model', 'Y'),
+                scenario: {
+                  inputDescs: [{ name: 'Unknown Input' }]
+                }
+              }
+            ]
           }
         ]
       ])
@@ -149,14 +285,18 @@ describe('runCheck', () => {
         [
           'gte',
           {
-            dataset: checkDataset('Model', 'Y'),
-            scenario: {
-              inputDescs: [],
-              error: {
-                kind: 'unknown-input-group',
-                name: 'Unknown Input Group'
+            refs: [
+              {
+                dataset: checkDataset('Model', 'Y'),
+                scenario: {
+                  inputDescs: [],
+                  error: {
+                    kind: 'unknown-input-group',
+                    name: 'Unknown Input Group'
+                  }
+                }
               }
-            }
+            ]
           }
         ]
       ])

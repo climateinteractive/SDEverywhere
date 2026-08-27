@@ -24,6 +24,48 @@ import { pointsFromDataset } from '../../graphs/comparison-graph-vm'
 
 let requestId = 1
 
+/**
+ * Return the key used to store the data for one of the datasets referenced by
+ * the given predicate op.
+ *
+ * @param op The predicate operation.
+ * @param index The index of the referenced dataset.
+ */
+function refDataKey(op: CheckPredicateOp, index: number): string {
+  return `${op}::${index}`
+}
+
+/**
+ * Return the point-wise sum of the given sets of points.  Note that a point is only
+ * included in the result if a value is available at that time in every one of the
+ * given sets.
+ *
+ * @param pointArrays The sets of points to be summed.
+ */
+function sumPoints(pointArrays: Point[][]): Point[] {
+  const firstPoints = pointArrays[0]
+  const otherPointMaps = pointArrays.slice(1).map(points => new Map(points.map(p => [p.x, p.y])))
+
+  const summed: Point[] = []
+  for (const point of firstPoints) {
+    let sum = point.y
+    let complete = true
+    for (const otherPointMap of otherPointMaps) {
+      const otherY = otherPointMap.get(point.x)
+      if (otherY === undefined) {
+        complete = false
+        break
+      }
+      sum += otherY
+    }
+    if (complete) {
+      summed.push({ x: point.x, y: sum })
+    }
+  }
+
+  return summed
+}
+
 export interface CheckSummaryGraphBoxContent {
   comparisonGraphViewModel: ComparisonGraphViewModel
 }
@@ -73,22 +115,26 @@ export class CheckSummaryGraphBoxViewModel {
         return
       }
 
-      // Add the op as a data key so that we keep track of which
-      // datasets need to be resolved
-      this.expectedDataKeys.push(op)
-
       switch (opRef.kind) {
         case 'constant':
+          // Add the op as a data key so that we keep track of which datasets
+          // need to be resolved
+          this.expectedDataKeys.push(op)
+
           // Add the constant value to the map.  A straight line segment
           // will be generated when the graph view model is created.
           this.resolvedDataKeys.push(op)
           this.opConstantRefs.set(op, opRef.value)
           break
         case 'data': {
-          // Fetch the reference dataset
-          const refScenario = opRef.dataRef.scenario.spec
-          const refDatasetKey = opRef.dataRef.dataset.datasetKey
-          this.requestDataset(op, refScenario, refDatasetKey)
+          // Fetch each referenced dataset separately; if the op references more
+          // than one dataset, they will be combined into a single set of points
+          // once all responses have been received
+          opRef.dataRef.refs.forEach((ref, index) => {
+            const dataKey = refDataKey(op, index)
+            this.expectedDataKeys.push(dataKey)
+            this.requestDataset(dataKey, ref.scenario.spec, ref.dataset.datasetKey)
+          })
           break
         }
         default:
@@ -148,6 +194,39 @@ export class CheckSummaryGraphBoxViewModel {
   }
 
   /**
+   * Combine the data for each op that references one or more datasets, and store
+   * the resulting points under the key for that op.  When an op references multiple
+   * datasets, the points are combined according to the op declared in the data ref
+   * (currently `sum` is the only supported op).
+   */
+  private combineRefData(): void {
+    const combineOp = (op: CheckPredicateOp) => {
+      const opRef = this.predicateReport.opRefs.get(op)
+      if (opRef === undefined || opRef.kind !== 'data') {
+        return
+      }
+
+      const pointArrays = opRef.dataRef.refs.map((_, index) => this.resolvedData.get(refDataKey(op, index)))
+      if (pointArrays.some(points => points === undefined)) {
+        return
+      }
+
+      if (opRef.dataRef.op === 'sum') {
+        this.resolvedData.set(op, sumPoints(pointArrays))
+      } else {
+        // There is a single referenced dataset, so no combining is needed
+        this.resolvedData.set(op, pointArrays[0])
+      }
+    }
+    combineOp('gt')
+    combineOp('gte')
+    combineOp('lt')
+    combineOp('lte')
+    combineOp('eq')
+    combineOp('approx')
+  }
+
+  /**
    * Should be called when a dataset response is received from the data coordinator.
    * If there are other pending requests, this will be a no-op.  Once all responses
    * are received, this will build the comparison graph view model.
@@ -157,6 +236,9 @@ export class CheckSummaryGraphBoxViewModel {
     if (this.resolvedDataKeys.length !== this.expectedDataKeys.length) {
       return
     }
+
+    // Combine the referenced datasets for each op into a single set of points
+    this.combineRefData()
 
     // Determine the min/max times for the primary dataset
     const primaryPoints = this.resolvedData.get('primary')

@@ -378,6 +378,13 @@ export default {
     },
 
     predicate_ref_data: {
+      oneOf: [
+        { $ref: '#/$defs/predicate_ref_data_single_dataset' },
+        { $ref: '#/$defs/predicate_ref_data_multiple_datasets' }
+      ]
+    },
+
+    predicate_ref_data_single_dataset: {
       type: 'object',
       additionalProperties: false,
       properties: {
@@ -385,6 +392,29 @@ export default {
         scenario: { $ref: '#/$defs/predicate_ref_data_scenario' }
       },
       required: ['dataset']
+    },
+
+    predicate_ref_data_multiple_datasets: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        op: { $ref: '#/$defs/predicate_ref_data_datasets_op' },
+        datasets: {
+          type: 'array',
+          items: { $ref: '#/$defs/predicate_ref_data_datasets_item' },
+          minItems: 1
+        },
+        scenario: { $ref: '#/$defs/predicate_ref_data_scenario' }
+      },
+      required: ['op', 'datasets']
+    },
+
+    predicate_ref_data_datasets_op: {
+      type: 'string',
+      enum: ['sum']
+    },
+    predicate_ref_data_datasets_item: {
+      oneOf: [{ type: 'string' }, { $ref: '#/$defs/dataset_name' }]
     },
 
     predicate_ref_data_dataset: {

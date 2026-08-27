@@ -65,7 +65,7 @@ export {
   createCheckDataCoordinatorForTests
 } from './check/check-data-coordinator'
 
-export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
+export type { CheckDataRef, CheckDataRefKey, CheckDataRefOp, CheckRefDataset } from './check/check-data-ref'
 
 export type { CheckDataset, CheckDatasetError } from './check/check-dataset'
 

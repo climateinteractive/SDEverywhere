@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { Dataset } from '../_shared/types'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { CheckDataRef } from './check-data-ref'
-import { dataRef } from './check-data-ref'
+import { dataRef, sumDataRef } from './check-data-ref'
 import { parseTestYaml } from './check-parser'
 import type { CheckPlanPredicate } from './check-planner'
 import { CheckPlanner } from './check-planner'
@@ -194,6 +194,58 @@ describe('CheckPlanner', () => {
     expect(ref2).toEqual({
       key: 'inputs__i1_at_75::ModelImpl_v3',
       dataset: dataset('ModelImpl', 'V3'),
+      scenario: inputAtValue(i1, 75)
+    })
+  })
+
+  it('should build a plan that includes a data ref for each dataset referenced by a `sum` predicate', () => {
+    const yamlString = `
+- describe: group1
+  tests:
+    - it: test1
+      scenarios:
+        - with: I1
+          at: 75
+      datasets:
+        - name: V1
+      predicates:
+        - approx:
+            op: sum
+            datasets:
+              - V3
+              - name: V4[A1]
+            scenario: inherit
+          tolerance: 0.1
+`
+
+    const checkSpecResult = parseTestYaml([yamlString])
+    if (checkSpecResult.isErr()) {
+      throw new Error(`Failed to parse yaml: ${checkSpecResult.error}`)
+    }
+    const checkSpec = checkSpecResult.value
+    const planner = new CheckPlanner(modelSpec)
+    planner.addAllChecks(checkSpec, [])
+    const plan = planner.buildPlan()
+
+    // Verify that the check task references both datasets
+    expect(plan.tasks.size).toBe(1)
+    const task = plan.tasks.get(1)
+    const expectedDataRef = sumDataRef(
+      [dataset('ModelImpl', 'V3'), dataset('ModelImpl', 'V4[A1]')],
+      inputAtValue(i1, 75)
+    )
+    expect(task.dataRefs).toEqual(new Map([['approx', expectedDataRef]]))
+
+    // Verify that each referenced dataset is fetched separately
+    expect(plan.dataRefs.size).toBe(2)
+    expect(plan.dataRefs.get('inputs__i1_at_75::ModelImpl_v3')).toEqual({
+      key: 'inputs__i1_at_75::ModelImpl_v3',
+      dataset: dataset('ModelImpl', 'V3'),
+      scenario: inputAtValue(i1, 75)
+    })
+    expect(plan.dataRefs.get('inputs__i1_at_75::ModelImpl_v4[_a1]')).toEqual({
+      key: 'inputs__i1_at_75::ModelImpl_v4[_a1]',
+      dataset: dataset('ModelImpl', 'V4[A1]'),
       scenario: inputAtValue(i1, 75)
     })
   })
