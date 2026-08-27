@@ -141,8 +141,9 @@ class SuiteRunner {
     // the reference data is available in memory when checks are performed.
     const refDataPlan = refDataPlanner.buildPlan()
     const dataPlan = dataPlanner.buildPlan()
-    const dataRequests = [...refDataPlan.requests, ...dataPlan.requests]
-    const taskCount = dataRequests.length
+    const refDataRequests = refDataPlan.requests
+    const dataRequests = dataPlan.requests
+    const taskCount = refDataRequests.length + dataRequests.length
     if (taskCount === 0) {
       // There are no data requests.  This can occur when there are no checks or comparisons defined,
       // or when all checks and comparisons are skipped.  We still build the reports so that the
@@ -183,32 +184,62 @@ class SuiteRunner {
       })
     }
 
-    // Schedule a task for each data request
+    // Schedule a task for each of the given data requests.  The `onGroupComplete`
+    // function will be called after all of the given requests have been processed.
     let tasksCompleted = 0
     let dataTaskId = 1
-    for (const dataRequest of dataRequests) {
-      const task: Task = {
-        key: `suite-runner-${dataTaskId++}`,
-        kind: 'suite-runner',
-        process: async bundleModels => {
-          // Remove the task key from the set of pending task keys
-          this.pendingTaskKeys.delete(task.key)
+    const scheduleRequests = (requests: DataRequest[], onGroupComplete: () => void) => {
+      let groupTasksCompleted = 0
+      for (const dataRequest of requests) {
+        const task: Task = {
+          key: `suite-runner-${dataTaskId++}`,
+          kind: 'suite-runner',
+          process: async bundleModels => {
+            // Remove the task key from the set of pending task keys
+            this.pendingTaskKeys.delete(task.key)
 
-          // Process the request
-          await this.processRequest(dataRequest, bundleModels)
+            // Process the request
+            await this.processRequest(dataRequest, bundleModels)
 
-          // Notify the progress callback after each task is processed
-          tasksCompleted++
-          this.callbacks.onProgress?.(tasksCompleted / taskCount)
+            // Notify the progress callback after each task is processed
+            tasksCompleted++
+            this.callbacks.onProgress?.(tasksCompleted / taskCount)
 
-          // Notify the completion callback when all tasks have been processed
-          if (tasksCompleted === taskCount) {
-            buildReport()
+            // Notify the callback when all tasks in this group have been processed
+            groupTasksCompleted++
+            if (groupTasksCompleted === requests.length) {
+              onGroupComplete()
+            }
           }
         }
+        this.taskQueue.addTask(task)
+        this.pendingTaskKeys.add(task.key)
       }
-      this.taskQueue.addTask(task)
-      this.pendingTaskKeys.add(task.key)
+    }
+
+    // Schedule the tasks that fetch the data for the checks and comparisons.  Note
+    // that this is only called after all reference data has been fetched.
+    const scheduleDataRequests = () => {
+      if (this.stopped) {
+        return
+      }
+      if (dataRequests.length > 0) {
+        scheduleRequests(dataRequests, buildReport)
+      } else {
+        // There is reference data but no checks or comparisons to run (as is the
+        // case when all checks are skipped), so build the report now
+        buildReport()
+      }
+    }
+
+    // Schedule the reference data tasks first.  These must all be processed before
+    // any check tasks are scheduled; otherwise, when more than one task can be
+    // processed at a time, a check could run before the data that it references
+    // has been fetched.
+    if (refDataRequests.length > 0) {
+      scheduleRequests(refDataRequests, scheduleDataRequests)
+    } else {
+      scheduleDataRequests()
     }
   }
 

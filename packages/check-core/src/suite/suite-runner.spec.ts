@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { TaskExecutor, TaskExecutorKey } from '../_shared/task-queue'
 import { createExecutor, TaskQueue } from '../_shared/task-queue'
+import type { DatasetKey, DatasetMap } from '../_shared/types'
 
 import type { Bundle, BundleModel, ModelSpec } from '../bundle/bundle-types'
 
@@ -21,40 +22,69 @@ import type { RunSuiteCallbacks } from './suite-runner'
 import { runSuiteWithTaskQueue } from './suite-runner'
 
 interface MockConfigOptions {
+  /** If true, configure the check suite with no tests. */
   emptyTests?: boolean
+  /** If true, configure the check suite with a test that fails to parse. */
   invalidTests?: boolean
+  /** If true, use a check test that includes a predicate that references another dataset. */
+  testsWithRefData?: boolean
+  /** The number of model instances to initialize (defaults to 1). */
+  concurrency?: number
+  /** The delay (in msecs) applied to every model run. */
   delayInGetDatasets?: number
+  /** The delay (in msecs) applied to a model run that includes the given dataset key. */
+  delaysByDatasetKey?: Map<DatasetKey, number>
+  /** If true, throw an error from each model run in the "current" bundle. */
   throwInCurrentGetDatasets?: boolean
+  /** If true, configure the suite with comparison tests in addition to check tests. */
   includeComparisons?: boolean
+  /** Called at the start of each model run, before any configured delay is applied. */
   onGetDatasets?: () => void
+  /** Called when a model run starts and when it completes. */
+  onModelRun?: (event: string) => void
 }
 
 function mockBundleModel(modelSpec: ModelSpec, mockOptions: MockConfigOptions): BundleModel {
   return {
     modelSpec,
-    getDatasetsForScenario: async () => {
+    getDatasetsForScenario: async (_scenarioSpec, datasetKeys) => {
       if (mockOptions.onGetDatasets) {
         mockOptions.onGetDatasets()
       }
-      if (mockOptions.delayInGetDatasets) {
-        await new Promise(resolve => setTimeout(resolve, mockOptions.delayInGetDatasets))
+      mockOptions.onModelRun?.(`start ${datasetKeys.join(',')}`)
+
+      // Use the longest delay that is configured for the requested dataset keys
+      let delay = mockOptions.delayInGetDatasets || 0
+      for (const datasetKey of datasetKeys) {
+        const delayForKey = mockOptions.delaysByDatasetKey?.get(datasetKey)
+        if (delayForKey !== undefined && delayForKey > delay) {
+          delay = delayForKey
+        }
       }
+      if (delay > 0) {
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+
       if (mockOptions.throwInCurrentGetDatasets === true) {
         throw new Error('Fake error')
       }
+
+      const datasetMap: DatasetMap = new Map(datasetKeys.map(datasetKey => [datasetKey, new Map([[2000, 0]])]))
+      mockOptions.onModelRun?.(`end ${datasetKeys.join(',')}`)
       return {
-        datasetMap: new Map([['Model_v1', new Map([[2000, 0]])]])
+        datasetMap
       }
     }
   }
 }
 
 function mockBundle(mockOptions: MockConfigOptions): Bundle {
+  const outputVars = mockOptions.testsWithRefData === true ? [outputVar('V1'), outputVar('V2')] : [outputVar('V1')]
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
     inputVars: new Map([inputVar('1', 'I1'), inputVar('2', 'I2')]),
-    outputVars: new Map([outputVar('V1')]),
+    outputVars: new Map(outputVars),
     implVars: new Map(),
     inputGroups: new Map(),
     datasetGroups: new Map()
@@ -74,6 +104,26 @@ async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
     tests = []
   } else if (mockOptions.invalidTests === true) {
     tests = ['INVALID']
+  } else if (mockOptions.testsWithRefData === true) {
+    // This test includes a predicate that compares one dataset against another
+    // dataset, which means the reference data for V2 must be fetched (and held
+    // in memory) before the check on V1 is performed
+    const test = `
+- describe: group1
+  tests:
+  - it: test1
+    scenarios:
+      - with: I1
+        at: min
+    datasets:
+      - name: V1
+    predicates:
+      - eq:
+          dataset:
+            name: V2
+          scenario: inherit
+`
+    tests = [test]
   } else {
     const test = `
 - describe: group1
@@ -147,7 +197,8 @@ async function mockConfig(mockOptions: MockConfigOptions): Promise<Config> {
     check: {
       tests
     },
-    comparison: comparisonOptions
+    comparison: comparisonOptions,
+    concurrency: mockOptions.concurrency
   }
   return createConfig(configOptions)
 }
@@ -194,6 +245,84 @@ describe('runSuite', () => {
     expect(sawOnComplete).toBe(true)
     expect(progressPcts).toEqual([0, 0.5, 1])
     expect(getDatasetsCallCount).toBe(2)
+  })
+
+  it('should fetch all reference data before running checks that depend on it', async () => {
+    // Use more than one model instance so that multiple data requests can be processed
+    // concurrently, and make the reference data request (for V2) take longer than the
+    // check data request (for V1).  If the two were allowed to run at the same time, the
+    // check would be performed before the reference data was available.
+    const events: string[] = []
+    const config = await mockConfig({
+      testsWithRefData: true,
+      concurrency: 2,
+      delaysByDatasetKey: new Map([['Model_v2', 20]]),
+      onModelRun: event => {
+        events.push(event)
+      }
+    })
+    const taskQueue = mockTaskQueue(config)
+
+    const progressPcts: number[] = []
+    const report: SuiteReport = await new Promise((resolve, reject) => {
+      const callbacks: RunSuiteCallbacks = {
+        onProgress: pct => {
+          progressPcts.push(pct)
+        },
+        onComplete: suiteReport => {
+          resolve(suiteReport)
+        },
+        onError: () => {
+          reject(new Error('onError should not be called'))
+        }
+      }
+      runSuiteWithTaskQueue(config, taskQueue, callbacks)
+    })
+
+    // Verify that the reference data run completed before the check data run started
+    expect(events).toEqual(['start Model_v2', 'end Model_v2', 'start Model_v1', 'end Model_v1'])
+
+    // Verify that the check passed (it will be reported as an error if the reference
+    // data was not resolved by the time the check was performed)
+    const test1 = report.checkReport.groups[0].tests[0]
+    expect(test1.status).toBe('passed')
+
+    // Verify that progress is reported across both sets of data requests
+    expect(progressPcts).toEqual([0, 0.5, 1])
+  })
+
+  it('should build reports when there is reference data but all checks are skipped', async () => {
+    const events: string[] = []
+    const config = await mockConfig({
+      testsWithRefData: true,
+      concurrency: 2,
+      onModelRun: event => {
+        events.push(event)
+      }
+    })
+    const taskQueue = mockTaskQueue(config)
+
+    const report: SuiteReport = await new Promise((resolve, reject) => {
+      const callbacks: RunSuiteCallbacks = {
+        onComplete: suiteReport => {
+          resolve(suiteReport)
+        },
+        onError: () => {
+          reject(new Error('onError should not be called'))
+        }
+      }
+      runSuiteWithTaskQueue(config, taskQueue, callbacks, {
+        skipChecks: [{ groupName: 'group1', testName: 'test1' }]
+      })
+    })
+
+    // Verify that only the reference data run was performed (there are no check data
+    // requests because the only check was skipped)
+    expect(events).toEqual(['start Model_v2', 'end Model_v2'])
+
+    // Verify that the report was still built
+    expect(report.checkReport.groups.length).toBe(1)
+    expect(report.checkReport.groups[0].tests[0].status).toBe('skipped')
   })
 
   it('should notify progress and completion callbacks even when there are no tests', async () => {
