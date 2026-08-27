@@ -13,6 +13,7 @@ import type {
   CheckPredicateOpRef,
   CheckPredicateReport,
   CheckPredicateTimeSpec,
+  CheckRefDataset,
   CheckResult,
   CheckScenarioReport,
   CheckStatus,
@@ -31,7 +32,7 @@ export function dataset(prefix: string, varName: string): CheckDataset {
   }
 }
 
-function dataRef(dataset: CheckDataset, scenario?: CheckScenario): CheckDataRef {
+function refDataset(dataset: CheckDataset, scenario?: CheckScenario): CheckRefDataset {
   if (!scenario) {
     scenario = {
       spec: allInputsAtPositionSpec('at-default'),
@@ -42,6 +43,19 @@ function dataRef(dataset: CheckDataset, scenario?: CheckScenario): CheckDataRef 
     key: `${scenario.spec.uid}::${dataset.datasetKey}`,
     dataset,
     scenario
+  }
+}
+
+function dataRef(dataset: CheckDataset, scenario?: CheckScenario): CheckDataRef {
+  return {
+    refs: [refDataset(dataset, scenario)]
+  }
+}
+
+function sumDataRef(datasets: CheckDataset[], scenario?: CheckScenario): CheckDataRef {
+  return {
+    op: 'sum',
+    refs: datasets.map(dataset => refDataset(dataset, scenario))
   }
 }
 
@@ -56,6 +70,13 @@ export function opDataRef(dataset: CheckDataset, scenario?: CheckScenario): Chec
   return {
     kind: 'data',
     dataRef: dataRef(dataset, scenario)
+  }
+}
+
+export function opSumDataRef(datasets: CheckDataset[], scenario?: CheckScenario): CheckPredicateOpDataRef {
+  return {
+    kind: 'data',
+    dataRef: sumDataRef(datasets, scenario)
   }
 }
 

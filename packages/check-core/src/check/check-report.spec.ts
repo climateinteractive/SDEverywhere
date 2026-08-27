@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import { positionSetting, inputSettingsSpec, valueSetting } from '../_shared/scenario-specs'
 import type { CheckDataRef } from './check-data-ref'
-import { dataRef } from './check-data-ref'
+import { dataRef, sumDataRef } from './check-data-ref'
 import type { CheckResult } from './check-func'
 import type { CheckKey, CheckPlan, CheckPlanPredicate } from './check-planner'
 import type { CheckPredicateOp } from './check-predicate'
@@ -28,6 +28,7 @@ import {
   groupReport,
   opConstantRef,
   opDataRef,
+  opSumDataRef,
   predicateReport,
   scenarioReport,
   testReport
@@ -190,6 +191,56 @@ describe('buildCheckReport', () => {
     )
   })
 
+  it('should build a report that describes a predicate that references the sum of multiple datasets', () => {
+    const dataRefs: Map<CheckPredicateOp, CheckDataRef> = new Map([
+      ['approx', sumDataRef([dataset('ModelImpl', 'V3'), dataset('ModelImpl', 'V4[A1]')], inputAtPos(i1, 'at-minimum'))]
+    ])
+    const predPlanWithSumRef: PredPlansFunc = k0 => [
+      predPlan(
+        k0,
+        {
+          approx: {
+            op: 'sum',
+            datasets: ['V3', { name: 'V4[A1]' }],
+            scenario: 'inherit'
+          },
+          tolerance: 0.5
+        },
+        dataRefs
+      )
+    ]
+
+    const checkPlan: CheckPlan = {
+      groups: [
+        groupPlan('group1', [
+          testPlan('test1', [
+            scenarioPlan(inputAtPos(i1, 'at-minimum'), [datasetPlan('Model', 'V1', predPlanWithSumRef(1))])
+          ])
+        ])
+      ],
+      tasks: new Map(),
+      dataRefs: new Map()
+    }
+
+    const passedResult: CheckResult = {
+      status: 'passed'
+    }
+
+    const report = buildCheckReport(checkPlan, new Map([[1, passedResult]]))
+    const predicate = report.groups[0].tests[0].scenarios[0].datasets[0].predicates[0]
+    expect(predicate.result).toEqual(passedResult)
+    expect(predicate.opValues).toEqual([`≈ 'V3' + 'V4[A1]' (w/ same scenario) ±0.5`])
+    expect(predicate.opRefs).toEqual(
+      new Map([
+        [
+          'approx',
+          opSumDataRef([dataset('ModelImpl', 'V3'), dataset('ModelImpl', 'V4[A1]')], inputAtPos(i1, 'at-minimum'))
+        ]
+      ])
+    )
+    expect(predicateMessage(predicate, bold)).toBe(`should be _≈ 'V3' + 'V4[A1]' (w/ same scenario) ±0.5_`)
+  })
+
   it('should build a report that includes the correct statuses for error cases', () => {
     const dataRefs: Map<CheckPredicateOp, CheckDataRef> = new Map()
     const predPlanWithUnknownDataset: PredPlansFunc = k0 => [
@@ -245,7 +296,7 @@ describe('buildCheckReport', () => {
         ])
       ],
       tasks: new Map(),
-      dataRefs
+      dataRefs: new Map()
     }
 
     const result1: CheckResult = {

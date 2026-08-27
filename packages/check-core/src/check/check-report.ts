@@ -193,7 +193,7 @@ function predicateReport(
         opValue = `${sym} ${predOp}`
       } else {
         const dataRef = predicatePlan.dataRefs?.get(op)
-        if (!dataRef) {
+        if (!dataRef || dataRef.refs.length === 0) {
           return
         }
         const opDataRef: CheckPredicateOpDataRef = {
@@ -201,9 +201,15 @@ function predicateReport(
           dataRef
         }
         opRef = opDataRef
-        opValue = `${sym} '${dataRef.dataset.name}'`
 
-        const refScenarioSpec = dataRef.scenario?.spec
+        // When multiple datasets are referenced, show them as a sum (for now
+        // `sum` is the only supported op)
+        const refDatasetNames = dataRef.refs.map(ref => `'${ref.dataset.name}'`)
+        opValue = `${sym} ${refDatasetNames.join(' + ')}`
+
+        // Note that all referenced datasets use the same scenario, so we only
+        // need to consult the first one here
+        const refScenarioSpec = dataRef.refs[0].scenario?.spec
         if (!refScenarioSpec) {
           return
         }

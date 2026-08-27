@@ -4,7 +4,7 @@ import assertNever from 'assert-never'
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { CheckAction } from './check-action'
 import { actionForPredicate } from './check-action'
-import type { CheckDataRef, CheckDataRefKey } from './check-data-ref'
+import type { CheckDataRef, CheckDataRefKey, CheckRefDataset } from './check-data-ref'
 import type { CheckDataset } from './check-dataset'
 import { expandDatasets } from './check-dataset'
 import type { CheckPredicateOp } from './check-predicate'
@@ -70,7 +70,7 @@ export interface CheckPlan {
    */
   tasks: Map<CheckKey, CheckTask>
   /**
-   * All data references for the checks.  These are kept separate so that the
+   * All referenced datasets for the checks.  These are kept separate so that the
    * reference data can be fetched in advance (and kept in memory) before
    * the actual checks are performed.
    *
@@ -79,13 +79,13 @@ export interface CheckPlan {
    * memory, but for now it's easier to just load all the reference data
    * as a preliminary step.
    */
-  dataRefs: Map<CheckDataRefKey, CheckDataRef>
+  dataRefs: Map<CheckDataRefKey, CheckRefDataset>
 }
 
 export class CheckPlanner {
   private readonly groups: CheckPlanGroup[] = []
   private readonly tasks: Map<CheckKey, CheckTask> = new Map()
-  private readonly dataRefs: Map<CheckDataRefKey, CheckDataRef> = new Map()
+  private readonly dataRefs: Map<CheckDataRefKey, CheckRefDataset> = new Map()
   private checkKey = 1
 
   constructor(private readonly modelSpec: ModelSpec) {}
@@ -232,6 +232,17 @@ export class CheckPlanner {
    * this will add a reference to the scenario/dataset pair so that the data can
    * be fetched in a later stage.
    *
+   * A predicate can also reference multiple datasets that are combined into a
+   * single dataset, for example:
+   * ```
+   *   approx:
+   *     op: sum
+   *     datasets:
+   *       - 'X'
+   *       - 'Y'
+   * ```
+   * in which case one reference is added for each of the datasets.
+   *
    * @param predicateSpec The predicate spec.
    * @param checkScenario The scenario in which the dataset is being checked.
    * @param checkDataset The dataset that is being checked.
@@ -251,36 +262,36 @@ export class CheckPlanner {
         return
       }
 
-      // Resolve the dataset
-      let refDataset: CheckDataset
-      if (typeof predOp.dataset === 'string') {
+      // Resolve the dataset(s)
+      const refDatasets: CheckDataset[] = []
+      if (predOp.datasets !== undefined) {
+        // The predicate references multiple datasets that will be combined using
+        // the given op
+        for (const datasetSpec of predOp.datasets) {
+          // Each item can be either a plain dataset name or an object that includes
+          // the name (and optional source)
+          const refDatasetSpec: CheckDatasetSpec =
+            typeof datasetSpec === 'string'
+              ? { name: datasetSpec }
+              : { name: datasetSpec.name, source: datasetSpec.source }
+          refDatasets.push(this.resolveRefDataset(refDatasetSpec))
+        }
+      } else if (typeof predOp.dataset === 'string') {
         switch (predOp.dataset) {
           case 'inherit':
             // Use the same dataset as the one being checked (this is typically used
             // when checking one dataset in one scenario against the same dataset in
             // a different scenario)
-            refDataset = checkDataset
+            refDatasets.push(checkDataset)
             break
           default:
             assertNever(predOp.dataset)
         }
       } else {
-        // Resolve the dataset for the given name; if it does not expand
-        // to a single valid dataset, treat it as an error case
-        const refDatasetSpec: CheckDatasetSpec = { name: predOp.dataset.name }
-        const matchedRefDatasets = expandDatasets(this.modelSpec, refDatasetSpec)
-        if (matchedRefDatasets.length === 1) {
-          refDataset = matchedRefDatasets[0]
-        } else {
-          // We failed to match a dataset (or the match expanded to multiple datasets);
-          // use an empty CheckDataset so that we can report the error later
-          refDataset = {
-            name: predOp.dataset.name
-          }
-        }
+        refDatasets.push(this.resolveRefDataset({ name: predOp.dataset.name }))
       }
 
-      // Resolve the scenario
+      // Resolve the scenario (this is shared by all referenced datasets)
       let refScenario: CheckScenario
       if (typeof predOp.scenario === 'string') {
         switch (predOp.scenario) {
@@ -311,28 +322,35 @@ export class CheckPlanner {
         }
       }
 
-      // Create the data ref that will be used for this predicate/op
-      let dataRefKey: CheckDataRefKey
-      if (refScenario.spec && refDataset.datasetKey) {
-        dataRefKey = `${refScenario.spec.uid}::${refDataset.datasetKey}`
-      }
-      const dataRef: CheckDataRef = {
-        key: dataRefKey,
-        dataset: refDataset,
-        scenario: refScenario
-      }
+      // Create a reference for each dataset that is used by this predicate/op
+      const refs: CheckRefDataset[] = refDatasets.map(refDataset => {
+        let dataRefKey: CheckDataRefKey
+        if (refScenario.spec && refDataset.datasetKey) {
+          dataRefKey = `${refScenario.spec.uid}::${refDataset.datasetKey}`
+        }
+        const ref: CheckRefDataset = {
+          key: dataRefKey,
+          dataset: refDataset,
+          scenario: refScenario
+        }
 
-      // Add the data ref to the plan only if the key is defined
-      if (dataRefKey) {
-        this.dataRefs.set(dataRefKey, dataRef)
-      }
+        // Add the reference to the plan only if the key is defined
+        if (dataRefKey) {
+          this.dataRefs.set(dataRefKey, ref)
+        }
 
-      // Add an entry to the map so that the op is associated with a particular
-      // reference dataset
+        return ref
+      })
+
+      // Add an entry to the map so that the op is associated with the reference
+      // dataset(s)
       if (dataRefs === undefined) {
         dataRefs = new Map()
       }
-      dataRefs.set(op, dataRef)
+      dataRefs.set(op, {
+        op: predOp.op,
+        refs
+      })
     }
 
     addDataRef('gt')
@@ -343,5 +361,25 @@ export class CheckPlanner {
     addDataRef('approx')
 
     return dataRefs
+  }
+
+  /**
+   * Resolve the dataset that matches the given spec.  If the spec does not expand
+   * to exactly one dataset, this will return a `CheckDataset` with an undefined
+   * `datasetKey` so that the error can be reported later.
+   *
+   * @param refDatasetSpec The spec for the referenced dataset.
+   */
+  private resolveRefDataset(refDatasetSpec: CheckDatasetSpec): CheckDataset {
+    const matchedRefDatasets = expandDatasets(this.modelSpec, refDatasetSpec)
+    if (matchedRefDatasets.length === 1) {
+      return matchedRefDatasets[0]
+    } else {
+      // We failed to match a dataset (or the match expanded to multiple datasets);
+      // use an empty CheckDataset so that we can report the error later
+      return {
+        name: refDatasetSpec.name
+      }
+    }
   }
 }
