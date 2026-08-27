@@ -67,6 +67,39 @@ function readInlineModel(reduceVariables: 'default' | 'aggressive', modelText: s
   return vars.filter(v => v.varName !== '_time')
 }
 
+/**
+ * Return the reduced formula for each variable in the model, in the order that the variables
+ * are defined.  This is a lighter-weight alternative to comparing whole `Variable` instances,
+ * for tests that only care about how far the reduction got.
+ */
+function readInlineModelFormulas(reduceVariables: 'default' | 'aggressive', modelText: string): string[][] {
+  return readInlineModel(reduceVariables, modelText).map(v => [v.varName, v.modelFormula])
+}
+
+/**
+ * Read the given model and run the full analysis (including the dependency sort) rather than
+ * stopping after the reduction step.  This is used to verify that a genuine dependency cycle
+ * is still reported by the sort.
+ */
+function readInlineModelWithFullAnalysis(reduceVariables: 'default' | 'aggressive', modelText: string): void {
+  // XXX: These steps are needed due to subs/dims and variables being in module-level storage
+  resetHelperState()
+  resetSubscriptsAndDimensions()
+  Model.resetModelState()
+
+  const parsedModel = parseInlineVensimModel(modelText)
+  Model.read(
+    parsedModel,
+    /*spec=*/ {},
+    /*extData=*/ undefined,
+    /*directData=*/ undefined,
+    /*modelDirname=*/ undefined,
+    {
+      reduceVariables
+    }
+  )
+}
+
 // function readSubscriptsAndEquations(modelName: string): Variable[] {
 //   return readSubscriptsAndEquationsFromSource({ modelName })
 // }
@@ -190,5 +223,55 @@ describe('reduceVariables (aggressive mode: reduce everything)', () => {
         refId: '_z'
       })
     ])
+  })
+
+  it('should stop at a feedback loop between a level and an aux variable', () => {
+    // This is the classic shape of a stock-and-flow feedback loop, and is the reason
+    // aggressive reduction previously failed on any real model: reducing `gas uptake`
+    // requires visiting `gas in atm`, whose rate refers back to `gas uptake`.
+    const formulas = readInlineModelFormulas(
+      'aggressive',
+      `
+        gas emissions = 300 ~~|
+        time constant = 8 ~~|
+        gas in atm = INTEG(gas emissions - gas uptake, 4900) ~~|
+        gas uptake = gas in atm / time constant ~~|
+      `
+    )
+    expect(formulas).toEqual([
+      ['_gas_emissions', '300'],
+      ['_time_constant', '8'],
+      // The constant is substituted, but the variable in the loop is left alone
+      ['_gas_in_atm', 'INTEG(300-gas uptake,4900)'],
+      ['_gas_uptake', 'gas in atm/8']
+    ])
+  })
+
+  it('should stop at a variable that refers to itself', () => {
+    const formulas = readInlineModelFormulas(
+      'aggressive',
+      `
+        x = 1 ~~|
+        y = SAMPLE IF TRUE(Time > x, y + 1, 0) ~~|
+      `
+    )
+    expect(formulas).toEqual([
+      ['_x', '1'],
+      ['_y', 'SAMPLE IF TRUE(Time>1,y+1,0)']
+    ])
+  })
+
+  it('should leave a genuine dependency cycle to be reported by the dependency sort', () => {
+    // A cycle between two aux variables is a real error in the model, but it is the
+    // dependency sort that should report it (with the full chain), not the reduction step
+    expect(() =>
+      readInlineModelWithFullAnalysis(
+        'aggressive',
+        `
+          X = Y ~~|
+          Y = X + 1 ~~|
+        `
+      )
+    ).toThrow('Found cyclic dependency during toposort:\n_y →\n_x →\n_y')
   })
 })
