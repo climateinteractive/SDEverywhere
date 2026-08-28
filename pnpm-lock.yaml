@@ -476,7 +476,7 @@ importers:
   packages/build:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.33
+        specifier: ^0.7.34
         version: link:../compile
       '@sdeverywhere/parse':
         specifier: ^0.1.6
@@ -531,7 +531,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.0
       '@sdeverywhere/check-core':
-        specifier: ^0.1.13
+        specifier: ^0.1.14
         version: link:../check-core
       assert-never:
         specifier: ^1.2.1
@@ -604,10 +604,10 @@ importers:
   packages/cli:
     dependencies:
       '@sdeverywhere/build':
-        specifier: ^0.3.15
+        specifier: ^0.3.16
         version: link:../build
       '@sdeverywhere/compile':
-        specifier: ^0.7.33
+        specifier: ^0.7.34
         version: link:../compile
       byline:
         specifier: ^5.0.0
@@ -649,7 +649,7 @@ importers:
   packages/create:
     dependencies:
       '@sdeverywhere/compile':
-        specifier: ^0.7.33
+        specifier: ^0.7.34
         version: link:../compile
       execa:
         specifier: ^6.1.0
@@ -729,10 +729,10 @@ importers:
         specifier: ^0.3.10
         version: link:../build
       '@sdeverywhere/check-core':
-        specifier: ^0.1.13
+        specifier: ^0.1.14
         version: link:../check-core
       '@sdeverywhere/check-ui-shell':
-        specifier: ^0.2.25
+        specifier: ^0.2.26
         version: link:../check-ui-shell
       '@sdeverywhere/runtime':
         specifier: ^0.2.10

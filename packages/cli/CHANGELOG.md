@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.7.47](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.46...cli-v0.7.47) (2026-08-27)
+
+
+### Performance Improvements
+
+* mark some C functions as `static inline` to improve performance ([#894](https://github.com/climateinteractive/SDEverywhere/issues/894)) ([3269d52](https://github.com/climateinteractive/SDEverywhere/commit/3269d520c25811a5c4cd40f06b563bf3687806f3)), closes [#893](https://github.com/climateinteractive/SDEverywhere/issues/893)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.15 to ^0.3.16
+    * @sdeverywhere/compile bumped from ^0.7.33 to ^0.7.34
+
 ## [0.7.46](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.45...cli-v0.7.46) (2026-08-19)
 
 

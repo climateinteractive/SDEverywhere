@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.14](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.13...check-core-v0.1.14) (2026-08-27)
+
+
+### Features
+
+* add support for check tests that verify that one dataset is equal/etc to the sum of other datasets ([#905](https://github.com/climateinteractive/SDEverywhere/issues/905)) ([c62a9bc](https://github.com/climateinteractive/SDEverywhere/commit/c62a9bc1f20d62b8e9d1d75fd5125267c224d8b1)), closes [#904](https://github.com/climateinteractive/SDEverywhere/issues/904)
+
+
+### Bug Fixes
+
+* correct scheduling of ref data requests when concurrency &gt; 1 ([#903](https://github.com/climateinteractive/SDEverywhere/issues/903)) ([f821c42](https://github.com/climateinteractive/SDEverywhere/commit/f821c421c801350fb552f20bad60308e4a33142d)), closes [#902](https://github.com/climateinteractive/SDEverywhere/issues/902)
+
 ## [0.1.13](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.12...check-core-v0.1.13) (2026-08-13)
 
 

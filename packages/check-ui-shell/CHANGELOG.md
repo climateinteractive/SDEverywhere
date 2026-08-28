@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.26](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.25...check-ui-shell-v0.2.26) (2026-08-27)
+
+
+### Features
+
+* add support for check tests that verify that one dataset is equal/etc to the sum of other datasets ([#905](https://github.com/climateinteractive/SDEverywhere/issues/905)) ([c62a9bc](https://github.com/climateinteractive/SDEverywhere/commit/c62a9bc1f20d62b8e9d1d75fd5125267c224d8b1)), closes [#904](https://github.com/climateinteractive/SDEverywhere/issues/904)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.13 to ^0.1.14
+
 ## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.24...check-ui-shell-v0.2.25) (2026-08-13)
 
 
