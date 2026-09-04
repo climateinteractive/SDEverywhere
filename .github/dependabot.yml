@@ -58,6 +58,12 @@ updates:
     # every release would needlessly narrow the range of versions that
     # consumers of the published packages can resolve.  Only rewrite a range
     # when the current one can't accommodate the new version.
+    #
+    # Note that this setting only applies to version updates, which are
+    # switched off above, so it has no effect today; it's here to document the
+    # intent in case we ever turn them back on.  (Security updates already
+    # rewrite a range only when the current one can't accommodate the fixed
+    # version, so the behavior we want is the default there.)
     versioning-strategy: increase-if-necessary
     groups:
       # Note the `applies-to` setting: grouping defaults to version updates,
