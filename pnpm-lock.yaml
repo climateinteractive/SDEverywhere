@@ -10,19 +10,19 @@ importers:
     devDependencies:
       '@eslint-community/eslint-plugin-eslint-comments':
         specifier: ^4.7.2
-        version: 4.7.2(eslint@10.8.1(supports-color@7.2.0))
+        version: 4.7.2(eslint@10.8.1)
       '@eslint/js':
         specifier: ^10.0.1
-        version: 10.0.1(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.0.1(eslint@10.8.1)
       '@playwright/test':
         specifier: ^1.56.1
         version: 1.56.1
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.67.0
-        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2))(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2))(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/parser':
         specifier: ^8.67.0
-        version: 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       '@vitest/browser':
         specifier: ^4.1.10
         version: 4.1.10(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))(vitest@4.1.10)
@@ -37,13 +37,13 @@ importers:
         version: 7.0.2
       eslint:
         specifier: ^10.8.1
-        version: 10.8.1(supports-color@7.2.0)
+        version: 10.8.1
       eslint-config-prettier:
         specifier: ^10.1.8
-        version: 10.1.8(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.1.8(eslint@10.8.1)
       eslint-plugin-svelte:
         specifier: ^3.22.0
-        version: 3.22.0(eslint@10.8.1(supports-color@7.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
+        version: 3.22.0(eslint@10.8.1)(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       fast-glob:
         specifier: ^3.3.3
         version: 3.3.3
@@ -67,7 +67,7 @@ importers:
         version: 1.8.0(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       tsup:
         specifier: ^8.5.1
-        version: 8.5.1(postcss@8.5.26)(supports-color@7.2.0)(typescript@5.2.2)(yaml@2.9.0)
+        version: 8.5.1(postcss@8.5.26)(typescript@5.2.2)(yaml@2.9.0)
       typedoc:
         specifier: 0.28.20
         version: 0.28.20(typescript@5.2.2)
@@ -103,10 +103,10 @@ importers:
     devDependencies:
       '@eslint-community/eslint-plugin-eslint-comments':
         specifier: ^4.7.2
-        version: 4.7.2(eslint@10.8.1(supports-color@7.2.0))
+        version: 4.7.2(eslint@10.8.1)
       '@eslint/js':
         specifier: ^10.0.1
-        version: 10.0.1(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.0.1(eslint@10.8.1)
       '@sdeverywhere/build':
         specifier: ^0.3.7
         version: link:../../packages/build
@@ -121,19 +121,19 @@ importers:
         version: link:../../packages/plugin-worker
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.67.0
-        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2))(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2))(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/parser':
         specifier: ^8.67.0
-        version: 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       eslint:
         specifier: ^10.8.1
-        version: 10.8.1(supports-color@7.2.0)
+        version: 10.8.1
       eslint-config-prettier:
         specifier: ^10.1.8
-        version: 10.1.8(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.1.8(eslint@10.8.1)
       eslint-plugin-svelte:
         specifier: ^3.22.0
-        version: 3.22.0(eslint@10.8.1(supports-color@7.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
+        version: 3.22.0(eslint@10.8.1)(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       globals:
         specifier: ^16.4.0
         version: 16.4.0
@@ -152,7 +152,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.4
-        version: 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -186,7 +186,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.4
-        version: 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       postcss:
         specifier: ^8.5.26
         version: 8.5.26
@@ -239,10 +239,10 @@ importers:
     devDependencies:
       '@eslint-community/eslint-plugin-eslint-comments':
         specifier: ^4.7.2
-        version: 4.7.2(eslint@10.8.1(supports-color@7.2.0))
+        version: 4.7.2(eslint@10.8.1)
       '@eslint/js':
         specifier: ^10.0.1
-        version: 10.0.1(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.0.1(eslint@10.8.1)
       '@sdeverywhere/build':
         specifier: ^0.3.7
         version: link:../../packages/build
@@ -269,16 +269,16 @@ importers:
         version: link:../../packages/plugin-worker
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.67.0
-        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2))(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2))(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/parser':
         specifier: ^8.67.0
-        version: 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       eslint:
         specifier: ^10.8.1
-        version: 10.8.1(supports-color@7.2.0)
+        version: 10.8.1
       eslint-config-prettier:
         specifier: ^10.1.8
-        version: 10.1.8(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.1.8(eslint@10.8.1)
       globals:
         specifier: ^16.4.0
         version: 16.4.0
@@ -352,10 +352,10 @@ importers:
     devDependencies:
       '@eslint-community/eslint-plugin-eslint-comments':
         specifier: ^4.7.2
-        version: 4.7.2(eslint@10.8.1(supports-color@7.2.0))
+        version: 4.7.2(eslint@10.8.1)
       '@eslint/js':
         specifier: ^10.0.1
-        version: 10.0.1(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.0.1(eslint@10.8.1)
       '@sdeverywhere/build':
         specifier: ^0.3.7
         version: link:../../packages/build
@@ -385,19 +385,19 @@ importers:
         version: link:../../packages/plugin-worker
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.67.0
-        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2))(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2))(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/parser':
         specifier: ^8.67.0
-        version: 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+        version: 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       eslint:
         specifier: ^10.8.1
-        version: 10.8.1(supports-color@7.2.0)
+        version: 10.8.1
       eslint-config-prettier:
         specifier: ^10.1.8
-        version: 10.1.8(eslint@10.8.1(supports-color@7.2.0))
+        version: 10.1.8(eslint@10.8.1)
       eslint-plugin-svelte:
         specifier: ^3.22.0
-        version: 3.22.0(eslint@10.8.1(supports-color@7.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
+        version: 3.22.0(eslint@10.8.1)(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       globals:
         specifier: ^16.4.0
         version: 16.4.0
@@ -425,7 +425,7 @@ importers:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.4
-        version: 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -560,7 +560,7 @@ importers:
         version: 10.5.7(@types/react@19.2.2)(react@19.2.0)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))
       '@storybook/addon-svelte-csf':
         specifier: ^5.1.2
-        version: 5.1.2(@storybook/svelte@10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0)))(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 5.1.2(@storybook/svelte@10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0)))(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@storybook/addon-vitest':
         specifier: ^10.5.7
         version: 10.5.7(@vitest/browser-playwright@4.1.10)(@vitest/browser@4.1.10)(@vitest/runner@4.1.10)(react@19.2.0)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(vitest@4.1.10)
@@ -569,10 +569,10 @@ importers:
         version: 10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       '@storybook/svelte-vite':
         specifier: ^10.5.7
-        version: 10.5.7(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(esbuild@0.27.0)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 10.5.7(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(esbuild@0.27.0)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@sveltejs/vite-plugin-svelte':
         specifier: ^6.2.4
-        version: 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -859,7 +859,7 @@ importers:
         version: link:../runtime
       threads:
         specifier: 1.7.0
-        version: 1.7.0(supports-color@7.2.0)
+        version: 1.7.0
 
   tests:
     dependencies:
@@ -4165,23 +4165,23 @@ snapshots:
   '@esbuild/win32-x64@0.27.0':
     optional: true
 
-  '@eslint-community/eslint-plugin-eslint-comments@4.7.2(eslint@10.8.1(supports-color@7.2.0))':
+  '@eslint-community/eslint-plugin-eslint-comments@4.7.2(eslint@10.8.1)':
     dependencies:
       escape-string-regexp: 4.0.0
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
       ignore: 7.0.5
 
-  '@eslint-community/eslint-utils@4.10.1(eslint@10.8.1(supports-color@7.2.0))':
+  '@eslint-community/eslint-utils@4.10.1(eslint@10.8.1)':
     dependencies:
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint/config-array@0.23.5(supports-color@7.2.0)':
+  '@eslint/config-array@0.23.5':
     dependencies:
       '@eslint/object-schema': 3.0.5
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       minimatch: 10.2.6
     transitivePeerDependencies:
       - supports-color
@@ -4194,9 +4194,9 @@ snapshots:
     dependencies:
       '@types/json-schema': 7.0.15
 
-  '@eslint/js@10.0.1(eslint@10.8.1(supports-color@7.2.0))':
+  '@eslint/js@10.0.1(eslint@10.8.1)':
     optionalDependencies:
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
 
   '@eslint/object-schema@3.0.5': {}
 
@@ -4638,11 +4638,11 @@ snapshots:
       '@types/react': 19.2.2
       react: 19.2.0
 
-  '@storybook/addon-svelte-csf@5.1.2(@storybook/svelte@10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0)))(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
+  '@storybook/addon-svelte-csf@5.1.2(@storybook/svelte@10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0)))(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
     dependencies:
       '@storybook/csf': 0.1.13
       '@storybook/svelte': 10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
-      '@sveltejs/vite-plugin-svelte': 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte': 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       dedent: 1.7.0
       es-toolkit: 1.40.0
       esrap: 1.4.9
@@ -4706,11 +4706,11 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.2
 
-  '@storybook/svelte-vite@10.5.7(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(esbuild@0.27.0)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
+  '@storybook/svelte-vite@10.5.7(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(esbuild@0.27.0)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
     dependencies:
       '@storybook/builder-vite': 10.5.7(esbuild@0.27.0)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       '@storybook/svelte': 10.5.7(storybook@10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0))
-      '@sveltejs/vite-plugin-svelte': 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte': 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       magic-string: 0.30.21
       storybook: 10.5.7(@types/react@19.2.2)(prettier@3.6.2)(react@19.2.0)
       svelte: 5.56.8(@typescript-eslint/types@8.67.0)
@@ -4735,18 +4735,18 @@ snapshots:
 
   '@sveltejs/load-config@0.2.2': {}
 
-  '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
+  '@sveltejs/vite-plugin-svelte-inspector@5.0.1(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
-      debug: 4.4.3(supports-color@7.2.0)
+      '@sveltejs/vite-plugin-svelte': 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+      debug: 4.4.3
       svelte: 5.56.8(@typescript-eslint/types@8.67.0)
       vite: 7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
+  '@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 5.0.1(@sveltejs/vite-plugin-svelte@6.2.4(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(supports-color@7.2.0)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
+      '@sveltejs/vite-plugin-svelte-inspector': 5.0.1(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0)))(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(sass@1.102.0)(yaml@2.9.0))
       deepmerge: 4.3.1
       magic-string: 0.30.21
       obug: 2.1.4
@@ -4854,15 +4854,15 @@ snapshots:
 
   '@types/yargs-parser@21.0.0': {}
 
-  '@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2))(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/eslint-plugin@8.67.0(@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2))(eslint@10.8.1)(typescript@5.2.2)':
     dependencies:
       '@eslint-community/regexpp': 4.12.2
-      '@typescript-eslint/parser': 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+      '@typescript-eslint/parser': 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/scope-manager': 8.67.0
-      '@typescript-eslint/type-utils': 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
-      '@typescript-eslint/utils': 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
+      '@typescript-eslint/type-utils': 8.67.0(eslint@10.8.1)(typescript@5.2.2)
+      '@typescript-eslint/utils': 8.67.0(eslint@10.8.1)(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 8.67.0
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
       ignore: 7.0.5
       natural-compare: 1.4.0
       ts-api-utils: 2.5.0(typescript@5.2.2)
@@ -4870,23 +4870,23 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/parser@8.67.0(eslint@10.8.1)(typescript@5.2.2)':
     dependencies:
       '@typescript-eslint/scope-manager': 8.67.0
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(supports-color@7.2.0)(typescript@5.2.2)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.2.2)
       '@typescript-eslint/visitor-keys': 8.67.0
-      debug: 4.4.3(supports-color@7.2.0)
-      eslint: 10.8.1(supports-color@7.2.0)
+      debug: 4.4.3
+      eslint: 10.8.1
       typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/project-service@8.67.0(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/project-service@8.67.0(typescript@5.2.2)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.2.2)
       '@typescript-eslint/types': 8.67.0
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
@@ -4900,13 +4900,13 @@ snapshots:
     dependencies:
       typescript: 5.2.2
 
-  '@typescript-eslint/type-utils@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/type-utils@8.67.0(eslint@10.8.1)(typescript@5.2.2)':
     dependencies:
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(supports-color@7.2.0)(typescript@5.2.2)
-      '@typescript-eslint/utils': 8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)
-      debug: 4.4.3(supports-color@7.2.0)
-      eslint: 10.8.1(supports-color@7.2.0)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.2.2)
+      '@typescript-eslint/utils': 8.67.0(eslint@10.8.1)(typescript@5.2.2)
+      debug: 4.4.3
+      eslint: 10.8.1
       ts-api-utils: 2.5.0(typescript@5.2.2)
       typescript: 5.2.2
     transitivePeerDependencies:
@@ -4914,13 +4914,13 @@ snapshots:
 
   '@typescript-eslint/types@8.67.0': {}
 
-  '@typescript-eslint/typescript-estree@8.67.0(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/typescript-estree@8.67.0(typescript@5.2.2)':
     dependencies:
-      '@typescript-eslint/project-service': 8.67.0(supports-color@7.2.0)(typescript@5.2.2)
+      '@typescript-eslint/project-service': 8.67.0(typescript@5.2.2)
       '@typescript-eslint/tsconfig-utils': 8.67.0(typescript@5.2.2)
       '@typescript-eslint/types': 8.67.0
       '@typescript-eslint/visitor-keys': 8.67.0
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       minimatch: 10.2.6
       semver: 7.8.5
       tinyglobby: 0.2.17
@@ -4929,13 +4929,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.67.0(eslint@10.8.1(supports-color@7.2.0))(supports-color@7.2.0)(typescript@5.2.2)':
+  '@typescript-eslint/utils@8.67.0(eslint@10.8.1)(typescript@5.2.2)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1)
       '@typescript-eslint/scope-manager': 8.67.0
       '@typescript-eslint/types': 8.67.0
-      '@typescript-eslint/typescript-estree': 8.67.0(supports-color@7.2.0)(typescript@5.2.2)
-      eslint: 10.8.1(supports-color@7.2.0)
+      '@typescript-eslint/typescript-estree': 8.67.0(typescript@5.2.2)
+      eslint: 10.8.1
       typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
@@ -5252,11 +5252,9 @@ snapshots:
 
   dayjs@1.11.21: {}
 
-  debug@4.4.3(supports-color@7.2.0):
+  debug@4.4.3:
     dependencies:
       ms: 2.1.3
-    optionalDependencies:
-      supports-color: 7.2.0
 
   dedent-js@1.0.1: {}
 
@@ -5373,15 +5371,15 @@ snapshots:
 
   escape-string-regexp@4.0.0: {}
 
-  eslint-config-prettier@10.1.8(eslint@10.8.1(supports-color@7.2.0)):
+  eslint-config-prettier@10.1.8(eslint@10.8.1):
     dependencies:
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
 
-  eslint-plugin-svelte@3.22.0(eslint@10.8.1(supports-color@7.2.0))(svelte@5.56.8(@typescript-eslint/types@8.67.0)):
+  eslint-plugin-svelte@3.22.0(eslint@10.8.1)(svelte@5.56.8(@typescript-eslint/types@8.67.0)):
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1)
       '@jridgewell/sourcemap-codec': 1.5.5
-      eslint: 10.8.1(supports-color@7.2.0)
+      eslint: 10.8.1
       esutils: 2.0.3
       globals: 16.4.0
       known-css-properties: 0.37.0
@@ -5413,11 +5411,11 @@ snapshots:
 
   eslint-visitor-keys@5.0.1: {}
 
-  eslint@10.8.1(supports-color@7.2.0):
+  eslint@10.8.1:
     dependencies:
-      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1(supports-color@7.2.0))
+      '@eslint-community/eslint-utils': 4.10.1(eslint@10.8.1)
       '@eslint-community/regexpp': 4.12.2
-      '@eslint/config-array': 0.23.5(supports-color@7.2.0)
+      '@eslint/config-array': 0.23.5
       '@eslint/config-helpers': 0.7.0
       '@eslint/core': 1.2.1
       '@eslint/plugin-kit': 0.7.2
@@ -5427,7 +5425,7 @@ snapshots:
       '@types/estree': 1.0.9
       ajv: 6.15.0
       cross-spawn: 7.0.6
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       escape-string-regexp: 4.0.0
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
@@ -6412,10 +6410,10 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  threads@1.7.0(supports-color@7.2.0):
+  threads@1.7.0:
     dependencies:
       callsites: 3.1.0
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       is-observable: 2.1.0
       observable-fns: 0.6.1
     optionalDependencies:
@@ -6465,13 +6463,13 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tsup@8.5.1(postcss@8.5.26)(supports-color@7.2.0)(typescript@5.2.2)(yaml@2.9.0):
+  tsup@8.5.1(postcss@8.5.26)(typescript@5.2.2)(yaml@2.9.0):
     dependencies:
       bundle-require: 5.1.0(esbuild@0.27.0)
       cac: 6.7.14
       chokidar: 4.0.3
       consola: 3.4.2
-      debug: 4.4.3(supports-color@7.2.0)
+      debug: 4.4.3
       esbuild: 0.27.0
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
