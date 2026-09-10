@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.35](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.34...compile-v0.7.35) (2026-09-10)
+
+
+### Dependencies
+
+* bump csv-parse from 5.3.3 to 7.0.2 ([#908](https://github.com/climateinteractive/SDEverywhere/issues/908)) ([ab55d88](https://github.com/climateinteractive/SDEverywhere/commit/ab55d88a9cf8f8799b907157953451b02853976b))
+
 ## [0.7.34](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.33...compile-v0.7.34) (2026-08-27)
 
 
