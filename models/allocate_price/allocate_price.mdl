@@ -44,6 +44,69 @@ amount demanded[priority curve,demander] = DEMAND AT PRICE(
   demand priority vector[priority curve,demander,ptype],
   market price[priority curve]) ~~~:SUPPLEMENTARY|
 
+shortage demand priority vector[priority curve,demander,pprofile] = 0 ~~|
+shortage reference demand[priority curve,demander] =
+  1000,250; 1000,250; 1000,250; 1000,250; 1000,250; ~~|
+shortage demand satiation[priority curve,demander] =
+  demand scale * shortage reference demand[priority curve,demander] ~~|
+
+shortage supply priority vector[priority curve,supplier,ptype] =
+  0,0,0; 1,1,1; 2,2,2; 3,3,3; 4,4,4; ~~|
+shortage supply priority vector[priority curve,supplier,ppriority] =
+  1,2,30; 1,2,30; 1,2,30; 1,2,30; 1,2,30; ~~|
+shortage supply priority vector[priority curve,supplier,pwidth] =
+  1,1,2; 1,1,2; 1,1,2; 1,1,2; 1,1,2; ~~|
+shortage supply priority vector[priority curve,supplier,pextra] = 0 ~~|
+shortage supply capacity[priority curve,supplier] =
+  200,300,0; 200,300,0; 200,300,0; 200,300,0; 200,300,0; ~~|
+
+shortage market price[priority curve] = FIND MARKET PRICE(
+  shortage demand satiation[priority curve,d1],
+  shortage demand priority vector[priority curve,d1,ptype],
+  shortage supply capacity[priority curve,s1],
+  shortage supply priority vector[priority curve,s1,ptype])
+  ~~ Regression case: demand exceeds the total supply capacity once Time > 4.8. \
+  Demand is a fixed quantity and supply follows a priority curve, as in the EPS \
+  electricity dispatch market. Supplier s3 has zero capacity but the highest \
+  priority; when the market cannot clear, the price is its priority plus five \
+  widths (40). |
+
+shortage amount supplied[priority curve,supplier] = SUPPLY AT PRICE(
+  shortage supply capacity[priority curve,supplier],
+  shortage supply priority vector[priority curve,supplier,ptype],
+  shortage market price[priority curve]) ~~|
+
+surplus supply priority vector[priority curve,supplier,pprofile] = 0 ~~|
+surplus supply capacity[priority curve,supplier] =
+  400,400,400; 400,400,400; 400,400,400; 400,400,400; 400,400,400; ~~|
+
+surplus demand priority vector[priority curve,demander,ptype] =
+  0,0; 1,1; 2,2; 3,3; 4,4; ~~|
+surplus demand priority vector[priority curve,demander,ppriority] =
+  2,-30; 2,-30; 2,-30; 2,-30; 2,-30; ~~|
+surplus demand priority vector[priority curve,demander,pwidth] =
+  1,2; 1,2; 1,2; 1,2; 1,2; ~~|
+surplus demand priority vector[priority curve,demander,pextra] = 0 ~~|
+surplus reference demand[priority curve,demander] =
+  2000,0; 2000,0; 2000,0; 2000,0; 2000,0; ~~|
+surplus demand satiation[priority curve,demander] =
+  demand scale * surplus reference demand[priority curve,demander] ~~|
+
+surplus market price[priority curve] = FIND MARKET PRICE(
+  surplus demand satiation[priority curve,d1],
+  surplus demand priority vector[priority curve,d1,ptype],
+  surplus supply capacity[priority curve,s1],
+  surplus supply priority vector[priority curve,s1,ptype])
+  ~~ Regression case: supply exceeds the total demand satiation while Time < 7.2. \
+  Supply is a fixed quantity and demand follows a priority curve. Demander d2 has \
+  zero satiation but the lowest priority; when the market cannot clear, the price \
+  is its priority minus five widths (-40). |
+
+surplus amount demanded[priority curve,demander] = DEMAND AT PRICE(
+  surplus demand satiation[priority curve,demander],
+  surplus demand priority vector[priority curve,demander,ptype],
+  surplus market price[priority curve]) ~~|
+
 ********************************************************
 	.Control
 ********************************************************~

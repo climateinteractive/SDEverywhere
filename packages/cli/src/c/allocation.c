@@ -164,6 +164,43 @@ static double* __allocations_at_price(double* quantities, double* profiles, doub
   return allocations;
 }
 
+// Return the distance from the priority at which a priority curve saturates, that
+// is, where the CDF reaches 1 (or 0 on the other side). These match the bounds
+// Vensim uses for its FIND MARKET PRICE search: the ends of the support for the
+// rectangular and triangular curves, five standard deviations for the normal
+// curve, and ten scale widths for the exponential (Laplace) curve.
+static double __saturation_offset(int ptype, double width) {
+  width = fabs(width);
+  switch (ptype) {
+    case PTYPE_RECTANGULAR:
+    case PTYPE_TRIANGULAR:
+      return width / 2.0;
+    case PTYPE_NORMAL:
+      return 5.0 * width;
+    case PTYPE_EXPONENTIAL:
+      return 10.0 * width;
+    default:
+      return 0.0;
+  }
+}
+// Compute the total (unclamped) quantity allocated at the given price. A fixed
+// profile allocates the full quantity regardless of price.
+static double __total_at_price(double* quantities, double* profiles, double price, size_t n, bool is_demand) {
+  double total = 0.0;
+  for (size_t i = 0; i < n; i++) {
+    if (quantities[i] <= 0.0) continue;
+    int ptype = (int)__get_pp(profiles, i, PTYPE);
+    if (ptype == PTYPE_FIXED) {
+      total += quantities[i];
+    } else {
+      double priority = __get_pp(profiles, i, PPRIORITY);
+      double width = __get_pp(profiles, i, PWIDTH);
+      total += quantities[i] * __allocate_by_priority(ptype, price, priority, width, is_demand);
+    }
+  }
+  return total;
+}
+
 // Allocate the available resource to the requesters using their priority profiles.
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
@@ -330,6 +367,45 @@ double _FIND_MARKET_PRICE(double* demand_quantities, double* demand_profiles, do
     }
     if (supply_ptype == PTYPE_FIXED) {
       total_supply_allocations = fmin(total_supply, total_demand);
+    }
+  }
+  // Vensim bounds the price search at the points where the outermost priority
+  // curves saturate, considering all agents, including those with zero quantity
+  // (but not agents with a fixed profile, whose priority is unused). When demand
+  // meets or exceeds supply at the upper bound, Vensim returns the upper bound
+  // rather than searching for an unreachable equilibrium; symmetrically, when
+  // supply meets or exceeds demand at the lower bound (for example, when demand
+  // is zero), it returns the lower bound.
+  {
+    double x_hi = -DBL_MAX;
+    double x_lo = DBL_MAX;
+    for (size_t i = 0; i < num_demanders; i++) {
+      int ptype = (int)__get_pp(demand_profiles, i, PTYPE);
+      if (ptype == PTYPE_FIXED) continue;
+      double p = __get_pp(demand_profiles, i, PPRIORITY);
+      double offset = __saturation_offset(ptype, __get_pp(demand_profiles, i, PWIDTH));
+      x_hi = fmax(x_hi, p + offset);
+      x_lo = fmin(x_lo, p - offset);
+    }
+    for (size_t i = 0; i < num_suppliers; i++) {
+      int ptype = (int)__get_pp(supply_profiles, i, PTYPE);
+      if (ptype == PTYPE_FIXED) continue;
+      double p = __get_pp(supply_profiles, i, PPRIORITY);
+      double offset = __saturation_offset(ptype, __get_pp(supply_profiles, i, PWIDTH));
+      x_hi = fmax(x_hi, p + offset);
+      x_lo = fmin(x_lo, p - offset);
+    }
+    if (x_hi > x_lo) {
+      double d_hi = __total_at_price(demand_quantities, demand_profiles, x_hi, num_demanders, true);
+      double s_hi = __total_at_price(supply_quantities, supply_profiles, x_hi, num_suppliers, false);
+      if (d_hi >= s_hi || __isEqual(d_hi, s_hi)) {
+        return x_hi;
+      }
+      double d_lo = __total_at_price(demand_quantities, demand_profiles, x_lo, num_demanders, true);
+      double s_lo = __total_at_price(supply_quantities, supply_profiles, x_lo, num_suppliers, false);
+      if (s_lo >= d_lo || __isEqual(s_lo, d_lo)) {
+        return x_lo;
+      }
     }
   }
   // Search for a price that matches demand with supply.
