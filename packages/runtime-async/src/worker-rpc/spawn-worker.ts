@@ -1,0 +1,104 @@
+// Copyright (c) 2026 Climate Interactive / New Venture Fund
+
+import type { NodeWorker } from './node-runtime'
+import { isNodeEnvironment, nodeWorkerThreads } from './node-runtime'
+import type { WorkerHandle } from './worker-port'
+
+/**
+ * Specifies the worker to be spawned; either a `path` to the worker JavaScript
+ * file, or the `source` containing the full JavaScript source of the worker.
+ */
+export type WorkerSpec = { path: string } | { source: string }
+
+/**
+ * The subset of the browser `Worker` API that is used by this package.
+ * @hidden
+ */
+interface WebWorker {
+  postMessage(message: unknown, transferables?: Transferable[]): void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addEventListener(type: string, listener: (event: any) => void): void
+  terminate(): void
+}
+
+/**
+ * Adapt the given Web Worker to the `WorkerHandle` interface.
+ *
+ * @param worker The Web Worker instance.
+ * @param onTerminate An optional function that is called after the worker is terminated.
+ * @returns The handle for the given worker.
+ * @hidden For internal use only.
+ */
+export function portForWebWorker(worker: WebWorker, onTerminate?: () => void): WorkerHandle {
+  return {
+    postMessage: (message, transferables) => worker.postMessage(message, transferables ?? []),
+
+    onMessage: handler => worker.addEventListener('message', event => handler(event.data)),
+
+    onError: handler => {
+      worker.addEventListener('error', event => handler(event.error ?? new Error(event.message)))
+    },
+
+    terminate: () => {
+      worker.terminate()
+      onTerminate?.()
+      return Promise.resolve()
+    }
+  }
+}
+
+/**
+ * Adapt the given Node.js worker to the `WorkerHandle` interface.
+ *
+ * @param worker The Node.js worker instance.
+ * @returns The handle for the given worker.
+ * @hidden For internal use only.
+ */
+export function portForNodeWorker(worker: NodeWorker): WorkerHandle {
+  return {
+    postMessage: (message, transferables) => worker.postMessage(message, transferables ?? []),
+
+    onMessage: handler => worker.on('message', handler),
+
+    onError: handler => worker.on('error', handler),
+
+    terminate: async () => {
+      await worker.terminate()
+    }
+  }
+}
+
+/**
+ * Spawn a worker for the given spec.  This uses a Web Worker when running in a
+ * browser environment, or a `worker_threads` worker when running in a Node.js
+ * environment.
+ *
+ * @param spec Either a `path` to the worker JavaScript file, or the `source`
+ * containing the full JavaScript source of the worker.
+ * @returns The handle for the spawned worker.
+ * @hidden For internal use only.
+ */
+export function spawnWorker(spec: WorkerSpec): WorkerHandle {
+  if (isNodeEnvironment()) {
+    const { Worker } = nodeWorkerThreads()
+    if ('source' in spec) {
+      // Note that `eval` mode runs the source as CommonJS, which is compatible with
+      // the `iife` format bundles produced by `plugin-worker`
+      return portForNodeWorker(new Worker(spec.source, { eval: true }))
+    } else {
+      return portForNodeWorker(new Worker(spec.path))
+    }
+  } else {
+    if ('source' in spec) {
+      // Wrap the source in a blob so that it can be loaded as a worker.  Note that we
+      // hold on to the URL and revoke it only after the worker is terminated, since
+      // the worker is not guaranteed to have fetched the source by the time the
+      // `Worker` constructor returns.
+      const blob = new Blob([spec.source], { type: 'text/javascript' })
+      const url = URL.createObjectURL(blob)
+      return portForWebWorker(new Worker(url), () => URL.revokeObjectURL(url))
+    } else {
+      return portForWebWorker(new Worker(spec.path))
+    }
+  }
+}
