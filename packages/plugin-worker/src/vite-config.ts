@@ -76,16 +76,14 @@ export function createViteConfig(stagedModelDir: string, modelJsFile: string, ou
         fileName: () => outputFile
       },
 
-      rollupOptions: {
-        onwarn: (warning, warn) => {
-          // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
-          // triggered by use of the following pattern in threads.js:
-          //   eval("require")("worker_threads")
-          // It would be nice to avoid use of `eval` there, but it's not critical for
-          // our use case so we will suppress the warnings for now
-          if (warning.code !== 'EVAL') {
-            warn(warning)
-          }
+      rolldownOptions: {
+        // XXX: Suppress "Use of direct eval" warnings that are triggered by use
+        // of the following pattern in threads.js:
+        //   eval("require")("worker_threads")
+        // It would be nice to avoid use of `eval` there, but it's not critical for
+        // our use case so we will suppress the warnings for now
+        checks: {
+          eval: false
         }
       }
     }
