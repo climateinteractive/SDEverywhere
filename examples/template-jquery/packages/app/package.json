@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "@types/chart.js": "^2.9.34",
-    "vite": "^7.3.6"
+    "vite": "^8.3.0"
   }
 }

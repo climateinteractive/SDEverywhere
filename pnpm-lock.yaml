@@ -96,8 +96,8 @@ importers:
         specifier: ^0.2.11
         version: link:../../packages/plugin-worker
       vite:
-        specifier: ^7.1.12
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/house-game:
     devDependencies:
@@ -151,8 +151,8 @@ importers:
         version: 2.9.4
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.4
-        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0))
+        specifier: ^7.3.0
+        version: 7.3.0(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -169,8 +169,8 @@ importers:
         specifier: ^4.7.5
         version: 4.7.5(picomatch@4.0.7)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2)
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/sample-check-app:
     dependencies:
@@ -185,8 +185,8 @@ importers:
         version: link:../sample-check-tests
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.4
-        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0))
+        specifier: ^7.3.0
+        version: 7.3.0(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0))
       postcss:
         specifier: ^8.5.26
         version: 8.5.28
@@ -200,8 +200,8 @@ importers:
         specifier: ^4.7.5
         version: 4.7.5(picomatch@4.0.7)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2)
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/sample-check-bundle:
     dependencies:
@@ -219,8 +219,8 @@ importers:
         specifier: ^2.9.34
         version: 2.9.37
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/sample-check-tests:
     dependencies:
@@ -232,8 +232,8 @@ importers:
         version: 1.2.1
     devDependencies:
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/template-jquery:
     devDependencies:
@@ -308,8 +308,8 @@ importers:
         specifier: ^2.9.34
         version: 2.9.37
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/template-jquery/packages/core:
     dependencies:
@@ -324,8 +324,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/template-minimal:
     dependencies:
@@ -424,8 +424,8 @@ importers:
         version: 2.9.4
     devDependencies:
       '@sveltejs/vite-plugin-svelte':
-        specifier: ^6.2.4
-        version: 6.2.4(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0))
+        specifier: ^7.3.0
+        version: 7.3.0(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0))
       '@types/chart.js':
         specifier: ^2.9.34
         version: 2.9.37
@@ -448,8 +448,8 @@ importers:
         specifier: ^4.7.5
         version: 4.7.5(picomatch@4.0.7)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2)
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   examples/template-svelte/packages/core:
     dependencies:
@@ -464,8 +464,8 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
       vite:
-        specifier: ^7.3.6
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   models:
     dependencies:
@@ -596,7 +596,7 @@ importers:
         version: 3.3.5(svelte@5.56.8(@typescript-eslint/types@8.67.0))
       svelte-check:
         specifier: ^4.7.5
-        version: 4.7.5(picomatch@4.0.7)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2)
+        version: 4.7.5(picomatch@4.0.5)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2)
       vite:
         specifier: ^7.3.6
         version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
@@ -1435,6 +1435,9 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
+  '@jridgewell/sourcemap-codec@1.6.0':
+    resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
+
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
@@ -2225,6 +2228,13 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
       vite: ^6.3.0 || ^7.0.0
+
+  '@sveltejs/vite-plugin-svelte@7.3.0':
+    resolution: {integrity: sha512-QbRoJyD92e9R0ufeQIWRHrCC0ObcqSv/aBDdrQMoU+sypav3cDx5wytdQ6GLdXjEMO6xjrXGzfkUygng8JMv0A==}
+    engines: {node: ^20.19 || ^22.12 || >=24}
+    peerDependencies:
+      svelte: ^5.46.4
+      vite: ^8.0.0-beta.7 || ^8.0.0
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -3326,6 +3336,9 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
+  magic-string@1.4.1:
+    resolution: {integrity: sha512-8lyCu36ErXR0J9uaGKlKQoiLZKmtI63YGLE8G2o9jyRPdr4X47LusSOwgOJOzcVtp81fTAAjxR7BwKz682Jhow==}
+
   magicast@0.5.4:
     resolution: {integrity: sha512-llBEhWm1SacoRwgHUoQJYtwp4PBLF4faQi5TCpIGyGs9n4y5+juI0tDgyKIfpqxckRHaHzouUEph3THklWh03w==}
 
@@ -4135,6 +4148,14 @@ packages:
       vite:
         optional: true
 
+  vitefu@1.1.3:
+    resolution: {integrity: sha512-ub4okH7Z5KLjb6hDyjqrGXqWtWvoYdU3IGm/NorpgHncKoLTCfRIbvlhBm7r0YstIaQRYlp4yEbFqDcKSzXSSg==}
+    peerDependencies:
+      vite: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+    peerDependenciesMeta:
+      vite:
+        optional: true
+
   vitest@4.1.10:
     resolution: {integrity: sha512-R9jUTe5S4Qb0HCd4TNqpC7oGcrMssMRGXLW80ubjWsW9VH5GF8y1Y0SFLY9AbqSk6nt0PnOx4H4WNJYZ13GUPw==}
     engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
@@ -4482,6 +4503,8 @@ snapshots:
   '@jridgewell/set-array@1.2.1': {}
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@jridgewell/sourcemap-codec@1.6.0': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
@@ -5036,6 +5059,15 @@ snapshots:
       vitefu: 1.1.1(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - supports-color
+
+  '@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.56.8(@typescript-eslint/types@8.67.0))(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0))':
+    dependencies:
+      deepmerge: 4.3.1
+      magic-string: 1.4.1
+      obug: 2.1.4
+      svelte: 5.56.8(@typescript-eslint/types@8.67.0)
+      vite: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
+      vitefu: 1.1.3(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0))
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -6175,6 +6207,10 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
+  magic-string@1.4.1:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.6.0
+
   magicast@0.5.4:
     dependencies:
       '@babel/parser': 7.29.8
@@ -6743,6 +6779,19 @@ snapshots:
     dependencies:
       svelte: 5.56.8(@typescript-eslint/types@8.67.0)
 
+  svelte-check@4.7.5(picomatch@4.0.5)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      '@sveltejs/load-config': 0.2.2
+      chokidar: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.5)
+      picocolors: 1.1.1
+      sade: 1.8.1
+      svelte: 5.56.8(@typescript-eslint/types@8.67.0)
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - picomatch
+
   svelte-check@4.7.5(picomatch@4.0.7)(svelte@5.56.8(@typescript-eslint/types@8.67.0))(typescript@5.2.2):
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
@@ -6973,6 +7022,10 @@ snapshots:
   vitefu@1.1.1(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)):
     optionalDependencies:
       vite: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+
+  vitefu@1.1.3(vite@8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)):
+    optionalDependencies:
+      vite: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
 
   vitest@4.1.10(@types/node@20.19.19)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(vite@7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)):
     dependencies:
