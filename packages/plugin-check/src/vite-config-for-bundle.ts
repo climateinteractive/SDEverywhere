@@ -1,11 +1,11 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, readFileSync, statSync } from 'fs'
+import { createRequire } from 'module'
 import { basename, dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig, Plugin as VitePlugin } from 'vite'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 import type { BuildContext, ResolvedModelSpec } from '@sdeverywhere/build'
 import { encodeImplVars } from '@sdeverywhere/check-core'
@@ -154,29 +154,40 @@ export const dataSizeInBytes = ${dataSizeInBytes};
  * in favor of exactly this approach.)
  */
 function resolveThreadsPlugin(): VitePlugin {
-  // Note that we need to use `call` below in order to provide the right `this` context,
-  // which provides Rollup plugin functionality
-  const customResolver = nodeResolve({ browser: false })
-  const resolveIdHook = customResolver.resolveId
-  const resolveIdFn = typeof resolveIdHook === 'function' ? resolveIdHook : resolveIdHook.handler
+  // Use Node's own module resolution to locate the threads package relative to the
+  // importing module.  Node resolution does not consult the `browser` field, which
+  // is exactly what we want here.  Note that the resolved path will be the CommonJS
+  // entry point (`<pkgRoot>/dist/index.js`, via the `require` condition in the
+  // `exports` map of `threads/package.json`), from which we can locate the package
+  // root and then force the use of the `dist-esm` variant.
+  const require = createRequire(import.meta.url)
+  const resolveThreadsPackageRoot = (importer: string) => {
+    try {
+      const resolved = require.resolve('threads', { paths: [dirname(importer)] })
+      return dirname(dirname(resolved))
+    } catch {
+      return undefined
+    }
+  }
 
   return {
     name: 'vite-plugin-resolve-threads',
     enforce: 'pre',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async resolveId(this: any, id: string, importer: string | undefined, options: any) {
+    resolveId(id: string, importer: string | undefined) {
       if (id === 'threads' || id === 'threads/worker') {
         // Resolve the package without consulting the `browser` field, then force the use
         // of the `dist-esm` variant
-        const resolved = await resolveIdFn.call(this, id, importer, options)
-        if (resolved === null || resolved === undefined) {
+        if (importer === undefined) {
           return undefined
         }
-        const resolvedId = typeof resolved === 'string' ? resolved : resolved.id
+        const pkgRoot = resolveThreadsPackageRoot(importer)
+        if (pkgRoot === undefined) {
+          return undefined
+        }
         if (id === 'threads/worker') {
-          return resolvedId.replace('worker.mjs', 'dist-esm/worker/index.js')
+          return joinPath(pkgRoot, 'dist-esm', 'worker', 'index.js')
         } else {
-          return resolvedId.replace('index.mjs', 'dist-esm/index.js')
+          return joinPath(pkgRoot, 'dist-esm', 'index.js')
         }
       }
 
@@ -281,9 +292,18 @@ export async function createViteConfigForBundle(
         fileName: () => 'check-bundle.js'
       },
 
-      rollupOptions: {
+      rolldownOptions: {
         // Don't transform Node imports used by threads.js
         external: ['events', 'os', 'path', 'url'],
+
+        // XXX: Suppress "Use of direct eval" warnings that are triggered by use
+        // of the following pattern in threads.js:
+        //   eval("require")("worker_threads")
+        // It would be nice to avoid use of `eval` there, but it's not critical for
+        // our use case so we will suppress the warnings for now
+        checks: {
+          eval: false
+        },
 
         // XXX: Insert custom code at the top of the generated bundle that defines
         // the special `__non_webpack_require__` function that is used by threads.js
@@ -299,17 +319,6 @@ let __non_webpack_require__ = () => {
   return worker_threads;
 };
 `
-        },
-
-        onwarn: (warning, warn) => {
-          // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
-          // triggered by use of the following pattern in threads.js:
-          //   eval("require")("worker_threads")
-          // It would be nice to avoid use of `eval` there, but it's not critical for
-          // our use case so we will suppress the warnings for now
-          if (warning.code !== 'EVAL') {
-            warn(warning)
-          }
         }
       }
     }
