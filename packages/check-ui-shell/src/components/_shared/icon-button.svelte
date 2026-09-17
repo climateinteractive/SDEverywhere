@@ -2,7 +2,8 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
-import Icon, { type IconType } from 'svelte-awesome/components/Icon.svelte'
+import Icon from 'svelte-awesome'
+import type { IconType } from 'svelte-awesome/components/Icon.svelte'
 
 import Button from './button.svelte'
 

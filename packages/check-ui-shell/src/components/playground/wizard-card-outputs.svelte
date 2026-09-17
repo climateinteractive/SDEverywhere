@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { slide } from 'svelte/transition'
-import Icon from 'svelte-awesome/components/Icon.svelte'
+import Icon from 'svelte-awesome'
 import { faArrowRightFromBracket } from '@fortawesome/free-solid-svg-icons'
 
 import SearchList from './search-list.svelte'
