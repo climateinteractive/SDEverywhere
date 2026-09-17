@@ -839,8 +839,8 @@ importers:
         specifier: ^0.2.10
         version: link:../runtime-async
       vite:
-        specifier: ^7.1.12
-        version: 7.3.6(@types/node@20.19.19)(lightningcss@1.33.0)(sass@1.102.0)(yaml@2.9.0)
+        specifier: ^8.3.0
+        version: 8.3.0(@types/node@20.19.19)(esbuild@0.27.0)(sass@1.102.0)(yaml@2.9.0)
     devDependencies:
       '@types/node':
         specifier: ^20.14.8
