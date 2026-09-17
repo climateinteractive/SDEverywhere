@@ -36,7 +36,7 @@ async function initApp() {
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `workerSpec` | \{ `path`: `string`; \} \| \{ `source`: `string`; \} | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
+| `workerSpec` | [`WorkerSpec`](../type-aliases/WorkerSpec.md) | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
 
 ## Returns
 

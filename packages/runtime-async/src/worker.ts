@@ -1,10 +1,12 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { TransferDescriptor } from 'threads'
-import { expose, Transfer } from 'threads/worker'
-
 import type { GeneratedModel, RunnableModel } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, createRunnableModel } from '@sdeverywhere/runtime'
+
+import { parentWorkerPort } from './worker-rpc/parent-port'
+import type { InitResult } from './worker-rpc/protocol'
+import type { RpcTransfer } from './worker-rpc/rpc'
+import { serveRpcRequests, withTransfer } from './worker-rpc/rpc'
 
 /** @hidden */
 let initGeneratedModel: () => Promise<GeneratedModel>
@@ -18,16 +20,6 @@ let runnableModel: RunnableModel
  * @hidden
  */
 const params = new BufferedRunModelParams()
-
-interface InitResult {
-  outputVarIds: string[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  modelListing?: /*ModelListingSpecs*/ any
-  startTime: number
-  endTime: number
-  saveFreq: number
-  outputRowLength: number
-}
 
 /** @hidden */
 const modelWorker = {
@@ -51,7 +43,7 @@ const modelWorker = {
     }
   },
 
-  runModel(ioBuffer: ArrayBuffer): TransferDescriptor<ArrayBuffer> {
+  runModel(ioBuffer: ArrayBuffer): RpcTransfer<ArrayBuffer> {
     if (!runnableModel) {
       throw new Error('RunnableModel must be initialized before running the model in worker')
     }
@@ -64,7 +56,7 @@ const modelWorker = {
     runnableModel.runModel(params)
 
     // Transfer the buffer back to the runner
-    return Transfer(ioBuffer)
+    return withTransfer(ioBuffer, [ioBuffer])
   }
 }
 
@@ -82,6 +74,6 @@ export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
   // on the worker
   initGeneratedModel = init
 
-  // Expose the worker implementation to `threads.js`
-  expose(modelWorker)
+  // Handle the requests that arrive from the runner in the main thread
+  serveRpcRequests(parentWorkerPort(), modelWorker)
 }

@@ -12,8 +12,6 @@
     // if we target "es2017" then the async/await code will not be
     // transpiled and things work correctly.
     "target": "es2017",
-    // XXX: The last part is needed because `observable-fns`
-    // refers to AsyncIterableIterator
-    "lib": ["dom", "es6", "esnext.asynciterable"]
+    "lib": ["dom", "es6"]
   }
 }
