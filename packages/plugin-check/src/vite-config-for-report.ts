@@ -172,7 +172,13 @@ export function createViteConfigForReport(
         noopPolyfillAlias('os'),
         noopPolyfillAlias('path'),
         noopPolyfillAlias('url'),
-        noopPolyfillAlias('worker_threads')
+        noopPolyfillAlias('worker_threads'),
+
+        // XXX: The Node implementation of threads.js also has a `require('tiny-worker')`
+        // fallback that is never taken in the browser.  Rollup ignored `require` calls in
+        // an ES module, but Rolldown (used by Vite 8+) resolves them, and an unresolved
+        // import is a hard error, so point this at the no-op polyfill as well.
+        noopPolyfillAlias('tiny-worker')
       ]
     },
 
