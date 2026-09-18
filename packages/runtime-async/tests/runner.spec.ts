@@ -50,9 +50,6 @@ const listingJson = `
 // is treated as an integration test and kept in the separate `tests` directory.  It
 // must be run only after the `runtime` and `runtime-async` have been built.
 //
-// The worker source is evaluated as a module, so it uses a dynamic `import` to load
-// those two packages; they are ESM only, so `require` is not an option here.
-//
 
 const workerWithMockJsModel = `\
 const { MockJsModel } = await import('@sdeverywhere/runtime')
