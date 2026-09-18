@@ -3,10 +3,9 @@
 import type { GeneratedModel, RunnableModel } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, createRunnableModel } from '@sdeverywhere/runtime'
 
+import type { InitResult, ModelWorkerMethods } from './worker-rpc/model-worker-rpc'
+import { serveModelWorker } from './worker-rpc/model-worker-rpc'
 import { parentWorkerPort } from './worker-rpc/parent-port'
-import type { InitResult } from './worker-rpc/protocol'
-import type { RpcTransfer } from './worker-rpc/rpc'
-import { serveRpcRequests, withTransfer } from './worker-rpc/rpc'
 
 /** @hidden */
 let initGeneratedModel: () => Promise<GeneratedModel>
@@ -22,7 +21,7 @@ let runnableModel: RunnableModel
 const params = new BufferedRunModelParams()
 
 /** @hidden */
-const modelWorker = {
+const modelWorker: ModelWorkerMethods = {
   async initModel(): Promise<InitResult> {
     if (runnableModel) {
       throw new Error('RunnableModel was already initialized')
@@ -38,12 +37,11 @@ const modelWorker = {
       modelListing: runnableModel.modelListing,
       startTime: runnableModel.startTime,
       endTime: runnableModel.endTime,
-      saveFreq: runnableModel.saveFreq,
-      outputRowLength: runnableModel.numSavePoints
+      saveFreq: runnableModel.saveFreq
     }
   },
 
-  runModel(ioBuffer: ArrayBuffer): RpcTransfer<ArrayBuffer> {
+  runModel(ioBuffer: ArrayBuffer): ArrayBuffer {
     if (!runnableModel) {
       throw new Error('RunnableModel must be initialized before running the model in worker')
     }
@@ -56,7 +54,7 @@ const modelWorker = {
     runnableModel.runModel(params)
 
     // Transfer the buffer back to the runner
-    return withTransfer(ioBuffer, [ioBuffer])
+    return ioBuffer
   }
 }
 
@@ -75,5 +73,5 @@ export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
   initGeneratedModel = init
 
   // Handle the requests that arrive from the runner in the main thread
-  serveRpcRequests(parentWorkerPort(), modelWorker)
+  serveModelWorker(parentWorkerPort(), modelWorker)
 }

@@ -3,8 +3,8 @@
 import type { ModelRunner } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
 
-import type { InitResult } from './worker-rpc/protocol'
-import { createRpcClient } from './worker-rpc/rpc'
+import { createModelWorkerClient } from './worker-rpc/model-worker-rpc'
+import type { InitResult } from './worker-rpc/model-worker-rpc'
 import type { WorkerSpec } from './worker-rpc/spawn-worker'
 import { spawnWorker } from './worker-rpc/spawn-worker'
 import type { WorkerHandle } from './worker-rpc/worker-port'
@@ -52,14 +52,14 @@ export async function spawnAsyncModelRunner(workerSpec: WorkerSpec): Promise<Mod
  */
 async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<ModelRunner> {
   // Create the client that communicates with the `ModelWorker` running in the worker
-  const client = createRpcClient(worker)
+  const client = createModelWorkerClient(worker)
 
   // Wait for the worker to initialize the model (in the worker thread). If
   // initialization fails, make sure the worker and any associated resources are
   // released before propagating the original error.
   let initResult: InitResult
   try {
-    initResult = await client.request<InitResult>('initModel')
+    initResult = await client.initModel()
   } catch (error) {
     try {
       await worker.terminate()
@@ -104,7 +104,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<Mo
       let ioBuffer: ArrayBuffer
       try {
         const buffer = params.getEncodedBuffer()
-        ioBuffer = await client.request<ArrayBuffer>('runModel', buffer, [buffer])
+        ioBuffer = await client.runModel(buffer)
       } finally {
         running = false
       }

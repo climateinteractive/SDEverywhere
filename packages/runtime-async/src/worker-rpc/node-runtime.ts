@@ -28,7 +28,6 @@ export interface NodeMessagePort {
  */
 export interface NodeWorker extends NodeMessagePort {
   terminate(): Promise<number>
-  unref(): void
 }
 
 /**
