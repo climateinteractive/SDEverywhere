@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.44](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.43...create-v0.2.44) (2026-09-18)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.35 to ^0.7.36
+
 ## [0.2.43](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.42...create-v0.2.43) (2026-09-10)
 
 
