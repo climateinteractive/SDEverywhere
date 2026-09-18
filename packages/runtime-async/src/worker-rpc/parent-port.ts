@@ -66,7 +66,7 @@ export function parentWorkerPort(): WorkerPort {
     return portForNodeParentPort(parentPort)
   } else {
     const scope = globalThis as unknown as WorkerGlobalScope
-    if (typeof scope.postMessage !== 'function') {
+    if ('document' in globalThis || typeof scope.postMessage !== 'function') {
       throw new Error('The `exposeModelWorker` function must be called from a worker thread')
     }
     return portForWorkerGlobalScope(scope)
