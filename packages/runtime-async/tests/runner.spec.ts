@@ -1,5 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
@@ -276,4 +280,30 @@ describe.each([
 
   // TODO
   // it('should throw an error if runModel is called while another is already in progress')
+})
+
+describe('spawnAsyncModelRunner initialization failure', () => {
+  it('should terminate the worker when model initialization fails', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'sde-runner-'))
+    const markerPath = join(tempDir, 'worker-still-running')
+    const workerSource = `\
+const { writeFileSync } = require('node:fs')
+const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+
+setTimeout(() => writeFileSync(${JSON.stringify(markerPath)}, ''), 100)
+setTimeout(() => process.exit(0), 300)
+
+exposeModelWorker(async () => {
+  throw new Error('model initialization failed')
+})
+`
+
+    try {
+      await expect(spawnAsyncModelRunner({ source: workerSource })).rejects.toThrow('model initialization failed')
+      await new Promise(resolve => setTimeout(resolve, 200))
+      expect(existsSync(markerPath)).toBe(false)
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })

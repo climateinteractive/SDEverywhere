@@ -54,8 +54,20 @@ async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<Mo
   // Create the client that communicates with the `ModelWorker` running in the worker
   const client = createRpcClient(worker)
 
-  // Wait for the worker to initialize the model (in the worker thread)
-  const initResult = await client.request<InitResult>('initModel')
+  // Wait for the worker to initialize the model (in the worker thread). If
+  // initialization fails, make sure the worker and any associated resources are
+  // released before propagating the original error.
+  let initResult: InitResult
+  try {
+    initResult = await client.request<InitResult>('initModel')
+  } catch (error) {
+    try {
+      await worker.terminate()
+    } catch {
+      // Preserve the model initialization error if worker termination also fails
+    }
+    throw error
+  }
 
   // Create a `ModelListing` instance if the listing was defined in the generated model
   const modelListing = initResult.modelListing ? new ModelListing(initResult.modelListing) : undefined
