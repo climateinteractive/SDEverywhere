@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.10...runtime-async-v0.2.11) (2026-09-18)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.10 to ^0.2.11
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.9...runtime-async-v0.2.10) (2026-08-19)
 
 

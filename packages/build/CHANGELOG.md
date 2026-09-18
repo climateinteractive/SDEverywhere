@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.18](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.17...build-v0.3.18) (2026-09-18)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.35 to ^0.7.36
+    * @sdeverywhere/parse bumped from ^0.1.6 to ^0.1.7
+
 ## [0.3.17](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.16...build-v0.3.17) (2026-09-10)
 
 

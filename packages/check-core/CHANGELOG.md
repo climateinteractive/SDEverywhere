@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.14...check-core-v0.1.15) (2026-09-18)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
 ## [0.1.14](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.13...check-core-v0.1.14) (2026-08-27)
 
 
