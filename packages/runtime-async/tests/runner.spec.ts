@@ -45,17 +45,18 @@ const listingJson = `
 `
 
 //
-// Note that the Node worker implementation below must use `require` and relies
-// on the compiled (JavaScript / CommonJS) versions of the `runtime` and
-// `runtime-async` packages, which is why this test file is treated as an
-// integration test and kept in the separate `tests` directory.  It must be
-// run only after the `runtime` and `runtime-async` have been built.
+// Note that the Node worker implementation below relies on the compiled (JavaScript)
+// versions of the `runtime` and `runtime-async` packages, which is why this test file
+// is treated as an integration test and kept in the separate `tests` directory.  It
+// must be run only after the `runtime` and `runtime-async` have been built.
+//
+// The worker source is evaluated as a module, so it uses a dynamic `import` to load
+// those two packages; they are ESM only, so `require` is not an option here.
 //
 
 const workerWithMockJsModel = `\
-const path = require('path')
-const { MockJsModel } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+const { MockJsModel } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
@@ -91,9 +92,8 @@ exposeModelWorker(createMockJsModel)
 `
 
 const workerWithMockWasmModule = `\
-const path = require('path')
-const { MockWasmModule } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
