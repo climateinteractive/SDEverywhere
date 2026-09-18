@@ -12,7 +12,5 @@ export default defineConfig({
   // As a workaround, the `build:dts` script runs `tsc` first to emit one declaration file
   // per source file under `dts-tmp`, and here we take those as input and roll them up.
   entry: ['dts-tmp/index.d.ts'],
-  format: ['esm'],
-  dts: { dtsInput: true },
-  clean: true
+  dts: { dtsInput: true }
 })
