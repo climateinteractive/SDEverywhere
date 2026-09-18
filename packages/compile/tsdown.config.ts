@@ -5,7 +5,6 @@ export default defineConfig({
   // Note that this package publishes its JavaScript sources directly (they are not
   // bundled), so we only use `tsdown` to roll up the type declarations that are generated
   // from the JSDoc comments in those sources into a single `index.d.ts` file.
-  //
   // XXX: tsdown cannot generate those declarations itself: when the entrypoint is a `.js`
   // file, it fails to resolve the relative `.js` imports that appear in the generated
   // declarations (it only follows such imports when they resolve to TypeScript sources).
