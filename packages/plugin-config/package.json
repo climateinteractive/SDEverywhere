@@ -26,7 +26,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "bundle": "tsup",
+    "bundle": "tsdown",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
     "docs": "../../scripts/gen-docs.js",

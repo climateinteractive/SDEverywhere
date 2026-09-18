@@ -23,7 +23,7 @@
     "test:ci": "run-s test:ts",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build:vite": "vite build",
-    "build:dts": "tsup --dts-only",
+    "build:dts": "tsdown",
     "build": "run-s build:vite build:dts",
     "build:watch": "vite build --watch",
     "storybook": "storybook dev -p 6010",

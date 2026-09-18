@@ -25,7 +25,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest --pool=forks --test-timeout=10000 run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
