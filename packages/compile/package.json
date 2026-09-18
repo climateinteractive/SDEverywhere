@@ -6,7 +6,7 @@
   "main": "./src/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist dts-tmp",
+    "clean": "rm -rf dts-tmp dist",
     "build:dts": "tsc -p tsconfig-build.json --emitDeclarationOnly --outDir dts-tmp",
     "build:bundle": "tsdown",
     "build": "run-s build:dts build:bundle",
