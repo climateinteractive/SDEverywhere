@@ -45,17 +45,25 @@ const listingJson = `
 `
 
 //
-// Note that the Node worker implementation below must use `require` and relies
-// on the compiled (JavaScript / CommonJS) versions of the `runtime` and
-// `runtime-async` packages, which is why this test file is treated as an
-// integration test and kept in the separate `tests` directory.  It must be
-// run only after the `runtime` and `runtime-async` have been built.
+// Note that the Node worker implementation below relies on the compiled (JavaScript)
+// versions of the `runtime` and `runtime-async` packages, which is why this test file
+// is treated as an integration test and kept in the separate `tests` directory.  It
+// must be run only after the `runtime` and `runtime-async` have been built.
+//
+// The async IIFE wrapper keeps each worker source a plain (CommonJS) script, like the
+// `iife` bundles that `plugin-worker` generates, while still allowing a dynamic
+// `import` of the two ESM-only packages.
+//
+// XXX: The wrapper defers `exposeModelWorker` until after the script has evaluated.
+// Node buffers port messages until a listener is attached, so that is safe here, but a
+// browser would drop them; real generated workers expose synchronously.
 //
 
 const workerWithMockJsModel = `\
-const path = require('path')
-const { MockJsModel } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+;(async () => {
+
+const { MockJsModel } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
@@ -88,12 +96,15 @@ function createMockJsModel() {
 }
 
 exposeModelWorker(createMockJsModel)
+
+})()
 `
 
 const workerWithMockWasmModule = `\
-const path = require('path')
-const { MockWasmModule } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
@@ -132,6 +143,8 @@ async function createMockWasmModule() {
 }
 
 exposeModelWorker(createMockWasmModule)
+
+})()
 `
 
 const p = (x: number, y: number) => {
