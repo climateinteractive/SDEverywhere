@@ -192,7 +192,13 @@ export function createRpcClient(port: WorkerPort): RpcClient {
         method,
         arg
       }
-      port.postMessage(request, transferables)
+      try {
+        port.postMessage(request, transferables)
+      } catch (error) {
+        const callback = pending.get(id)
+        pending.delete(id)
+        callback?.reject(error instanceof Error ? error : new Error(String(error)))
+      }
 
       return promise
     },

@@ -164,6 +164,16 @@ describe('createRpcClient + serveRpcRequests', () => {
     expect(near.posted[0].transferables).toEqual([buffer])
   })
 
+  it('should reject a request when posting its message throws', async () => {
+    const [near] = createLinkedPorts()
+    near.postMessage = () => {
+      throw new Error('message could not be cloned')
+    }
+    const client = createRpcClient(near)
+
+    await expect(client.request('send')).rejects.toThrow('message could not be cloned')
+  })
+
   it('should include the transferables declared by the handler when posting a response', async () => {
     const [near, far] = createLinkedPorts()
     const buffer = new ArrayBuffer(8)
