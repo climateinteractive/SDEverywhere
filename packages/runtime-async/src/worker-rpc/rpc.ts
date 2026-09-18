@@ -134,6 +134,18 @@ export function createRpcClient(port: WorkerPort): RpcClient {
     }
   }
 
+  /**
+   * Make the client terminal and reject all pending requests.
+   *
+   * @param error The error that made the client unusable.
+   */
+  function fail(error: Error): void {
+    if (disposedError === undefined) {
+      disposedError = error
+      rejectAll(error)
+    }
+  }
+
   port.onMessage(message => {
     if (!isRpcMessage<RpcResponse>(message, 'response')) {
       // Ignore any message that was not sent by this package
@@ -156,9 +168,11 @@ export function createRpcClient(port: WorkerPort): RpcClient {
 
   port.onError(error => {
     // If the worker fails, there is no way for the pending requests to be settled,
-    // so reject them all
-    rejectAll(error)
+    // so make the client terminal and reject them all
+    fail(error)
   })
+
+  port.onClose?.(error => fail(error))
 
   return {
     request<T>(method: string, arg?: unknown, transferables?: Transferable[]): Promise<T> {
@@ -184,8 +198,7 @@ export function createRpcClient(port: WorkerPort): RpcClient {
     },
 
     dispose(error: Error): void {
-      disposedError = error
-      rejectAll(error)
+      fail(error)
     }
   }
 }

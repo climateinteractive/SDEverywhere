@@ -39,6 +39,9 @@ export function portForWebWorker(worker: WebWorker, onTerminate?: () => void): W
       worker.addEventListener('error', event => handler(event.error ?? new Error(event.message)))
     },
 
+    // Web Workers do not expose an event when they close themselves
+    onClose: () => undefined,
+
     terminate: () => {
       worker.terminate()
       onTerminate?.()
@@ -61,6 +64,10 @@ export function portForNodeWorker(worker: NodeWorker): WorkerHandle {
     onMessage: handler => worker.on('message', handler),
 
     onError: handler => worker.on('error', handler),
+
+    onClose: handler => {
+      worker.on('exit', exitCode => handler(new Error(`Worker exited with code ${exitCode}`)))
+    },
 
     terminate: async () => {
       await worker.terminate()

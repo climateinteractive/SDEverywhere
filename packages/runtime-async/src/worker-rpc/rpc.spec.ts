@@ -16,6 +16,10 @@ interface MockPort extends WorkerPort {
   deliver(message: unknown): void
   /** Deliver an error to the handler installed on this port. */
   fail(error: Error): void
+  /** Report that this port has closed. */
+  close(error: Error): void
+  /** Install the handler that is called when this port closes. */
+  onClose(handler: (error: Error) => void): void
 }
 
 /**
@@ -28,6 +32,7 @@ function createLinkedPorts(): [MockPort, MockPort] {
   function createPort(): MockPort {
     let messageHandler: (message: unknown) => void
     let errorHandler: (error: Error) => void
+    let closeHandler: (error: Error) => void
     return {
       posted: [],
       postMessage(message: unknown, transferables?: Transferable[]) {
@@ -39,11 +44,17 @@ function createLinkedPorts(): [MockPort, MockPort] {
       onError(handler: (error: Error) => void) {
         errorHandler = handler
       },
+      onClose(handler: (error: Error) => void) {
+        closeHandler = handler
+      },
       deliver(message: unknown) {
         messageHandler?.(message)
       },
       fail(error: Error) {
         errorHandler?.(error)
+      },
+      close(error: Error) {
+        closeHandler?.(error)
       }
     }
   }
@@ -203,6 +214,29 @@ describe('createRpcClient + serveRpcRequests', () => {
     near.fail(new Error('worker died'))
 
     await expect(promise).rejects.toThrow('worker died')
+  })
+
+  it('should reject pending requests when the port closes', async () => {
+    const [near, far] = createLinkedPorts()
+    serveRpcRequests(far, {
+      never: () => new Promise(() => undefined)
+    })
+    const client = createRpcClient(near)
+
+    const promise = client.request('never')
+    near.close(new Error('worker exited'))
+
+    await expect(promise).rejects.toThrow('worker exited')
+  })
+
+  it('should reject later requests after the port reports an error', async () => {
+    const [near] = createLinkedPorts()
+    const client = createRpcClient(near)
+
+    near.fail(new Error('worker died'))
+
+    await expect(client.request('ping')).rejects.toThrow('worker died')
+    expect(near.posted).toEqual([])
   })
 
   it('should ignore messages that are not RPC messages', async () => {

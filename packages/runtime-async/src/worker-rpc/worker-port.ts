@@ -34,6 +34,14 @@ export interface WorkerPort {
    * @param handler The function that is called with each error.
    */
   onError(handler: (error: Error) => void): void
+
+  /**
+   * Install the handler that is called when this port closes, if the underlying
+   * platform reports that event.
+   *
+   * @param handler The function that is called when the port closes.
+   */
+  onClose?(handler: (error: Error) => void): void
 }
 
 /**
@@ -41,6 +49,13 @@ export interface WorkerPort {
  * allows for terminating the underlying worker.
  */
 export interface WorkerHandle extends WorkerPort {
+  /**
+   * Install the handler that is called when the worker exits.
+   *
+   * @param handler The function that is called when the worker exits.
+   */
+  onClose(handler: (error: Error) => void): void
+
   /**
    * Terminate the underlying worker and release any associated resources.
    *

@@ -113,6 +113,12 @@ describe('spawnWorker (in a Node environment)', () => {
     }
   })
 
+  it('should report when the worker exits without an error', async () => {
+    const handle = spawnWorker({ source: '' })
+    const error = await new Promise<Error>(resolve => handle.onClose(resolve))
+    expect(error.message).toContain('exited')
+  })
+
   it('should resolve the promise returned by terminate', async () => {
     const handle = spawnWorker({ source: echoWorkerSource })
     await expect(handle.terminate()).resolves.toBeUndefined()
