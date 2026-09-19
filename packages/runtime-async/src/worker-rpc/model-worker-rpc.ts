@@ -129,11 +129,20 @@ export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
   port.onError(error => fail(error))
   port.onClose(error => fail(error))
 
+  /** Make the client terminal with an unexpected-response error and return the error. */
+  function unexpectedResponse(kind: string, requestName: string): Error {
+    // A response that does not match its request means the protocol state is
+    // corrupt, so make the client terminal rather than allow further requests
+    const error = new Error(`Unexpected '${kind}' response to ${requestName} request`)
+    fail(error)
+    return error
+  }
+
   return {
     async initModel(): Promise<InitResult> {
       const response = await send({ kind: 'init' })
       if (response.kind !== 'initialized') {
-        throw new Error(`Unexpected '${response.kind}' response to model initialization request`)
+        throw unexpectedResponse(response.kind, 'model initialization')
       }
       return response.result
     },
@@ -141,7 +150,7 @@ export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
     async runModel(buffer: ArrayBuffer): Promise<ArrayBuffer> {
       const response = await send({ kind: 'run', buffer }, [buffer])
       if (response.kind !== 'ran') {
-        throw new Error(`Unexpected '${response.kind}' response to model run request`)
+        throw unexpectedResponse(response.kind, 'model run')
       }
       return response.buffer
     },

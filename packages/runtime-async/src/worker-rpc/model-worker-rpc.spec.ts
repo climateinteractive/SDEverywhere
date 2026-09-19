@@ -199,6 +199,19 @@ describe('model worker protocol', () => {
     await expect(pending).rejects.toThrow('worker exited')
   })
 
+  it('should reject pending and later requests after an unexpected response kind', async () => {
+    const [clientPort] = createLinkedPorts()
+    const client = createModelWorkerClient(clientPort)
+
+    const pending = client.initModel()
+    // Deliver a response whose kind does not match the request; the protocol
+    // state is corrupt at this point, so the client must become terminal
+    clientPort.deliver({ kind: 'ran', buffer: new ArrayBuffer(8) })
+
+    await expect(pending).rejects.toThrow(`Unexpected 'ran' response`)
+    await expect(client.initModel()).rejects.toThrow(`Unexpected 'ran' response`)
+  })
+
   it('should reject a request when posting its message throws', async () => {
     const [clientPort] = createLinkedPorts()
     clientPort.postMessage = () => {
