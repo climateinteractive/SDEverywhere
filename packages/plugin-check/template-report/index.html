@@ -24,13 +24,15 @@
     </style>
 
     <!--
-      XXX: Include no-op polyfills for these modules that are used in the Node-specific
-      implementation of threads.js.  This allows us to use one model-check bundle that
-      works in both Node and browser environments.  Without this importmap, loading a
-      remote bundle would fail with the following error when trying to import Node
-      modules like `worker_threads` that aren't available in the browser:
+      XXX: Include no-op polyfills for the Node built-ins that are referenced by check
+      bundles built with an older version of plugin-check (which used threads.js, whose
+      Node implementation referenced these modules).  Without this importmap, loading
+      such a remote bundle would fail with the following error when trying to import
+      Node modules like `worker_threads` that aren't available in the browser:
         TypeError: The specifier “worker_threads” was a bare specifier, but was not
         remapped to anything.
+      Bundles built with the current version of plugin-check don't reference these
+      modules at all, so this is only needed for backward compatibility.
     -->
     <script type="importmap">
       {

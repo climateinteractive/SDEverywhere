@@ -1,5 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
@@ -289,4 +293,46 @@ describe.each([
 
   // TODO
   // it('should throw an error if runModel is called while another is already in progress')
+})
+
+describe('spawnAsyncModelRunner initialization failure', () => {
+  it('should terminate the worker when model initialization fails', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'sde-runner-'))
+    const markerPath = join(tempDir, 'worker-still-running')
+    const workerSource = `\
+;(async () => {
+
+const { writeFileSync } = await import('node:fs')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+// Keep writing the marker file while this worker is alive; if the runner
+// terminates the worker as expected, the writes stop
+setInterval(() => writeFileSync(${JSON.stringify(markerPath)}, ''), 5)
+
+// Safety net in case the runner fails to terminate this worker
+setTimeout(() => process.exit(0), 3000)
+
+exposeModelWorker(async () => {
+  throw new Error('model initialization failed')
+})
+
+})()
+`
+
+    try {
+      await expect(spawnAsyncModelRunner({ source: workerSource })).rejects.toThrow('model initialization failed')
+
+      // The runner terminates the worker before the rejection propagates, so a
+      // marker written during the init handshake is expected and not a failure;
+      // remove it, and then verify that the (now terminated) worker does not
+      // write it again.  Note that this cannot flake in the passing direction:
+      // once the worker has been terminated, no further writes are possible, so
+      // the wait below only affects how reliably a regression would be caught.
+      rmSync(markerPath, { force: true })
+      await new Promise(resolve => setTimeout(resolve, 100))
+      expect(existsSync(markerPath)).toBe(false)
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })

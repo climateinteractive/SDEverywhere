@@ -36,8 +36,13 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.10",
-    "threads": "1.7.0"
+    "@sdeverywhere/runtime": "^0.2.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8"
+  },
+  "engines": {
+    "node": ">=22.3"
   },
   "author": "Climate Interactive",
   "license": "MIT",

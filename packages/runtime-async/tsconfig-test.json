@@ -2,6 +2,10 @@
 {
   "extends": "./tsconfig-base.json",
   "compilerOptions": {
+    // Note that the Node type definitions are enabled for tests only; the sources
+    // under `src` (excluding the `.spec.ts` files) must not depend on `@types/node`
+    // since this package is also used in the browser
+    "types": ["node"],
     // We specify the `packages` directory as the root, since TypeScript requires
     // all referenced files to live underneath the root directory
     "rootDir": "..",
