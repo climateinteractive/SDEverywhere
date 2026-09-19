@@ -6,8 +6,10 @@
   "main": "./src/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "clean": "rm -rf dist",
-    "build": "tsup",
+    "clean": "rm -rf dts-tmp dist",
+    "build:dts": "tsc -p tsconfig-build.json --emitDeclarationOnly --outDir dts-tmp",
+    "build:bundle": "tsdown",
+    "build": "run-s build:dts build:bundle",
     "lint": "eslint . --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",

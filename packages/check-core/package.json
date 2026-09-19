@@ -24,7 +24,7 @@
     "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "compile": "tsup",
+    "compile": "tsdown",
     "copy-schemas": "./scripts/copy-schemas.js",
     "build": "run-s compile copy-schemas",
     "docs": "../../scripts/gen-docs.js",
