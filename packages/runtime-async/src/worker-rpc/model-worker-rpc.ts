@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
-import type { WorkerPort } from './worker-port'
+import type { WorkerHandle, WorkerPort } from './worker-port'
 
 /** The model metadata returned after the worker initializes the model. */
 export interface InitResult {
@@ -65,12 +65,12 @@ function isModelWorkerResponse(message: unknown): message is ModelWorkerResponse
 }
 
 /**
- * Create a client for the model worker connected to the given port.
+ * Create a client for the model worker connected to the given handle.
  *
- * @param port The port connected to the model worker.
+ * @param port The handle for the spawned model worker.
  * @returns The model worker client.
  */
-export function createModelWorkerClient(port: WorkerPort): ModelWorkerClient {
+export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
   let pending: PendingRequest | undefined
   let terminalError: Error | undefined
 
@@ -127,7 +127,7 @@ export function createModelWorkerClient(port: WorkerPort): ModelWorkerClient {
     }
   })
   port.onError(error => fail(error))
-  port.onClose?.(error => fail(error))
+  port.onClose(error => fail(error))
 
   return {
     async initModel(): Promise<InitResult> {

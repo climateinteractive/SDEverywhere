@@ -25,9 +25,7 @@ export function portForNodeParentPort(parentPort: NodeMessagePort): WorkerPort {
   return {
     postMessage: (message, transferables) => parentPort.postMessage(message, transferables ?? []),
 
-    onMessage: handler => parentPort.on('message', handler),
-
-    onError: handler => parentPort.on('messageerror', handler)
+    onMessage: handler => parentPort.on('message', handler)
   }
 }
 
@@ -42,11 +40,7 @@ export function portForWorkerGlobalScope(scope: WorkerGlobalScope): WorkerPort {
   return {
     postMessage: (message, transferables) => scope.postMessage(message, transferables ?? []),
 
-    onMessage: handler => scope.addEventListener('message', event => handler(event.data)),
-
-    onError: handler => {
-      scope.addEventListener('messageerror', event => handler(event.error ?? new Error(event.message)))
-    }
+    onMessage: handler => scope.addEventListener('message', event => handler(event.data))
   }
 }
 

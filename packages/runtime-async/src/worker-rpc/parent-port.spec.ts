@@ -52,18 +52,6 @@ describe('portForNodeParentPort', () => {
 
     expect(received).toEqual([{ a: 1 }])
   })
-
-  it('should deliver errors to the error handler', () => {
-    const { parentPort, listeners } = createMockParentPort()
-    const port = portForNodeParentPort(parentPort)
-
-    let received: Error
-    port.onError(error => (received = error))
-    const error = new Error('boom')
-    listeners.get('messageerror')?.(error)
-
-    expect(received).toBe(error)
-  })
 })
 
 describe('portForWorkerGlobalScope', () => {
@@ -113,17 +101,5 @@ describe('portForWorkerGlobalScope', () => {
     listeners.get('message')?.({ data: { a: 1 } })
 
     expect(received).toEqual([{ a: 1 }])
-  })
-
-  it('should convert an error event to an Error instance', () => {
-    const { scope, listeners } = createMockWorkerScope()
-    const port = portForWorkerGlobalScope(scope)
-
-    let received: Error
-    port.onError(error => (received = error))
-    listeners.get('messageerror')?.({ message: 'bad message' })
-
-    expect(received).toBeInstanceOf(Error)
-    expect(received.message).toBe('bad message')
   })
 })

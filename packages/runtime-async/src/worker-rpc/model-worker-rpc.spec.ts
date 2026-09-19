@@ -3,10 +3,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { createModelWorkerClient, serveModelWorker } from './model-worker-rpc'
-import type { WorkerPort } from './worker-port'
+import type { WorkerHandle } from './worker-port'
 
-/** A worker port that can be connected to another mock port. */
-interface MockPort extends WorkerPort {
+/** A worker handle that can be connected to another mock port. */
+interface MockPort extends WorkerHandle {
   /** The messages posted through this port. */
   posted: { message: unknown; transferables?: Transferable[] }[]
   /** Deliver a message to this port. */
@@ -15,8 +15,6 @@ interface MockPort extends WorkerPort {
   fail(error: Error): void
   /** Report that this port has closed. */
   close(error: Error): void
-  /** Install the handler that is called when this port closes. */
-  onClose(handler: (error: Error) => void): void
 }
 
 /**
@@ -51,6 +49,9 @@ function createLinkedPorts(): [MockPort, MockPort] {
       },
       close(error: Error) {
         closeHandler?.(error)
+      },
+      terminate() {
+        return Promise.resolve()
       }
     }
   }

@@ -8,6 +8,10 @@
  * environment, or on top of a `worker_threads` worker when running in a
  * Node.js environment.  Keeping this interface small means that the rest of
  * the package has no direct dependency on either environment.
+ *
+ * Note that this interface declares only what the worker side of the channel
+ * needs; the runner side uses the wider `WorkerHandle` interface, which adds
+ * the error/close notifications and termination that only the runner acts on.
  */
 export interface WorkerPort {
   /**
@@ -26,31 +30,25 @@ export interface WorkerPort {
    * @param handler The function that is called with each received message.
    */
   onMessage(handler: (message: unknown) => void): void
+}
 
+/**
+ * A `WorkerPort` for a worker that was spawned by the runner, which additionally
+ * reports worker errors, reports when the worker exits, and allows for terminating
+ * the underlying worker.
+ */
+export interface WorkerHandle extends WorkerPort {
   /**
-   * Install the handler that is called when an error occurs on this port.
-   * Only one handler can be installed at a time.
+   * Install the handler that is called when an error occurs in the worker or
+   * on the channel.  Only one handler can be installed at a time.
    *
    * @param handler The function that is called with each error.
    */
   onError(handler: (error: Error) => void): void
 
   /**
-   * Install the handler that is called when this port closes, if the underlying
+   * Install the handler that is called when the worker exits, if the underlying
    * platform reports that event.
-   *
-   * @param handler The function that is called when the port closes.
-   */
-  onClose?(handler: (error: Error) => void): void
-}
-
-/**
- * A `WorkerPort` for a worker that was spawned by the runner, which additionally
- * allows for terminating the underlying worker.
- */
-export interface WorkerHandle extends WorkerPort {
-  /**
-   * Install the handler that is called when the worker exits.
    *
    * @param handler The function that is called when the worker exits.
    */
