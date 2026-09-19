@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "start": "./bin/create-sde.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },

@@ -1,11 +1,9 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   tsconfig: 'tsconfig-build.json',
   entry: ['src/index.ts'],
-  format: ['esm'],
-  dts: true,
-  splitting: false,
+  fixedExtension: false,
   sourcemap: true,
-  clean: false
+  dts: { sourcemap: true }
 })

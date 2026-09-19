@@ -6,14 +6,12 @@
     "template-config/**"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -26,7 +24,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "bundle": "tsup",
+    "bundle": "tsdown",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
     "docs": "../../scripts/gen-docs.js",

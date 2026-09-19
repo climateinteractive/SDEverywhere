@@ -25,10 +25,10 @@ const reSpecialChars = /[^\p{L}\p{N}_!]/gu
  * 'Variable name[DimA,B2]'), use `canonicalVarId` to convert the base variable name
  * and subscript/dimension parts to canonical form indepdendently.
  *
- * @param {string} name The name of the variable in the source model, e.g., "Variable name".
- * @returns {string} The C identifier for the given name, e.g., "_variable_name".
+ * @param name The name of the variable in the source model, e.g., "Variable name".
+ * @returns The C identifier for the given name, e.g., "_variable_name".
  */
-export function canonicalId(name) {
+export function canonicalId(name: string): string {
   return (
     '_' +
     name
@@ -54,10 +54,10 @@ export function canonicalId(name) {
  * (with special characters converted to underscore, and subscript/dimension parts separated
  * by commas).
  *
- * @param {string} name The name of the variable in the source model, e.g., "Variable name[DimA, B2]".
- * @returns {string} The canonical identifier for the given name, e.g., "_variable_name[_dima,_b2]".
+ * @param name The name of the variable in the source model, e.g., "Variable name[DimA, B2]".
+ * @returns The canonical identifier for the given name, e.g., "_variable_name[_dima,_b2]".
  */
-export function canonicalVarId(name) {
+export function canonicalVarId(name: string): string {
   const m = name.match(/([^[]+)(?:\[([^\]]+)\])?/)
   if (!m) {
     throw new Error(`Invalid variable name: ${name}`)
@@ -76,9 +76,9 @@ export function canonicalVarId(name) {
  * Format a model function name into a valid C identifier (with special characters
  * converted to underscore, and the ID converted to uppercase).
  *
- * @param {string} name The name of the variable in the source model, e.g., "FUNCTION name".
- * @returns {string} The C identifier for the given name, e.g., "_FUNCTION_NAME".
+ * @param name The name of the variable in the source model, e.g., "FUNCTION name".
+ * @returns The C identifier for the given name, e.g., "_FUNCTION_NAME".
  */
-export function canonicalFunctionId(name) {
+export function canonicalFunctionId(name: string): string {
   return canonicalId(name).toUpperCase()
 }
