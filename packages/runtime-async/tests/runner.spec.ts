@@ -290,8 +290,12 @@ describe('spawnAsyncModelRunner initialization failure', () => {
 const { writeFileSync } = require('node:fs')
 const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
 
-setTimeout(() => writeFileSync(${JSON.stringify(markerPath)}, ''), 100)
-setTimeout(() => process.exit(0), 300)
+// Keep writing the marker file while this worker is alive; if the runner
+// terminates the worker as expected, the writes stop
+setInterval(() => writeFileSync(${JSON.stringify(markerPath)}, ''), 5)
+
+// Safety net in case the runner fails to terminate this worker
+setTimeout(() => process.exit(0), 3000)
 
 exposeModelWorker(async () => {
   throw new Error('model initialization failed')
@@ -300,7 +304,15 @@ exposeModelWorker(async () => {
 
     try {
       await expect(spawnAsyncModelRunner({ source: workerSource })).rejects.toThrow('model initialization failed')
-      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // The runner terminates the worker before the rejection propagates, so a
+      // marker written during the init handshake is expected and not a failure;
+      // remove it, and then verify that the (now terminated) worker does not
+      // write it again.  Note that this cannot flake in the passing direction:
+      // once the worker has been terminated, no further writes are possible, so
+      // the wait below only affects how reliably a regression would be caught.
+      rmSync(markerPath, { force: true })
+      await new Promise(resolve => setTimeout(resolve, 100))
       expect(existsSync(markerPath)).toBe(false)
     } finally {
       rmSync(tempDir, { recursive: true, force: true })
