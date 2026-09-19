@@ -73,10 +73,12 @@ export function createViteConfigForReport(
     } as Alias
   }
 
-  // XXX: This provides custom handling for Node built-ins such as 'events' that are
-  // referenced by the check bundle (specifically in the Node implementation of
-  // threads.js).  These are not actually used in the browser, so we just need
-  // to provide no-op polyfills for these.
+  // XXX: This provides custom handling for the Node built-ins that are referenced by
+  // check bundles that were built with an older version of plugin-check (which used
+  // the threads.js package, whose Node implementation referenced these modules).
+  // Bundles built with the current version don't reference these modules at all, but
+  // we keep these no-op polyfills so that an older bundle can still be loaded as the
+  // baseline bundle for comparison purposes.
   const noopPolyfillAlias = (find: string) => {
     return {
       find,
@@ -136,14 +138,9 @@ export function createViteConfigForReport(
       ],
 
       exclude: [
-        // XXX: The threads.js implementation references `tiny-worker` as an optional
-        // dependency, but it doesn't get used at runtime, so we can just exclude it
-        // so that Vite doesn't complain in dev mode
-        'tiny-worker'
-
-        // XXX: Similarly, chart.js treats `moment` as an optional dependency, but we
-        // don't use it at runtime; we need to exclude it here, otherwise Vite will
-        // complain about missing dependencies in dev mode
+        // XXX: chart.js treats `moment` as an optional dependency, but we don't use
+        // it at runtime; if it causes Vite to complain about missing dependencies in
+        // dev mode, we can exclude it here
         // 'moment'
       ]
     },
@@ -164,9 +161,8 @@ export function createViteConfigForReport(
         // Make the overlay use the `messages.html` file that is written to the prep directory
         alias('@_prep_', prepDir),
 
-        // XXX: Include no-op polyfills for these modules that are used in the Node-specific
-        // implementation of threads.js; this allows us to use one bundle that works in both
-        // Node and browser environments
+        // Include no-op polyfills for the Node built-ins that are referenced by check
+        // bundles built with an older version of plugin-check (see above)
         noopPolyfillAlias('events'),
         noopPolyfillAlias('fs'),
         noopPolyfillAlias('os'),
@@ -174,10 +170,11 @@ export function createViteConfigForReport(
         noopPolyfillAlias('url'),
         noopPolyfillAlias('worker_threads'),
 
-        // XXX: The Node implementation of threads.js also has a `require('tiny-worker')`
-        // fallback that is never taken in the browser.  Rollup ignored `require` calls in
-        // an ES module, but Rolldown (used by Vite 8+) resolves them, and an unresolved
-        // import is a hard error, so point this at the no-op polyfill as well.
+        // XXX: The Node implementation of threads.js (used by check bundles built with
+        // an older version of plugin-check) also has a `require('tiny-worker')` fallback
+        // that is never taken in the browser.  Rollup ignored `require` calls in an ES
+        // module, but Rolldown (used by Vite 8+) resolves them, and an unresolved import
+        // is a hard error, so point this at the no-op polyfill as well.
         noopPolyfillAlias('tiny-worker')
       ]
     },
@@ -228,11 +225,12 @@ export function createViteConfigForReport(
 
       rolldownOptions: {
         // XXX: Suppress "Use of direct eval" warnings that are triggered by use
-        // of the following pattern in threads.js (which is included in the check
-        // bundles that are bundled into the report):
+        // of the following pattern in threads.js, which appears in check bundles
+        // built with an older version of plugin-check (such a bundle can still be
+        // used as the baseline bundle for comparison purposes):
         //   eval("require")("worker_threads")
-        // It would be nice to avoid use of `eval` there, but it's not critical for
-        // our use case so we will suppress the warnings for now
+        // Bundles built with the current version of plugin-check don't use `eval`
+        // at all, so this is only needed for backward compatibility.
         checks: {
           eval: false
         }

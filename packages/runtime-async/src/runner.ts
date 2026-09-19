@@ -1,9 +1,15 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
-
 import type { ModelRunner } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
+
+import { createModelWorkerClient } from './worker-rpc/model-worker-rpc'
+import type { InitResult } from './worker-rpc/model-worker-rpc'
+import type { WorkerSpec } from './worker-rpc/spawn-worker'
+import { spawnWorker } from './worker-rpc/spawn-worker'
+import type { WorkerHandle } from './worker-rpc/worker-port'
+
+export type { WorkerSpec }
 
 /**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker
@@ -34,26 +40,37 @@ import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/run
  * }
  * ```
  *
+ * The returned promise rejects if the worker fails to initialize the model or
+ * exits unexpectedly.
+ *
  * @param workerSpec Either a `path` to the worker JavaScript file, or the `source`
  * containing the full JavaScript source of the worker.
  */
-export async function spawnAsyncModelRunner(workerSpec: { path: string } | { source: string }): Promise<ModelRunner> {
-  if (workerSpec['path']) {
-    return spawnAsyncModelRunnerWithWorker(new Worker(workerSpec['path']))
-  } else {
-    return spawnAsyncModelRunnerWithWorker(BlobWorker.fromText(workerSpec['source']))
-  }
+export async function spawnAsyncModelRunner(workerSpec: WorkerSpec): Promise<ModelRunner> {
+  return spawnAsyncModelRunnerWithWorker(spawnWorker(workerSpec))
 }
 
 /**
  * @hidden For internal use only
  */
-async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRunner> {
-  // Spawn the given Worker that contains the `ModelWorker`
-  const modelWorker = await spawn(worker)
+async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<ModelRunner> {
+  // Create the client that communicates with the `ModelWorker` running in the worker
+  const client = createModelWorkerClient(worker)
 
-  // Wait for the worker to initialize the wasm model (in the worker thread)
-  const initResult = await modelWorker.initModel()
+  // Wait for the worker to initialize the model (in the worker thread). If
+  // initialization fails, make sure the worker and any associated resources are
+  // released before propagating the original error.
+  let initResult: InitResult
+  try {
+    initResult = await client.initModel()
+  } catch (error) {
+    try {
+      await worker.terminate()
+    } catch {
+      // Preserve the model initialization error if worker termination also fails
+    }
+    throw error
+  }
 
   // Create a `ModelListing` instance if the listing was defined in the generated model
   const modelListing = initResult.modelListing ? new ModelListing(initResult.modelListing) : undefined
@@ -84,13 +101,13 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       // Update the I/O parameters
       params.updateFromParams(inputs, outputs, options)
 
-      // Run the model in the worker. We pass the underlying `ArrayBuffer`
-      // instance back to the worker wrapped in a `Transfer` to make it
-      // no-copy transferable, and then the worker will return it back
-      // to us.
+      // Run the model in the worker. We transfer the underlying `ArrayBuffer`
+      // instance to the worker to make it no-copy transferable, and then the
+      // worker will transfer it back to us.
       let ioBuffer: ArrayBuffer
       try {
-        ioBuffer = await modelWorker.runModel(Transfer(params.getEncodedBuffer()))
+        const buffer = params.getEncodedBuffer()
+        ioBuffer = await client.runModel(buffer)
       } finally {
         running = false
       }
@@ -113,7 +130,8 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
         return Promise.resolve()
       } else {
         terminated = true
-        return Thread.terminate(modelWorker)
+        client.dispose(new Error('Async model runner has already been terminated'))
+        return worker.terminate()
       }
     }
   }

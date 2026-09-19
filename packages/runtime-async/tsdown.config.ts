@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup'
+import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   tsconfig: 'tsconfig-build.json',
@@ -6,9 +6,7 @@ export default defineConfig({
   // worker one in particular is used by plugin-worker to avoid having
   // Vite pull in extra code that breaks the worker
   entry: ['src/index.ts', 'src/runner.ts', 'src/worker.ts'],
-  format: ['esm', 'cjs'],
-  dts: true,
-  splitting: false,
+  fixedExtension: false,
   sourcemap: true,
-  clean: true
+  dts: { sourcemap: true }
 })

@@ -1,8 +1,7 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
 import { existsSync, readFileSync, statSync } from 'fs'
-import { createRequire } from 'module'
-import { basename, dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
+import { dirname, join as joinPath, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
 import type { InlineConfig, Plugin as VitePlugin } from 'vite'
@@ -136,98 +135,6 @@ export const dataSizeInBytes = ${dataSizeInBytes};
   }
 }
 
-/**
- * XXX: Return a plugin that takes over resolution of the threads.js package.
- *
- * Vite's library mode is browser focused, so by default it uses the `browser` mappings in
- * `threads/package.json`.  We don't want that for the check bundle: it needs the generic
- * implementation from threads that chooses between the Node and browser implementations
- * at runtime, so that one bundle works in both environments.  Note that we could in theory
- * set `resolve.browserField` to false, but that would make Vite ignore the browser field
- * for all other packages, and there is not currently a way to tell Vite to use the browser
- * field on a case-by-case basis.
- *
- * This runs with `enforce: 'pre'` so that it sees the bare specifiers before the bundler's
- * own resolver does.  (It used to be split between an alias `customResolver` and a wrapper
- * installed around the built-in `vite:resolve` plugin.  The latter relied on an internal
- * plugin name that does not exist when Vite runs on Rolldown, and the former is deprecated
- * in favor of exactly this approach.)
- */
-function resolveThreadsPlugin(): VitePlugin {
-  // Use Node's own module resolution to locate the threads package relative to the
-  // importing module.  Node resolution does not consult the `browser` field, which
-  // is exactly what we want here.  Note that the resolved path will be the CommonJS
-  // entry point (`<pkgRoot>/dist/index.js`, via the `require` condition in the
-  // `exports` map of `threads/package.json`), from which we can locate the package
-  // root and then force the use of the `dist-esm` variant.
-  const require = createRequire(import.meta.url)
-  const resolveThreadsPackageRoot = (importer: string) => {
-    try {
-      const resolved = require.resolve('threads', { paths: [dirname(importer)] })
-      return dirname(dirname(resolved))
-    } catch {
-      return undefined
-    }
-  }
-
-  return {
-    name: 'vite-plugin-resolve-threads',
-    enforce: 'pre',
-    resolveId(id: string, importer: string | undefined) {
-      if (id === 'threads' || id === 'threads/worker') {
-        // Resolve the package without consulting the `browser` field, then force the use
-        // of the `dist-esm` variant
-        if (importer === undefined) {
-          return undefined
-        }
-        const pkgRoot = resolveThreadsPackageRoot(importer)
-        if (pkgRoot === undefined) {
-          return undefined
-        }
-        if (id === 'threads/worker') {
-          return joinPath(pkgRoot, 'dist-esm', 'worker', 'index.js')
-        } else {
-          return joinPath(pkgRoot, 'dist-esm', 'index.js')
-        }
-      }
-
-      if (id.startsWith('./implementation') && importer?.includes('threads/dist-esm')) {
-        // XXX: The default resolver behavior will look at the `browser` mappings in
-        // `threads/package.json` and try to resolve `implementation.js` to
-        // `implementation.browser.js` because it thinks we're in a browser-only context.
-        // We don't want that.  Instead we want to keep the generic implementation from
-        // threads that chooses between the Node and browser implementations at runtime.
-        //
-        // If we get here, importer will be something like:
-        //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/index.js
-        // And id will be:
-        //   ./implementation
-        // So resolve the ID to:
-        //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.js
-        //
-        // Or, importer will be:
-        //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.js
-        // And id will be one of:
-        //   ./implementation.browser
-        //   ./implementation.node
-        //   ./implementation.worker_threads
-        // So resolve the ID to:
-        //   /.../node_modules/.pnpm/threads@1.7.0/node_modules/threads/dist-esm/{worker,master}/implementation.{...}.js
-        const idFileName = id.replace('./', '')
-        const importerFileName = basename(importer)
-        const resolvedId = importer.replace(importerFileName, `${idFileName}.js`)
-        return {
-          id: resolvedId,
-          moduleSideEffects: false
-        }
-      }
-
-      // For all other cases, fall back on the default resolver
-      return undefined
-    }
-  }
-}
-
 export async function createViteConfigForBundle(
   context: BuildContext,
   modelSpec: ResolvedModelSpec
@@ -270,11 +177,7 @@ export async function createViteConfigForBundle(
 
     plugins: [
       // Use a virtual module plugin to inject the model spec values
-      injectModelSpec(context, modelSpec),
-
-      // XXX: Take over resolution of the threads.js package so that the check bundle gets
-      // the implementation that works in both Node and browser environments
-      resolveThreadsPlugin()
+      injectModelSpec(context, modelSpec)
     ],
 
     build: {
@@ -290,36 +193,6 @@ export async function createViteConfigForBundle(
         entry: './src/index.ts',
         formats: ['es'],
         fileName: () => 'check-bundle.js'
-      },
-
-      rolldownOptions: {
-        // Don't transform Node imports used by threads.js
-        external: ['events', 'os', 'path', 'url'],
-
-        // XXX: Suppress "Use of direct eval" warnings that are triggered by use
-        // of the following pattern in threads.js:
-        //   eval("require")("worker_threads")
-        // It would be nice to avoid use of `eval` there, but it's not critical for
-        // our use case so we will suppress the warnings for now
-        checks: {
-          eval: false
-        },
-
-        // XXX: Insert custom code at the top of the generated bundle that defines
-        // the special `__non_webpack_require__` function that is used by threads.js
-        // in its Node implementation.  This import ensures that threads.js uses
-        // the native `worker_threads` implementation when using the bundle in a
-        // Node environment.  When importing the bundle for use in the browser,
-        // Vite will transform this import into an empty module due to the empty
-        // polyfill that is configured in `vite-config-for-report.ts`.
-        output: {
-          banner: `
-import * as worker_threads from 'worker_threads'
-let __non_webpack_require__ = () => {
-  return worker_threads;
-};
-`
-        }
       }
     }
   }

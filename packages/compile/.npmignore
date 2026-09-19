@@ -4,6 +4,9 @@
 # Include all files under src directory
 !src/**
 
+# Include the generated type declarations (referenced by the `types` field in package.json)
+!dist/**
+
 # Exclude test-related files
 src/**/_tests
 src/**/*.spec.ts

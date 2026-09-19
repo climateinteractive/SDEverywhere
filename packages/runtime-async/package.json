@@ -5,24 +5,20 @@
     "dist/**"
   ],
   "type": "module",
-  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./runner": {
       "types": "./dist/runner.d.ts",
-      "import": "./dist/runner.js",
-      "require": "./dist/runner.cjs"
+      "import": "./dist/runner.js"
     },
     "./worker": {
       "types": "./dist/worker.d.ts",
-      "import": "./dist/worker.js",
-      "require": "./dist/worker.cjs"
+      "import": "./dist/worker.js"
     }
   },
   "scripts": {
@@ -35,13 +31,18 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.10",
-    "threads": "1.7.0"
+    "@sdeverywhere/runtime": "^0.2.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8"
+  },
+  "engines": {
+    "node": ">=22.3"
   },
   "author": "Climate Interactive",
   "license": "MIT",

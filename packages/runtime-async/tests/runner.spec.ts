@@ -1,5 +1,9 @@
 // Copyright (c) 2022 Climate Interactive / New Venture Fund
 
+import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import type { ModelRunner } from '@sdeverywhere/runtime'
@@ -45,17 +49,25 @@ const listingJson = `
 `
 
 //
-// Note that the Node worker implementation below must use `require` and relies
-// on the compiled (JavaScript / CommonJS) versions of the `runtime` and
-// `runtime-async` packages, which is why this test file is treated as an
-// integration test and kept in the separate `tests` directory.  It must be
-// run only after the `runtime` and `runtime-async` have been built.
+// Note that the Node worker implementation below relies on the compiled (JavaScript)
+// versions of the `runtime` and `runtime-async` packages, which is why this test file
+// is treated as an integration test and kept in the separate `tests` directory.  It
+// must be run only after the `runtime` and `runtime-async` have been built.
+//
+// The async IIFE wrapper keeps each worker source a plain (CommonJS) script, like the
+// `iife` bundles that `plugin-worker` generates, while still allowing a dynamic
+// `import` of the two ESM-only packages.
+//
+// XXX: The wrapper defers `exposeModelWorker` until after the script has evaluated.
+// Node buffers port messages until a listener is attached, so that is safe here, but a
+// browser would drop them; real generated workers expose synchronously.
 //
 
 const workerWithMockJsModel = `\
-const path = require('path')
-const { MockJsModel } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+;(async () => {
+
+const { MockJsModel } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
@@ -88,12 +100,15 @@ function createMockJsModel() {
 }
 
 exposeModelWorker(createMockJsModel)
+
+})()
 `
 
 const workerWithMockWasmModule = `\
-const path = require('path')
-const { MockWasmModule } = require('@sdeverywhere/runtime')
-const { exposeModelWorker } = require('@sdeverywhere/runtime-async')
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 const startTime = 2000
 const endTime = 2002
@@ -132,6 +147,8 @@ async function createMockWasmModule() {
 }
 
 exposeModelWorker(createMockWasmModule)
+
+})()
 `
 
 const p = (x: number, y: number) => {
@@ -276,4 +293,46 @@ describe.each([
 
   // TODO
   // it('should throw an error if runModel is called while another is already in progress')
+})
+
+describe('spawnAsyncModelRunner initialization failure', () => {
+  it('should terminate the worker when model initialization fails', async () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'sde-runner-'))
+    const markerPath = join(tempDir, 'worker-still-running')
+    const workerSource = `\
+;(async () => {
+
+const { writeFileSync } = await import('node:fs')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+// Keep writing the marker file while this worker is alive; if the runner
+// terminates the worker as expected, the writes stop
+setInterval(() => writeFileSync(${JSON.stringify(markerPath)}, ''), 5)
+
+// Safety net in case the runner fails to terminate this worker
+setTimeout(() => process.exit(0), 3000)
+
+exposeModelWorker(async () => {
+  throw new Error('model initialization failed')
+})
+
+})()
+`
+
+    try {
+      await expect(spawnAsyncModelRunner({ source: workerSource })).rejects.toThrow('model initialization failed')
+
+      // The runner terminates the worker before the rejection propagates, so a
+      // marker written during the init handshake is expected and not a failure;
+      // remove it, and then verify that the (now terminated) worker does not
+      // write it again.  Note that this cannot flake in the passing direction:
+      // once the worker has been terminated, no further writes are possible, so
+      // the wait below only affects how reliably a regression would be caught.
+      rmSync(markerPath, { force: true })
+      await new Promise(resolve => setTimeout(resolve, 100))
+      expect(existsSync(markerPath)).toBe(false)
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+  })
 })
