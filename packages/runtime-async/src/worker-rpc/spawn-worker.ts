@@ -37,6 +37,12 @@ export function portForWebWorker(worker: WebWorker, onTerminate?: () => void): W
 
     onError: handler => {
       worker.addEventListener('error', event => handler(event.error ?? new Error(event.message)))
+      // A `messageerror` event fires when a message received from the worker fails
+      // deserialization; report it as an error so that a pending request settles
+      // instead of hanging
+      worker.addEventListener('messageerror', () => {
+        handler(new Error('Failed to deserialize message received from worker'))
+      })
     },
 
     // Web Workers do not expose an event when they close themselves
@@ -63,7 +69,13 @@ export function portForNodeWorker(worker: NodeWorker): WorkerHandle {
 
     onMessage: handler => worker.on('message', handler),
 
-    onError: handler => worker.on('error', handler),
+    onError: handler => {
+      worker.on('error', handler)
+      // A `messageerror` event fires when a message received from the worker fails
+      // deserialization; report it as an error so that a pending request settles
+      // instead of hanging
+      worker.on('messageerror', handler)
+    },
 
     onClose: handler => {
       worker.on('exit', exitCode => handler(new Error(`Worker exited with code ${exitCode}`)))

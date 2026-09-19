@@ -7,7 +7,7 @@ import { join } from 'node:path'
 import { afterAll, describe, expect, it, vi } from 'vitest'
 
 import type { WorkerHandle } from './worker-port'
-import { portForWebWorker, spawnWorker } from './spawn-worker'
+import { portForNodeWorker, portForWebWorker, spawnWorker } from './spawn-worker'
 
 /**
  * The source of a worker that echoes each message back to the runner.  Note that
@@ -199,11 +199,68 @@ describe('portForWebWorker', () => {
     expect(received).toBe(underlying)
   })
 
+  it('should convert a messageerror event to an Error instance', () => {
+    const { worker, listeners } = createMockWebWorker()
+    const handle = portForWebWorker(worker)
+
+    let received: Error
+    handle.onError(error => (received = error))
+    listeners.get('messageerror')?.({ data: null })
+
+    expect(received).toBeInstanceOf(Error)
+    expect(received.message).toContain('deserialize')
+  })
+
   it('should terminate the worker and resolve', async () => {
     const { worker } = createMockWebWorker()
     const handle = portForWebWorker(worker)
 
     await expect(handle.terminate()).resolves.toBeUndefined()
     expect(worker.terminate).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('portForNodeWorker', () => {
+  /**
+   * Create a minimal stand-in for a `Worker` instance from `node:worker_threads`.
+   *
+   * @returns The mock worker along with the listeners that were installed on it.
+   */
+  function createMockNodeWorker() {
+    const listeners = new Map<string, (arg: unknown) => void>()
+    return {
+      listeners,
+      worker: {
+        postMessage: vi.fn(),
+        terminate: () => Promise.resolve(0),
+        on: (event: string, listener: (arg: unknown) => void) => {
+          listeners.set(event, listener)
+        }
+      }
+    }
+  }
+
+  it('should deliver worker errors to the error handler', () => {
+    const { worker, listeners } = createMockNodeWorker()
+    const handle = portForNodeWorker(worker)
+
+    let received: Error
+    handle.onError(error => (received = error))
+    const error = new Error('worker blew up')
+    listeners.get('error')?.(error)
+
+    expect(received).toBe(error)
+  })
+
+  it('should deliver message deserialization errors to the error handler', () => {
+    const { worker, listeners } = createMockNodeWorker()
+    const handle = portForNodeWorker(worker)
+
+    let received: Error
+    handle.onError(error => (received = error))
+    const error = new Error('could not deserialize message')
+    listeners.get('messageerror')?.(error)
+
+    expect(received).toBe(error)
   })
 })
