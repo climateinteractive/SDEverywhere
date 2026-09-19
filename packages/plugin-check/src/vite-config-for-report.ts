@@ -4,13 +4,13 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { Alias, InlineConfig, PluginOption } from 'vite'
-import replace from '@rollup/plugin-replace'
+import type { Alias, InlineConfig } from 'vite'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
 import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckPluginOptions } from './options'
+import { injectLiteralsPlugin } from './vite-inject-literals-plugin'
 import { localBundlesPlugin } from './vite-local-bundles-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -168,7 +168,14 @@ export function createViteConfigForReport(
         noopPolyfillAlias('os'),
         noopPolyfillAlias('path'),
         noopPolyfillAlias('url'),
-        noopPolyfillAlias('worker_threads')
+        noopPolyfillAlias('worker_threads'),
+
+        // XXX: The Node implementation of threads.js (used by check bundles built with
+        // an older version of plugin-check) also has a `require('tiny-worker')` fallback
+        // that is never taken in the browser.  Rollup ignored `require` calls in an ES
+        // module, but Rolldown (used by Vite 8+) resolves them, and an unresolved import
+        // is a hard error, so point this at the no-op polyfill as well.
+        noopPolyfillAlias('tiny-worker')
       ]
     },
 
@@ -188,24 +195,20 @@ export function createViteConfigForReport(
     },
 
     plugins: [
-      // Inject special values into the generated JS
-      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
-      // built-in `define` feature because the latter does not seem to run before
-      // the glob handler (which requires the glob to be injected as a literal)
-      replace({
-        preventAssignment: true,
-        delimiters: ['', ''],
-        values: {
-          // Inject the path for baseline bundles
-          // XXX: Note that we use './bundles/**/*.txt' instead of something special
-          // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
-          // scanner sees the latter (instead of the injected path) and reports
-          // an error since the path does not exist.  As a workaround, we use
-          // './bundles/**/*.txt', which gets interpreted as the valid path
-          // '.../template-report/src/bundles/**/*.txt' (see `bundles/unused.txt`).
-          './bundles/**/*.txt': bundlesPath
-        }
-      }) as unknown as PluginOption,
+      // Inject special values into the generated JS.  Note that we use a literal
+      // string replacement plugin instead of Vite's built-in `define` feature
+      // because the latter does not run before the glob handler (which requires
+      // the glob to be injected as a literal).
+      injectLiteralsPlugin({
+        // Inject the path for baseline bundles
+        // XXX: Note that we use './bundles/**/*.txt' instead of something special
+        // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
+        // scanner sees the latter (instead of the injected path) and reports
+        // an error since the path does not exist.  As a workaround, we use
+        // './bundles/**/*.txt', which gets interpreted as the valid path
+        // '.../template-report/src/bundles/**/*.txt' (see `bundles/unused.txt`).
+        './bundles/**/*.txt': bundlesPath
+      }),
 
       // When local development mode is active, enable the local bundles plugin that
       // allows the report app to access the local bundles directory
@@ -220,10 +223,16 @@ export function createViteConfigForReport(
       // Write js/css files to `public` (instead of the default `<outDir>/assets`)
       assetsDir: '',
 
-      rollupOptions: {
-        output: {
-          // XXX: Prevent vite from creating a separate `vendor.js` file
-          manualChunks: undefined
+      rolldownOptions: {
+        // XXX: Suppress "Use of direct eval" warnings that are triggered by use
+        // of the following pattern in threads.js, which appears in check bundles
+        // built with an older version of plugin-check (such a bundle can still be
+        // used as the baseline bundle for comparison purposes):
+        //   eval("require")("worker_threads")
+        // Bundles built with the current version of plugin-check don't use `eval`
+        // at all, so this is only needed for backward compatibility.
+        checks: {
+          eval: false
         }
       }
     },

@@ -6,9 +6,13 @@
     "outDir": "./dist",
     // Use "es2021" because this is the ES version for Node 16
     "target": "es2021",
-    // Use "es2020" because this is a Node module (using ESM) and we need to
-    // use dynamic imports
-    "module": "es2020",
+    // XXX: Vite 8 declares its type entry point only under the `exports` field of
+    // its `package.json` (it no longer has `main` or `types` fields), so the classic
+    // "node" resolution mode inherited from `tsconfig-common.json` cannot find it.
+    // Use "bundler" resolution here instead, which in turn requires "esnext" (or
+    // "preserve") for `module`.
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true

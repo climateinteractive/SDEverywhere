@@ -31,7 +31,6 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@rollup/plugin-replace": "^6.0.3",
     "@sdeverywhere/check-core": "^0.1.14",
     "@sdeverywhere/check-ui-shell": "^0.2.26",
     "@sdeverywhere/runtime": "^0.2.10",
@@ -39,17 +38,7 @@
     "assert-never": "^1.2.1",
     "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",
-    "rollup": "^4.62.4",
-    "vite": "^7.1.12"
-  },
-  "dependenciesComments": {
-    "rollup": [
-      "XXX: For now, rollup is listed as a dependency even though it is not actually",
-      "needed since we only use the @rollup plugins with vite.  Those @rollup plugins",
-      "don't technically need rollup to function properly, but they list rollup as a",
-      "required peer dependency.  To avoid making consumers worry about this, we list",
-      "it as a dependency here."
-    ]
+    "vite": "^8.3.0"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.10"
