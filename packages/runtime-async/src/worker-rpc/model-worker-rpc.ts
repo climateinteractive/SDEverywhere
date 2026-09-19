@@ -177,7 +177,14 @@ export function serveModelWorker(port: WorkerPort, methods: ModelWorkerMethods):
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
-        port.postMessage({ kind: 'error', message: errorMessage } satisfies ModelWorkerResponse)
+        try {
+          port.postMessage({ kind: 'error', message: errorMessage } satisfies ModelWorkerResponse)
+        } catch {
+          // Nothing more can be done if the error response also cannot be posted
+          // (for example, when the port is already closed); swallow the failure
+          // rather than crash the worker with an unhandled rejection.  The runner
+          // side will observe the problem through worker error/exit events.
+        }
       }
     }
 

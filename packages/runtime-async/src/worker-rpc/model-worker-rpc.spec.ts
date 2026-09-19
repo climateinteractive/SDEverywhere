@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { createModelWorkerClient, serveModelWorker } from './model-worker-rpc'
 import type { WorkerHandle } from './worker-port'
@@ -207,5 +207,32 @@ describe('model worker protocol', () => {
     const client = createModelWorkerClient(clientPort)
 
     await expect(client.initModel()).rejects.toThrow('message could not be cloned')
+  })
+
+  it('should not produce an unhandled rejection when the worker cannot post a response', async () => {
+    const [, workerPort] = createLinkedPorts()
+    workerPort.postMessage = () => {
+      throw new Error('port is closed')
+    }
+    serveModelWorker(workerPort, {
+      initModel: () => initResult(),
+      runModel: buffer => buffer
+    })
+
+    const onUnhandledRejection = vi.fn()
+    process.on('unhandledRejection', onUnhandledRejection)
+    try {
+      // Both the response post and the fallback error-response post will throw;
+      // the worker should swallow the failure rather than leave it as an
+      // unhandled rejection (which would crash the worker thread)
+      workerPort.deliver({ kind: 'init' })
+
+      // Give the async request handler (and Node's unhandled rejection reporting)
+      // a chance to run
+      await new Promise(resolve => setTimeout(resolve, 0))
+      expect(onUnhandledRejection).not.toHaveBeenCalled()
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandledRejection)
+    }
   })
 })
