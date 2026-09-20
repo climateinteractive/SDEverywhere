@@ -1,8 +1,9 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join as joinPath } from 'node:path'
+import { dirname, join as joinPath } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 import type { ViteDevServer } from 'vite'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -70,15 +71,37 @@ function createFakeServer(): FakeServer {
   }
 }
 
+/** The temporary directory that stands in for the user's project directory. */
+let projDir: string
+/** The `bundles` directory under `projDir`. */
 let bundlesDir: string
+/** The "current" bundle that the builder writes to the prep directory. */
+let currentBundlePath: string
 let fakeServer: FakeServer
 let errorSpy: ReturnType<typeof vi.spyOn>
 
+/**
+ * Write a bundle file (with the given name, which may contain slashes) to the
+ * local bundles directory.
+ */
+async function writeLocalBundle(name: string): Promise<string> {
+  const filePath = joinPath(bundlesDir, ...name.split('/')) + '.js'
+  await mkdir(dirname(filePath), { recursive: true })
+  await writeFile(filePath, `// ${name}`, 'utf8')
+  return filePath
+}
+
 beforeEach(async () => {
-  bundlesDir = await mkdtemp(joinPath(tmpdir(), 'sde-local-bundles-'))
+  projDir = await mkdtemp(joinPath(tmpdir(), 'sde-local-bundles-'))
+  bundlesDir = joinPath(projDir, 'bundles')
+  await mkdir(bundlesDir, { recursive: true })
+  currentBundlePath = joinPath(projDir, 'sde-prep', 'check-bundle.js')
+  await mkdir(dirname(currentBundlePath), { recursive: true })
+  await writeFile(currentBundlePath, '// current', 'utf8')
+
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
   fakeServer = createFakeServer()
-  const plugin = localBundlesPlugin(bundlesDir, joinPath(bundlesDir, 'current.js'))
+  const plugin = localBundlesPlugin(bundlesDir, currentBundlePath)
   await (plugin.configureServer as any)(fakeServer.devServer)
 })
 
@@ -86,10 +109,34 @@ afterEach(async () => {
   fakeServer.close()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
-  await rm(bundlesDir, { recursive: true, force: true })
+  await rm(projDir, { recursive: true, force: true })
 })
 
 describe('localBundlesPlugin', () => {
+  it('should discover the bundles in the local bundles directory, including subdirectories', async () => {
+    // Note that this is the mechanism that replaced the `import.meta.glob` call that the
+    // report app used to rely on for finding local bundles
+    await writeLocalBundle('previous')
+    await writeLocalBundle('feature/remote-1')
+    // Non-JS files should be ignored
+    await writeFile(joinPath(bundlesDir, 'notes.txt'), 'not a bundle', 'utf8')
+
+    await fakeServer.handlers.get('list-bundles')({})
+
+    expect(errorSpy).not.toHaveBeenCalled()
+    expect(fakeServer.sentMessages).toHaveLength(1)
+    expect(fakeServer.sentMessages[0].event).toBe('list-bundles-success')
+
+    const bundles = fakeServer.sentMessages[0].data.bundles as { name: string; url: string }[]
+    const byName = new Map(bundles.map(b => [b.name, b.url]))
+    expect([...byName.keys()].sort()).toEqual(['current', 'feature/remote-1', 'previous'])
+    expect(byName.get('previous')).toBe(pathToFileURL(joinPath(bundlesDir, 'previous.js')).toString())
+    expect(byName.get('feature/remote-1')).toBe(
+      pathToFileURL(joinPath(bundlesDir, 'feature', 'remote-1.js')).toString()
+    )
+    expect(byName.get('current')).toBe('current')
+  })
+
   it('should log a concise message (without the raw error object) when a remote bundle cannot be fetched', async () => {
     // Simulate the kind of error (with a long stack trace) that is thrown when nothing
     // is listening at the configured remote bundle URL
