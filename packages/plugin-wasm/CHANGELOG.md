@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.9...plugin-wasm-v0.2.10) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
 ## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.8...plugin-wasm-v0.2.9) (2026-08-19)
 
 

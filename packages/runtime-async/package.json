@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/runtime-async",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "files": [
     "dist/**"
   ],
@@ -36,7 +36,7 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.10"
+    "@sdeverywhere/runtime": "^0.2.11"
   },
   "devDependencies": {
     "@types/node": "^20.14.8"

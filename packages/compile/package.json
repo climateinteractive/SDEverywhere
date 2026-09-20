@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/compile",
-  "version": "0.7.35",
+  "version": "0.7.36",
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
   "main": "./src/index.js",
@@ -21,7 +21,7 @@
     "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },
   "dependencies": {
-    "@sdeverywhere/parse": "^0.1.6",
+    "@sdeverywhere/parse": "^0.1.7",
     "byline": "^5.0.0",
     "csv-parse": "^7.0.2",
     "fflate": "^0.8.3",
