@@ -19,9 +19,6 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-// The following value will be injected by `vite-config-for-report.ts`
-const bundlesPath = './bundles/**/*.txt'
-
 async function initForProduction(): Promise<void> {
   // For "production" builds, load the summary from a JSON file that
   // was generated as part of the build process.  This makes the
@@ -70,8 +67,8 @@ async function initForLocal(): Promise<void> {
   // Restore the bundles that were previously selected (from before the page was reloaded).
   // Note that we read these each time the app is initialized, since `resolveBundle` will
   // clear a saved selection if the bundle cannot be loaded.
-  const savedBundleMetadataL = bundlesPath ? loadBundleMetadata('left') : undefined
-  const savedBundleMetadataR = bundlesPath ? loadBundleMetadata('right') : undefined
+  const savedBundleMetadataL = loadBundleMetadata('left')
+  const savedBundleMetadataR = loadBundleMetadata('right')
 
   const {
     bundle: bundleL,

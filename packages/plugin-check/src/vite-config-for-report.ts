@@ -10,7 +10,6 @@ import type { SuiteSummary } from '@sdeverywhere/check-core'
 
 import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckPluginOptions } from './options'
-import { injectLiteralsPlugin } from './vite-inject-literals-plugin'
 import { localBundlesPlugin } from './vite-local-bundles-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -36,23 +35,14 @@ export function createViteConfigForReport(
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
 
-  // Make sure the `bundles` directory exists, otherwise Vite's dependency scanner
-  // may report errors when processing the `import.meta.glob` call
+  // Make sure the `bundles` directory exists.  This is required by the local bundles
+  // plugin, which watches this directory for changes and scans it when the report app
+  // asks for the list of available local bundles.
+  // TODO: Use localBundlesPath from options
   const bundlesDir = resolvePath(projDir, 'bundles')
   if (!existsSync(bundlesDir)) {
     mkdirSync(bundlesDir, { recursive: true })
   }
-
-  // Include `bundles/**/*.js` files under the configured project root directory.  This
-  // glob path apparently must be a relative path (relative to the `template-report/src`
-  // directory where the glob is used).
-  const templateSrcDir = resolvePath(root, 'src')
-  const relProjDir = relative(templateSrcDir, projDir)
-  // XXX: The glob pattern must use forward slashes only, so on Windows we need to
-  // convert backslashes to slashes
-  const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use localBundlesPath from options
-  const bundlesPath = `${relProjDirPath}/bundles/**/*.js`
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -195,21 +185,6 @@ export function createViteConfigForReport(
     },
 
     plugins: [
-      // Inject special values into the generated JS.  Note that we use a literal
-      // string replacement plugin instead of Vite's built-in `define` feature
-      // because the latter does not run before the glob handler (which requires
-      // the glob to be injected as a literal).
-      injectLiteralsPlugin({
-        // Inject the path for baseline bundles
-        // XXX: Note that we use './bundles/**/*.txt' instead of something special
-        // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
-        // scanner sees the latter (instead of the injected path) and reports
-        // an error since the path does not exist.  As a workaround, we use
-        // './bundles/**/*.txt', which gets interpreted as the valid path
-        // '.../template-report/src/bundles/**/*.txt' (see `bundles/unused.txt`).
-        './bundles/**/*.txt': bundlesPath
-      }),
-
       // When local development mode is active, enable the local bundles plugin that
       // allows the report app to access the local bundles directory
       ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir, currentBundleSpec.path, options?.fetchRemoteBundle)] : [])
