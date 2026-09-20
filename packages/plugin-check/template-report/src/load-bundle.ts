@@ -2,10 +2,7 @@
 
 import type { Bundle } from '@sdeverywhere/check-core'
 
-export interface BundleMetadata {
-  name: string
-  url: string
-}
+import type { BundleMetadata } from './bundle-metadata'
 
 export interface BundleResult {
   bundle: Bundle
