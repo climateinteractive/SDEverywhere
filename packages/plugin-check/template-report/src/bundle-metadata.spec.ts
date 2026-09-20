@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Climate Interactive / New Venture Fund
+// Copyright (c) 2026 Climate Interactive / New Venture Fund
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Climate Interactive / New Venture Fund
+// Copyright (c) 2026 Climate Interactive / New Venture Fund
 
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
