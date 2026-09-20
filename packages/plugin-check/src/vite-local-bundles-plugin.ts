@@ -17,6 +17,11 @@ import { copyBundle, downloadBundle } from './bundle-file-ops'
  * This plugin adds an HMR (Hot Module Replacement) event handler that listens for
  * 'list-bundles' and 'download-bundle' events from the client.
  *
+ * Note that when a request fails, the handlers below log only the error message (along
+ * with the bundle name and URL) instead of the raw error object, since the latter can
+ * produce a long and unhelpful stack trace in the console.  The full message is sent
+ * back to the client, which reports it in the browser console.
+ *
  * @param bundlesDir The absolute path to the bundles directory.
  * @param currentBundlePath The absolute path to the current bundle file.
  * @param fetchRemoteBundle Optional function for fetching remote bundle files.
@@ -74,7 +79,7 @@ export function localBundlesPlugin(
           client.send('list-bundles-success', { bundles })
         } catch (error) {
           // Send error message back to client
-          console.error(`[sde-local-bundles] Failed to list bundles:`, error)
+          console.error(`[sde-local-bundles] Failed to list bundles in ${bundlesDir}: ${error.message}`)
           client.send('list-bundles-error', { error: error.message })
         }
       })
@@ -113,9 +118,7 @@ export function localBundlesPlugin(
           // Send the source code back to client
           client.send('load-bundle-success', { name, url, sourceCode })
         } catch (error) {
-          // Send error message back to client.  Note that we log only the error message
-          // (along with the name and URL of the bundle) instead of the raw error object,
-          // since the latter can produce a long and unhelpful stack trace in the console.
+          // Send error message back to client
           console.error(`[sde-local-bundles] Failed to load bundle '${name}' from ${url}: ${error.message}`)
           client.send('load-bundle-error', { name, url, error: error.message })
         }
@@ -134,7 +137,7 @@ export function localBundlesPlugin(
           client.send('download-bundle-success', { name, filePath: `${name}.js` })
         } catch (error) {
           // Send error message back to client
-          console.error(`[sde-local-bundles] Failed to download bundle:`, error)
+          console.error(`[sde-local-bundles] Failed to download bundle '${name}' from ${url}: ${error.message}`)
           client.send('download-bundle-error', { name, error: error.message })
         }
       })
@@ -152,7 +155,7 @@ export function localBundlesPlugin(
           client.send('copy-bundle-success', { name: newName, filePath: `${newName}.js` })
         } catch (error) {
           // Send error message back to client
-          console.error(`[sde-local-bundles] Failed to copy bundle:`, error)
+          console.error(`[sde-local-bundles] Failed to copy bundle '${name}' to '${newName}': ${error.message}`)
           client.send('copy-bundle-error', { name, error: error.message })
         }
       })

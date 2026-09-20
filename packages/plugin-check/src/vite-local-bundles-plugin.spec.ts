@@ -136,6 +136,50 @@ describe('localBundlesPlugin', () => {
     expect(fakeServer.sentMessages[0].event).toBe('load-bundle-success')
     expect(fakeServer.sentMessages[0].data.sourceCode).toBe('export function createBundle() {}')
   })
+
+  it('should log a concise message (without the raw error object) when the bundles cannot be listed', async () => {
+    // Remove the bundles directory so that the directory scan fails
+    await rm(bundlesDir, { recursive: true, force: true })
+
+    await fakeServer.handlers.get('list-bundles')({})
+
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    const args = errorSpy.mock.calls[0]
+    expect(args).toHaveLength(1)
+    expect(args[0]).toContain(`[sde-local-bundles] Failed to list bundles in ${bundlesDir}: `)
+    expect(args[0]).toContain('ENOENT')
+    expect(fakeServer.sentMessages[0].event).toBe('list-bundles-error')
+  })
+
+  it('should log a concise message (without the raw error object) when a bundle cannot be downloaded', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('fetch failed')
+      })
+    )
+
+    const url = 'http://localhost:9000/remote-2.js'
+    await fakeServer.handlers.get('download-bundle')({ url, name: 'remote-2', lastModified: undefined })
+
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    const args = errorSpy.mock.calls[0]
+    expect(args).toHaveLength(1)
+    expect(args[0]).toBe(`[sde-local-bundles] Failed to download bundle 'remote-2' from ${url}: fetch failed`)
+    expect(fakeServer.sentMessages[0].event).toBe('download-bundle-error')
+  })
+
+  it('should log a concise message (without the raw error object) when a bundle cannot be copied', async () => {
+    const url = 'file:///does/not/exist.js'
+    await fakeServer.handlers.get('copy-bundle')({ url, name: 'missing', newName: 'copy-of-missing' })
+
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    const args = errorSpy.mock.calls[0]
+    expect(args).toHaveLength(1)
+    expect(args[0]).toContain(`[sde-local-bundles] Failed to copy bundle 'missing' to 'copy-of-missing': `)
+    expect(args[0]).toContain('ENOENT')
+    expect(fakeServer.sentMessages[0].event).toBe('copy-bundle-error')
+  })
 })
 
 /* eslint-enable @typescript-eslint/no-explicit-any */
