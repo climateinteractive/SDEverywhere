@@ -23,8 +23,6 @@
     * @sdeverywhere/check-ui-shell bumped from ^0.2.26 to ^0.2.27
     * @sdeverywhere/runtime bumped from ^0.2.10 to ^0.2.11
     * @sdeverywhere/runtime-async bumped from ^0.2.10 to ^0.2.11
-  * peerDependencies
-    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.18
 
 ## [0.3.37](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.36...plugin-check-v0.3.37) (2026-08-27)
 
