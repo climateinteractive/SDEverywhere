@@ -6,9 +6,11 @@ import type { BundleLocation, BundleSpec } from '@sdeverywhere/check-ui-shell'
 import { initAppShell } from '@sdeverywhere/check-ui-shell'
 import '@sdeverywhere/check-ui-shell/dist/style.css'
 
-import type { BundleMetadata, BundleResult } from './load-bundle'
+import type { BundleMetadata } from './bundle-metadata'
+import { loadBundleMetadata, saveBundleMetadata } from './bundle-metadata'
 import { loadBundle } from './load-bundle'
 import { initOverlay } from './overlay'
+import { resolveBundle } from './resolve-bundle'
 
 import './global.css'
 
@@ -17,35 +19,8 @@ import { createBundle as createBaselineBundle } from '@_baseline_bundle_'
 import { createBundle as createCurrentBundle } from '@_current_bundle_'
 import { getConfigOptions } from '@_test_config_'
 
-function loadBundleMetadata(side: 'left' | 'right'): BundleMetadata | undefined {
-  if (import.meta.hot) {
-    const metadataJson = localStorage.getItem(`sde-check-selected-bundle-${side}`)
-    if (metadataJson) {
-      const parsed = JSON.parse(metadataJson)
-      if (parsed.name && parsed.url) {
-        return parsed as BundleMetadata
-      }
-    }
-  }
-  return undefined
-}
-
-function saveBundleMetadata(side: 'left' | 'right', metadata: BundleMetadata): void {
-  if (import.meta.hot) {
-    localStorage.setItem(`sde-check-selected-bundle-${side}`, JSON.stringify(metadata))
-  }
-}
-
-// For local development mode, use the bundle metadata saved in `LocalStorage`
-let savedBundleMetadataL: BundleMetadata | undefined
-let savedBundleMetadataR: BundleMetadata | undefined
 // The following value will be injected by `vite-config-for-report.ts`
 const bundlesPath = './bundles/**/*.txt'
-if (import.meta.hot && bundlesPath) {
-  // Restore the previously selected bundles (from before the page was reloaded)
-  savedBundleMetadataL = loadBundleMetadata('left')
-  savedBundleMetadataR = loadBundleMetadata('right')
-}
 
 async function initForProduction(): Promise<void> {
   // For "production" builds, load the summary from a JSON file that
@@ -87,56 +62,27 @@ async function initForProduction(): Promise<void> {
 }
 
 async function initForLocal(): Promise<void> {
-  async function createBundle(
-    bundleMetadata: BundleMetadata | undefined,
-    side: 'left' | 'right'
-  ): Promise<BundleResult> {
-    if (bundleMetadata === undefined) {
-      bundleMetadata = {
-        name: 'current',
-        url: 'current'
-      }
-    }
-
-    if (bundleMetadata.url.startsWith('http') || bundleMetadata.url.startsWith('file://')) {
-      // Load bundles (both local and remote) via the Vite dev server
-      try {
-        console.log(`Loading bundle for ${side} side: name=${bundleMetadata.name} url=${bundleMetadata.url}`)
-        const result = await loadBundle(bundleMetadata)
-        if (result) {
-          return result
-        } else {
-          console.error(`ERROR: Failed to load bundle ${bundleMetadata.name}; will use "current" bundle instead`)
-        }
-      } catch (e) {
-        console.error(
-          `ERROR: Failed to load bundle from ${bundleMetadata.url}; will use "current" bundle instead. Cause:`,
-          e
-        )
-      }
-    }
-
-    // Load the "current" bundle if it was requested or if the other loading
-    // processes failed
-    console.log(`Loading current bundle for ${side} side`)
-    const bundle = createCurrentBundle()
-    return {
-      bundle,
-      bundleName: 'current',
-      bundleUrl: 'current'
-    }
+  const resolveBundleDeps = {
+    loadBundle,
+    createCurrentBundle
   }
+
+  // Restore the bundles that were previously selected (from before the page was reloaded).
+  // Note that we read these each time the app is initialized, since `resolveBundle` will
+  // clear a saved selection if the bundle cannot be loaded.
+  const savedBundleMetadataL = bundlesPath ? loadBundleMetadata('left') : undefined
+  const savedBundleMetadataR = bundlesPath ? loadBundleMetadata('right') : undefined
 
   const {
     bundle: bundleL,
     bundleName: bundleNameL,
     bundleUrl: bundleUrlL
-  } = await createBundle(savedBundleMetadataL, 'left')
+  } = await resolveBundle('left', savedBundleMetadataL, resolveBundleDeps)
   const {
     bundle: bundleR,
     bundleName: bundleNameR,
     bundleUrl: bundleUrlR
-  } = await createBundle(savedBundleMetadataR, 'right')
+  } = await resolveBundle('right', savedBundleMetadataR, resolveBundleDeps)
 
   // Prepare the model check/comparison configuration
   const configInitOptions: ConfigInitOptions = {
@@ -197,13 +143,9 @@ if (import.meta.hot) {
   document.addEventListener('sde-check-bundle', e => {
     // Change the selected bundle
     const info = (e as CustomEvent).detail
-    const bundleMetadata = { name: info.name, url: info.url }
-    if (info.side === 'left') {
-      saveBundleMetadata('left', bundleMetadata)
-      savedBundleMetadataL = bundleMetadata
-    } else if (info.side === 'right') {
-      saveBundleMetadata('right', bundleMetadata)
-      savedBundleMetadataR = bundleMetadata
+    const bundleMetadata: BundleMetadata = { name: info.name, url: info.url }
+    if (info.side === 'left' || info.side === 'right') {
+      saveBundleMetadata(info.side, bundleMetadata)
     }
 
     // Reinitialize using the chosen bundles

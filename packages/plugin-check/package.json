@@ -5,7 +5,8 @@
     "dist/**",
     "template-bundle/**",
     "template-report/**",
-    "template-tests/**"
+    "template-tests/**",
+    "!**/*.spec.ts"
   ],
   "type": "module",
   "module": "dist/index.js",
@@ -22,9 +23,9 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
-    "test:watch": "echo No tests yet",
-    "test:ci": "echo No tests yet",
+    "test": "vitest run",
+    "test:watch": "vitest --hideSkippedTests",
+    "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
     "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
