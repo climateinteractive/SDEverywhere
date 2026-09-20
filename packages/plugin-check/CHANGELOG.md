@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.3.38](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.37...plugin-check-v0.3.38) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Bug Fixes
+
+* clear saved bundle selection in model-check report when bundle fails to load ([#922](https://github.com/climateinteractive/SDEverywhere/issues/922)) ([82dcb13](https://github.com/climateinteractive/SDEverywhere/commit/82dcb13acb4e5c7d34417f3df5d41aef24f4825e)), closes [#920](https://github.com/climateinteractive/SDEverywhere/issues/920)
+* remove leftover glob machinery from model-check report template ([#923](https://github.com/climateinteractive/SDEverywhere/issues/923)) ([86a99d7](https://github.com/climateinteractive/SDEverywhere/commit/86a99d76199af6ebb3be2f6783f3c5d3960fa9b0)), closes [#921](https://github.com/climateinteractive/SDEverywhere/issues/921)
+* replace threads.js dependency in runtime-async package with custom RPC layer ([#918](https://github.com/climateinteractive/SDEverywhere/issues/918)) ([45219c0](https://github.com/climateinteractive/SDEverywhere/commit/45219c0b8dd4701ef30bc13f1fb3847429dfb4e4)), closes [#913](https://github.com/climateinteractive/SDEverywhere/issues/913)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.14 to ^0.1.15
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.26 to ^0.2.27
+    * @sdeverywhere/runtime bumped from ^0.2.10 to ^0.2.11
+    * @sdeverywhere/runtime-async bumped from ^0.2.10 to ^0.2.11
+  * peerDependencies
+    * @sdeverywhere/build bumped from ^0.3.10 to ^0.3.18
+
 ## [0.3.37](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.36...plugin-check-v0.3.37) (2026-08-27)
 
 
