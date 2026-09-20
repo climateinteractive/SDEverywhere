@@ -113,8 +113,10 @@ export function localBundlesPlugin(
           // Send the source code back to client
           client.send('load-bundle-success', { name, url, sourceCode })
         } catch (error) {
-          // Send error message back to client
-          console.error(`[sde-local-bundles] Failed to load bundle:`, error)
+          // Send error message back to client.  Note that we log only the error message
+          // (along with the name and URL of the bundle) instead of the raw error object,
+          // since the latter can produce a long and unhelpful stack trace in the console.
+          console.error(`[sde-local-bundles] Failed to load bundle '${name}' from ${url}: ${error.message}`)
           client.send('load-bundle-error', { name, url, error: error.message })
         }
       })
