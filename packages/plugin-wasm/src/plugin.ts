@@ -78,6 +78,25 @@ Module["modelListing"] = ${modelListingJs}
     // Generate the Wasm binary (wrapped in a JS file)
     await buildWasm(context, context.config.prepDir, stagedOutputJsPath, this.options)
 
+    // If requested, add a staged file entry for the separate Wasm binary (which `emcc`
+    // writes next to the JS file)
+    const outputWasmPath = this.options?.outputWasmPath
+    if (outputWasmPath !== undefined) {
+      const stagedOutputWasmFile = stagedOutputJsFile.replace(/\.js$/, '.wasm')
+      const stagedOutputWasmPath = context.prepareStagedFile(
+        'model',
+        stagedOutputWasmFile,
+        dirname(outputWasmPath),
+        basename(outputWasmPath)
+      )
+      if (!existsSync(stagedOutputWasmPath)) {
+        throw new Error(
+          'The `outputWasmPath` option is defined, but emcc did not write a separate Wasm binary ' +
+            '(make sure that `emccArgs` does not include `-sSINGLE_FILE=1`)'
+        )
+      }
+    }
+
     // context.log('info', '  Done!')
 
     return content
@@ -85,7 +104,8 @@ Module["modelListing"] = ${modelListingJs}
 }
 
 /**
- * Generate a JS file (containing an embedded Wasm blob) from the C file.
+ * Generate a JS file (containing an embedded Wasm blob, unless `outputWasmPath` is defined)
+ * from the C file.
  */
 async function buildWasm(
   context: BuildContext,
@@ -151,7 +171,7 @@ async function buildWasm(
     }
     normalizeEmccArgs(argsArray).forEach(addArg)
   } else {
-    defaultEmccArgs().forEach(addArg)
+    defaultEmccArgs({ singleFile: options?.outputWasmPath === undefined }).forEach(addArg)
   }
 
   // context.log('verbose', `    emcc args: ${args}`)

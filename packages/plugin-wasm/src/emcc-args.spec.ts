@@ -22,6 +22,20 @@ describe('defaultEmccArgs', () => {
     ])
   })
 
+  it('should return the same arguments when `singleFile` is true', () => {
+    expect(defaultEmccArgs({ singleFile: true })).toEqual(defaultEmccArgs())
+  })
+
+  it('should omit `SINGLE_FILE` and allow `wasmBinary` to be passed in when `singleFile` is false', () => {
+    const args = defaultEmccArgs({ singleFile: false })
+    expect(args).not.toContain('-sSINGLE_FILE=1')
+    expect(args).toContain(`-sINCOMING_MODULE_JS_API=['wasmBinary']`)
+    // All other arguments should be the same as the defaults
+    expect(args.filter(arg => !arg.startsWith('-sINCOMING_MODULE_JS_API'))).toEqual(
+      defaultEmccArgs().filter(arg => arg !== '-sSINGLE_FILE=1')
+    )
+  })
+
   it('should use the no-space notation for each `-s` argument', () => {
     for (const arg of defaultEmccArgs()) {
       expect(arg).not.toMatch(/\s/)
