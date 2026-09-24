@@ -295,6 +295,48 @@ describe.each([
   // it('should throw an error if runModel is called while another is already in progress')
 })
 
+describe('spawnAsyncModelRunner with init args', () => {
+  it('should pass the init args (including transferred objects) to the worker init function', async () => {
+    // The worker derives the output values from the init args that it receives
+    const workerSource = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const values = new Float64Array(initArgs.buffer)
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1', '_output_2'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([...values, initArgs.offset, initArgs.offset + 1, initArgs.offset + 2])
+    }
+  })
+})
+
+})()
+`
+
+    const buffer = new Float64Array([10, 11, 12]).buffer
+    const runner = await spawnAsyncModelRunner(
+      { source: workerSource },
+      { initArgs: { buffer, offset: 20 }, transfer: [buffer] }
+    )
+    try {
+      // The buffer should have been transferred (not copied) to the worker
+      expect(buffer.byteLength).toBe(0)
+
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 20), p(2001, 21), p(2002, 22)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+})
+
 describe('spawnAsyncModelRunner initialization failure', () => {
   it('should terminate the worker when model initialization fails', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'sde-runner-'))

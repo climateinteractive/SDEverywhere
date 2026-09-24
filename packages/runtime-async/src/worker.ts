@@ -8,7 +8,7 @@ import { serveModelWorker } from './worker-rpc/model-worker-rpc'
 import { parentWorkerPort } from './worker-rpc/parent-port'
 
 /** @hidden */
-let initGeneratedModel: () => Promise<GeneratedModel>
+let initGeneratedModel: (initArgs?: unknown) => Promise<GeneratedModel>
 
 /** @hidden */
 let runnableModel: RunnableModel
@@ -22,13 +22,13 @@ const params = new BufferedRunModelParams()
 
 /** @hidden */
 const modelWorker: ModelWorkerMethods = {
-  async initModel(): Promise<InitResult> {
+  async initModel(initArgs?: unknown): Promise<InitResult> {
     if (runnableModel) {
       throw new Error('RunnableModel was already initialized')
     }
 
     // Initialize the runnable model
-    const generatedModel = await initGeneratedModel()
+    const generatedModel = await initGeneratedModel(initArgs)
     runnableModel = createRunnableModel(generatedModel)
 
     // Transfer the model metadata to the runner
@@ -65,12 +65,16 @@ const modelWorker: ModelWorkerMethods = {
  * sending the outputs back to the main thread.
  *
  * @param init The function that initializes the generated model instance that
- * is used in the worker thread.
+ * is used in the worker thread.  This is passed the `initArgs` value (if any) that
+ * was passed to `spawnAsyncModelRunner` in the main thread.  Note that the function
+ * exported by an Emscripten-generated Wasm model can be used directly, in which case
+ * `initArgs` (if defined) is used as the Emscripten module argument (for example,
+ * `{ wasmBinary }`).
  */
-export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
+export function exposeModelWorker<InitArgs = unknown>(init: (initArgs?: InitArgs) => Promise<GeneratedModel>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
-  initGeneratedModel = init
+  initGeneratedModel = init as (initArgs?: unknown) => Promise<GeneratedModel>
 
   // Handle the requests that arrive from the runner in the main thread
   serveModelWorker(parentWorkerPort(), modelWorker)

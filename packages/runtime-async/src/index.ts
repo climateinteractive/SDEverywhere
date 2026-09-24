@@ -2,6 +2,7 @@
 
 export type { WorkerSpec } from './worker-rpc/spawn-worker'
 
+export type { AsyncModelRunnerOptions } from './runner'
 export { spawnAsyncModelRunner } from './runner'
 
 export { exposeModelWorker } from './worker'

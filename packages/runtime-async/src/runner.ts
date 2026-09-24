@@ -12,6 +12,35 @@ import type { WorkerHandle } from './worker-rpc/worker-port'
 export type { WorkerSpec }
 
 /**
+ * Options for {@link spawnAsyncModelRunner}.
+ */
+export interface AsyncModelRunnerOptions {
+  /**
+   * A value that is passed to the model initialization function in the worker (the
+   * function that was passed to `exposeModelWorker`).  This must be compatible with the
+   * structured clone algorithm.
+   *
+   * For example, a Wasm model that was compiled without embedding the Wasm binary in the
+   * generated JS file (i.e., without `-sSINGLE_FILE=1`) can be initialized by passing the
+   * binary (as an `ArrayBuffer`) to the Emscripten-generated module factory function:
+   * ```js
+   * const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
+   * const runner = await spawnAsyncModelRunner(
+   *   { path: './worker.js' },
+   *   { initArgs: { wasmBinary }, transfer: [wasmBinary] }
+   * )
+   * ```
+   */
+  initArgs?: unknown
+  /**
+   * The objects in `initArgs` (e.g., an `ArrayBuffer`) whose ownership should be
+   * transferred to the worker instead of being copied.  Note that transferred objects
+   * are no longer usable in the calling context.
+   */
+  transfer?: Transferable[]
+}
+
+/**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker
  * (a Web Worker when running in a browser environment, or a worker thread
  * when running in a Node.js environment).
@@ -45,15 +74,23 @@ export type { WorkerSpec }
  *
  * @param workerSpec Either a `path` to the worker JavaScript file, or the `source`
  * containing the full JavaScript source of the worker.
+ * @param options Additional options, such as the arguments to pass to the model
+ * initialization function in the worker.
  */
-export async function spawnAsyncModelRunner(workerSpec: WorkerSpec): Promise<ModelRunner> {
-  return spawnAsyncModelRunnerWithWorker(spawnWorker(workerSpec))
+export async function spawnAsyncModelRunner(
+  workerSpec: WorkerSpec,
+  options?: AsyncModelRunnerOptions
+): Promise<ModelRunner> {
+  return spawnAsyncModelRunnerWithWorker(spawnWorker(workerSpec), options)
 }
 
 /**
  * @hidden For internal use only
  */
-async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<ModelRunner> {
+async function spawnAsyncModelRunnerWithWorker(
+  worker: WorkerHandle,
+  options?: AsyncModelRunnerOptions
+): Promise<ModelRunner> {
   // Create the client that communicates with the `ModelWorker` running in the worker
   const client = createModelWorkerClient(worker)
 
@@ -62,7 +99,7 @@ async function spawnAsyncModelRunnerWithWorker(worker: WorkerHandle): Promise<Mo
   // released before propagating the original error.
   let initResult: InitResult
   try {
-    initResult = await client.initModel()
+    initResult = await client.initModel(options?.initArgs, options?.transfer)
   } catch (error) {
     try {
       await worker.terminate()
