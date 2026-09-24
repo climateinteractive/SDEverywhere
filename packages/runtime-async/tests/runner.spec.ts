@@ -295,23 +295,23 @@ describe.each([
   // it('should throw an error if runModel is called while another is already in progress')
 })
 
-describe('spawnAsyncModelRunner with init args', () => {
-  it('should pass the init args (including transferred objects) to the worker init function', async () => {
-    // The worker derives the output values from the init args that it receives
-    const workerSource = `\
+describe('spawnAsyncModelRunner with wasmBinary', () => {
+  // The worker derives the output values from the `wasmBinary` that it receives, which
+  // stands in for a real Wasm binary being handed to an Emscripten module factory
+  const workerWithBinaryDerivedOutputs = `\
 ;(async () => {
 
 const { MockWasmModule } = await import('@sdeverywhere/runtime')
 const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
 
 exposeModelWorker(async initArgs => {
-  const values = new Float64Array(initArgs.buffer)
+  const values = new Float64Array(initArgs.wasmBinary)
   return new MockWasmModule({
     initialTime: 2000,
     finalTime: 2002,
     outputVarIds: ['_output_1', '_output_2'],
     onRunModel: (_inputs, outputs) => {
-      outputs.set([...values, initArgs.offset, initArgs.offset + 1, initArgs.offset + 2])
+      outputs.set([...values, ...values])
     }
   })
 })
@@ -319,18 +319,67 @@ exposeModelWorker(async initArgs => {
 })()
 `
 
-    const buffer = new Float64Array([10, 11, 12]).buffer
-    const runner = await spawnAsyncModelRunner(
-      { source: workerSource },
-      { initArgs: { buffer, offset: 20 }, transfer: [buffer] }
-    )
+  it('should pass the Wasm binary to the worker init function', async () => {
+    const wasmBinary = new Float64Array([10, 11, 12]).buffer
+    const runner = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
     try {
-      // The buffer should have been transferred (not copied) to the worker
-      expect(buffer.byteLength).toBe(0)
-
       const outputs = await runner.runModel([], runner.createOutputs())
-      expect(outputs.getSeriesForVar('_output_1').points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
-      expect(outputs.getSeriesForVar('_output_2').points).toEqual([p(2000, 20), p(2001, 21), p(2002, 22)])
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+      expect(outputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+
+  it('should copy the Wasm binary so that it can be reused after the runner is spawned', async () => {
+    const wasmBinary = new Float64Array([10, 11, 12]).buffer
+
+    // Spawn one runner, then spawn a second one using the same binary; this only works
+    // if the binary is copied (and not transferred) when it is sent to the worker
+    const runner1 = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
+    try {
+      // The binary should not have been detached
+      expect(wasmBinary.byteLength).toBe(24)
+
+      const runner2 = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
+      try {
+        const outputs = await runner2.runModel([], runner2.createOutputs())
+        expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+      } finally {
+        await runner2.terminate()
+      }
+    } finally {
+      await runner1.terminate()
+    }
+  })
+
+  it('should not pass any init args to the worker init function when wasmBinary is undefined', async () => {
+    // The worker reports whether it received an init args value
+    const workerSource = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const received = initArgs === undefined ? 1 : 2
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([received, received, received])
+    }
+  })
+})
+
+})()
+`
+
+    const runner = await spawnAsyncModelRunner({ source: workerSource })
+    try {
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 1), p(2001, 1), p(2002, 1)])
     } finally {
       await runner.terminate()
     }

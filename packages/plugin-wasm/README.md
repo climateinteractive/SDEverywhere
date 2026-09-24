@@ -106,8 +106,8 @@ wasmPlugin({
 
 ### Writing the Wasm binary to a separate file
 
-By default, the Wasm binary is embedded in the generated JS file as a base64-encoded string.
-Use the `outputWasmPath` option to write the Wasm binary to a separate `.wasm` file instead.
+By default, the Wasm binary is embedded in the generated JS file as a base64-encoded string, as described in the previous section.
+You can use the `outputWasmPath` option to write the Wasm binary to a separate `.wasm` file instead.
 This makes the download smaller (base64 encoding adds about 33% before compression), and allows the browser to compile the binary while it is being downloaded:
 
 ```js
@@ -127,13 +127,10 @@ const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
 const generatedModel = await loadGeneratedModel({ wasmBinary })
 ```
 
-When running the model in a worker, pass the binary to the worker using the `initArgs` option of `spawnAsyncModelRunner` (from `@sdeverywhere/runtime-async`):
+When running the model in a worker, pass the binary to the worker using the `wasmBinary` option of `spawnAsyncModelRunner` (from `@sdeverywhere/runtime-async`), and the worker will take care of passing it along to the generated model:
 
 ```js
-const runner = await spawnAsyncModelRunner(
-  { path: './worker.js' },
-  { initArgs: { wasmBinary }, transfer: [wasmBinary] }
-)
+const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
 ```
 
 ### Configuring the Emscripten SDK location

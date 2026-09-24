@@ -40,7 +40,7 @@ exits unexpectedly.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `workerSpec` | [`WorkerSpec`](../type-aliases/WorkerSpec.md) | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
-| `options?` | [`AsyncModelRunnerOptions`](../interfaces/AsyncModelRunnerOptions.md) | Additional options, such as the arguments to pass to the model initialization function in the worker. |
+| `options?` | [`AsyncModelRunnerOptions`](../interfaces/AsyncModelRunnerOptions.md) | Additional options, such as the Wasm binary to use when the model was compiled without embedding the binary in the generated JS file. |
 
 ## Returns
 

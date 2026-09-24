@@ -6,31 +6,19 @@ Options for [spawnAsyncModelRunner](../functions/spawnAsyncModelRunner.md).
 
 ## Properties
 
-### initArgs?
+### wasmBinary?
 
-> `optional` **initArgs?**: `unknown`
+> `optional` **wasmBinary?**: `ArrayBuffer`
 
-A value that is passed to the model initialization function in the worker (the
-function that was passed to `exposeModelWorker`).  This must be compatible with the
-structured clone algorithm.
-
-For example, a Wasm model that was compiled without embedding the Wasm binary in the
-generated JS file (i.e., without `-sSINGLE_FILE=1`) can be initialized by passing the
-binary (as an `ArrayBuffer`) to the Emscripten-generated module factory function:
+The Wasm binary for a model that was compiled without embedding the binary in the
+generated JS file (i.e., without `-sSINGLE_FILE=1`), for example when the `plugin-wasm`
+`outputWasmPath` option is used.  The binary is sent to the worker, which passes it to
+the Emscripten-generated module factory function:
 ```js
 const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
-const runner = await spawnAsyncModelRunner(
-  { path: './worker.js' },
-  { initArgs: { wasmBinary }, transfer: [wasmBinary] }
-)
+const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
 ```
 
-***
-
-### transfer?
-
-> `optional` **transfer?**: `Transferable`[]
-
-The objects in `initArgs` (e.g., an `ArrayBuffer`) whose ownership should be
-transferred to the worker instead of being copied.  Note that transferred objects
-are no longer usable in the calling context.
+Note that the binary is copied (not transferred) when it is sent to the worker, so it
+remains usable in the calling context, for example if it is used to spawn more than
+one runner.

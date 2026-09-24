@@ -44,11 +44,10 @@ export interface ModelWorkerClient {
    * Initialize the model and return its metadata.
    *
    * @param args The arguments to pass to the worker's model initialization function.  These
-   * must be compatible with the structured clone algorithm.
-   * @param transferables The objects in `args` (e.g., an `ArrayBuffer`) whose ownership
-   * should be transferred to the worker instead of being copied.
+   * must be compatible with the structured clone algorithm, and are copied (not transferred)
+   * when they are sent to the worker.
    */
-  initModel(args?: unknown, transferables?: Transferable[]): Promise<InitResult>
+  initModel(args?: unknown): Promise<InitResult>
   /** Run the model using the parameters encoded in the given buffer. */
   runModel(buffer: ArrayBuffer): Promise<ArrayBuffer>
   /** Make the client terminal and reject its pending request. */
@@ -150,9 +149,9 @@ export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
   }
 
   return {
-    async initModel(args?: unknown, transferables?: Transferable[]): Promise<InitResult> {
+    async initModel(args?: unknown): Promise<InitResult> {
       const request: ModelWorkerRequest = args !== undefined ? { kind: 'init', args } : { kind: 'init' }
-      const response = await send(request, transferables)
+      const response = await send(request)
       if (response.kind !== 'initialized') {
         throw unexpectedResponse(response.kind, 'model initialization')
       }

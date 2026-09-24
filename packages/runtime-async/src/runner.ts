@@ -3,6 +3,7 @@
 import type { ModelRunner } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
 
+import type { ModelInitArgs } from './model-init-args'
 import { createModelWorkerClient } from './worker-rpc/model-worker-rpc'
 import type { InitResult } from './worker-rpc/model-worker-rpc'
 import type { WorkerSpec } from './worker-rpc/spawn-worker'
@@ -16,28 +17,20 @@ export type { WorkerSpec }
  */
 export interface AsyncModelRunnerOptions {
   /**
-   * A value that is passed to the model initialization function in the worker (the
-   * function that was passed to `exposeModelWorker`).  This must be compatible with the
-   * structured clone algorithm.
-   *
-   * For example, a Wasm model that was compiled without embedding the Wasm binary in the
-   * generated JS file (i.e., without `-sSINGLE_FILE=1`) can be initialized by passing the
-   * binary (as an `ArrayBuffer`) to the Emscripten-generated module factory function:
+   * The Wasm binary for a model that was compiled without embedding the binary in the
+   * generated JS file (i.e., without `-sSINGLE_FILE=1`), for example when the `plugin-wasm`
+   * `outputWasmPath` option is used.  The binary is sent to the worker, which passes it to
+   * the Emscripten-generated module factory function:
    * ```js
    * const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
-   * const runner = await spawnAsyncModelRunner(
-   *   { path: './worker.js' },
-   *   { initArgs: { wasmBinary }, transfer: [wasmBinary] }
-   * )
+   * const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
    * ```
+   *
+   * Note that the binary is copied (not transferred) when it is sent to the worker, so it
+   * remains usable in the calling context, for example if it is used to spawn more than
+   * one runner.
    */
-  initArgs?: unknown
-  /**
-   * The objects in `initArgs` (e.g., an `ArrayBuffer`) whose ownership should be
-   * transferred to the worker instead of being copied.  Note that transferred objects
-   * are no longer usable in the calling context.
-   */
-  transfer?: Transferable[]
+  wasmBinary?: ArrayBuffer
 }
 
 /**
@@ -74,8 +67,8 @@ export interface AsyncModelRunnerOptions {
  *
  * @param workerSpec Either a `path` to the worker JavaScript file, or the `source`
  * containing the full JavaScript source of the worker.
- * @param options Additional options, such as the arguments to pass to the model
- * initialization function in the worker.
+ * @param options Additional options, such as the Wasm binary to use when the model was
+ * compiled without embedding the binary in the generated JS file.
  */
 export async function spawnAsyncModelRunner(
   workerSpec: WorkerSpec,
@@ -94,12 +87,20 @@ async function spawnAsyncModelRunnerWithWorker(
   // Create the client that communicates with the `ModelWorker` running in the worker
   const client = createModelWorkerClient(worker)
 
+  // Build the arguments for the model initialization function in the worker.  Note that
+  // these are left undefined when there is nothing to pass, so that an initialization
+  // function that takes no arguments is unaffected.
+  let initArgs: ModelInitArgs
+  if (options?.wasmBinary !== undefined) {
+    initArgs = { wasmBinary: options.wasmBinary }
+  }
+
   // Wait for the worker to initialize the model (in the worker thread). If
   // initialization fails, make sure the worker and any associated resources are
   // released before propagating the original error.
   let initResult: InitResult
   try {
-    initResult = await client.initModel(options?.initArgs, options?.transfer)
+    initResult = await client.initModel(initArgs)
   } catch (error) {
     try {
       await worker.terminate()
