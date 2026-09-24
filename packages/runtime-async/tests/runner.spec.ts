@@ -353,6 +353,44 @@ exposeModelWorker(async initArgs => {
     }
   })
 
+  it('should accept the Wasm binary as a Uint8Array (including a view into a larger buffer)', async () => {
+    // This worker reads the binary the same way that an Emscripten module factory does
+    // (using `new Uint8Array(wasmBinary)`), so that it works for both an `ArrayBuffer`
+    // and a `Uint8Array`
+    const workerSource = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const bytes = new Uint8Array(initArgs.wasmBinary)
+  const values = new Float64Array(bytes.slice().buffer)
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([...values])
+    }
+  })
+})
+
+})()
+`
+
+    // Create a view that covers only the middle of a larger buffer
+    const largerBuffer = new Float64Array([1, 10, 11, 12, 2]).buffer
+    const wasmBinary = new Uint8Array(largerBuffer, 8, 24)
+    const runner = await spawnAsyncModelRunner({ source: workerSource }, { wasmBinary })
+    try {
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+
   it('should not pass any init args to the worker init function when wasmBinary is undefined', async () => {
     // The worker reports whether it received an init args value
     const workerSource = `\

@@ -8,7 +8,7 @@ Options for [spawnAsyncModelRunner](../functions/spawnAsyncModelRunner.md).
 
 ### wasmBinary?
 
-> `optional` **wasmBinary?**: `ArrayBuffer`
+> `optional` **wasmBinary?**: `ArrayBuffer` \| `Uint8Array`
 
 The Wasm binary for a model that was compiled without embedding the binary in the
 generated JS file (i.e., without `-sSINGLE_FILE=1`), for example when the `plugin-wasm`
@@ -19,6 +19,8 @@ const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
 const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
 ```
 
-Note that the binary is copied (not transferred) when it is sent to the worker, so it
-remains usable in the calling context, for example if it is used to spawn more than
-one runner.
+The binary can be provided as an `ArrayBuffer` or as a `Uint8Array` (for example, the
+`Buffer` returned by `readFileSync` in Node.js).  Note that the binary is copied (not
+transferred) when it is sent to the worker, so it remains usable in the calling
+context, for example if it is used to spawn more than one runner.  (If a `Uint8Array`
+is a view into a larger buffer, the entire underlying buffer is copied.)

@@ -12,7 +12,8 @@
 export interface ModelInitArgs {
   /**
    * The Wasm binary, if the model was compiled without embedding the binary in the
-   * generated JS file (i.e., without `-sSINGLE_FILE=1`).
+   * generated JS file (i.e., without `-sSINGLE_FILE=1`).  This can be an `ArrayBuffer`
+   * or a `Uint8Array`, both of which are accepted by the Emscripten module factory.
    */
-  wasmBinary?: ArrayBuffer
+  wasmBinary?: ArrayBuffer | Uint8Array
 }

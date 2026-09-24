@@ -26,11 +26,13 @@ export interface AsyncModelRunnerOptions {
    * const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
    * ```
    *
-   * Note that the binary is copied (not transferred) when it is sent to the worker, so it
-   * remains usable in the calling context, for example if it is used to spawn more than
-   * one runner.
+   * The binary can be provided as an `ArrayBuffer` or as a `Uint8Array` (for example, the
+   * `Buffer` returned by `readFileSync` in Node.js).  Note that the binary is copied (not
+   * transferred) when it is sent to the worker, so it remains usable in the calling
+   * context, for example if it is used to spawn more than one runner.  (If a `Uint8Array`
+   * is a view into a larger buffer, the entire underlying buffer is copied.)
    */
-  wasmBinary?: ArrayBuffer
+  wasmBinary?: ArrayBuffer | Uint8Array
 }
 
 /**
@@ -90,7 +92,7 @@ async function spawnAsyncModelRunnerWithWorker(
   // Build the arguments for the model initialization function in the worker.  Note that
   // these are left undefined when there is nothing to pass, so that an initialization
   // function that takes no arguments is unaffected.
-  let initArgs: ModelInitArgs
+  let initArgs: ModelInitArgs | undefined
   if (options?.wasmBinary !== undefined) {
     initArgs = { wasmBinary: options.wasmBinary }
   }
