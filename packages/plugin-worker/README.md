@@ -94,6 +94,23 @@ export async function createModelRunner() {
 }
 ```
 
+If you are not using Vite (or if you are building a library with a bundler that doesn't support `?raw`), use the `outputSourceModulePaths` option instead.
+This generates a module that exports the worker source as a string, so it can be imported like any other module:
+
+```js
+workerPlugin({
+  outputSourceModulePaths: [corePath('src', 'model', 'generated', 'worker-source.ts')]
+})
+```
+
+```js
+import workerSource from './generated/worker-source'
+
+export async function createModelRunner() {
+  return spawnAsyncModelRunner({ source: workerSource })
+}
+```
+
 Alternatively, if you serve `worker.js` as a static asset, you can spawn it by path instead:
 
 ```js
