@@ -111,10 +111,11 @@ export async function config() {
       // containing the Wasm model
       genFormat === 'c' && wasmPlugin(),
 
-      // Generate a `worker.js` file that runs the model asynchronously on a
-      // worker thread for improved responsiveness
+      // Generate a `worker-source.ts` module that exports the source code of the
+      // worker that runs the model asynchronously on a worker thread for improved
+      // responsiveness
       workerPlugin({
-        outputPaths: [corePath('src', 'model', 'generated', 'worker.js')]
+        outputSourceModulePaths: [corePath('src', 'model', 'generated', 'worker-source.ts')]
       }),
 
       // Build or serve the model-check report
