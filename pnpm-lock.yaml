@@ -732,7 +732,7 @@ importers:
         specifier: ^0.2.11
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.11
+        specifier: ^0.2.12
         version: link:../runtime-async
       assert-never:
         specifier: ^1.2.1
@@ -827,7 +827,7 @@ importers:
         specifier: ^0.2.11
         version: link:../runtime
       '@sdeverywhere/runtime-async':
-        specifier: ^0.2.11
+        specifier: ^0.2.12
         version: link:../runtime-async
       vite:
         specifier: ^8.3.0
