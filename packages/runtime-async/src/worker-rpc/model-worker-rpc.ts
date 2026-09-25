@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
+import type { ModelInitArgs } from '../model-init-args'
 import type { WorkerHandle, WorkerPort } from './worker-port'
 
 /** The model metadata returned after the worker initializes the model. */
@@ -18,7 +19,7 @@ export interface InitResult {
 }
 
 /** A request sent from the runner to the model worker. */
-type ModelWorkerRequest = { kind: 'init'; args?: unknown } | { kind: 'run'; buffer: ArrayBuffer }
+type ModelWorkerRequest = { kind: 'init'; args?: ModelInitArgs } | { kind: 'run'; buffer: ArrayBuffer }
 
 /** A response sent from the model worker to the runner. */
 type ModelWorkerResponse =
@@ -33,7 +34,7 @@ export interface ModelWorkerMethods {
    *
    * @param args The arguments that were passed by the runner, if any.
    */
-  initModel(args?: unknown): InitResult | Promise<InitResult>
+  initModel(args?: ModelInitArgs): InitResult | Promise<InitResult>
   /** Run the model using the parameters encoded in the given buffer. */
   runModel(buffer: ArrayBuffer): ArrayBuffer | Promise<ArrayBuffer>
 }
@@ -44,10 +45,9 @@ export interface ModelWorkerClient {
    * Initialize the model and return its metadata.
    *
    * @param args The arguments to pass to the worker's model initialization function.  These
-   * must be compatible with the structured clone algorithm, and are copied (not transferred)
-   * when they are sent to the worker.
+   * are copied (not transferred) when they are sent to the worker.
    */
-  initModel(args?: unknown): Promise<InitResult>
+  initModel(args?: ModelInitArgs): Promise<InitResult>
   /** Run the model using the parameters encoded in the given buffer. */
   runModel(buffer: ArrayBuffer): Promise<ArrayBuffer>
   /** Make the client terminal and reject its pending request. */
@@ -149,7 +149,7 @@ export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
   }
 
   return {
-    async initModel(args?: unknown): Promise<InitResult> {
+    async initModel(args?: ModelInitArgs): Promise<InitResult> {
       const request: ModelWorkerRequest = args !== undefined ? { kind: 'init', args } : { kind: 'init' }
       const response = await send(request)
       if (response.kind !== 'initialized') {
