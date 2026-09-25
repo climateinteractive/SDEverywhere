@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.16...plugin-worker-v0.2.17) (2026-09-25)
+
+
+### Features
+
+* add option to plugin-worker for generating a module that exports the worker source ([#928](https://github.com/climateinteractive/SDEverywhere/issues/928)) ([38ea3f8](https://github.com/climateinteractive/SDEverywhere/commit/38ea3f8363abc50f73f54c8718ade8512ba2b57a)), closes [#927](https://github.com/climateinteractive/SDEverywhere/issues/927)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime-async bumped from ^0.2.11 to ^0.2.12
+
 ## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.15...plugin-worker-v0.2.16) (2026-09-20)
 
 

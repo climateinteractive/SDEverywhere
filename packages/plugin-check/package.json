@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.38",
+  "version": "0.3.39",
   "files": [
     "dist/**",
     "template-bundle/**",
@@ -35,7 +35,7 @@
     "@sdeverywhere/check-core": "^0.1.15",
     "@sdeverywhere/check-ui-shell": "^0.2.27",
     "@sdeverywhere/runtime": "^0.2.11",
-    "@sdeverywhere/runtime-async": "^0.2.11",
+    "@sdeverywhere/runtime-async": "^0.2.12",
     "assert-never": "^1.2.1",
     "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",
