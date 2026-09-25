@@ -17,11 +17,15 @@ a `worker.js` file will be written to the configured `prepDir`.
 
 > `optional` **outputSourceModulePaths?**: `string`[]
 
-The destination paths for generated JS or TS module files that export the source
-code of the worker (as a string) as the default export, for example:
+The destination paths for the generated modules that export the worker source code
+(as a string) as the default export, for example:
 ```js
   export default "(function() { ... })()"
 ```
+
+One module is written per path, with the same content in each case.  That content is
+valid as either a JavaScript or a TypeScript module, so use whichever extension suits
+the project that imports it (for example, `worker-source.ts` for a TypeScript package).
 
 This is useful for spawning the worker from its source code (for example, using
 `spawnAsyncModelRunner({ source })` from `@sdeverywhere/runtime-async`), since the
