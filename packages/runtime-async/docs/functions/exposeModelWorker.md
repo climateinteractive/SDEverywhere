@@ -13,7 +13,7 @@ sending the outputs back to the main thread.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `init` | () => `Promise`\<`GeneratedModel`\> | The function that initializes the generated model instance that is used in the worker thread. |
+| `init` | (`initArgs?`) => `Promise`\<`GeneratedModel`\> | The function that initializes the generated model instance that is used in the worker thread. This is passed the [ModelInitArgs](../interfaces/ModelInitArgs.md) derived from the options (if any) that were passed to `spawnAsyncModelRunner` in the main thread, or undefined if there are none. Note that the factory function exported by an Emscripten-generated Wasm model accepts those arguments as its module argument, so it can be passed here directly. |
 
 ## Returns
 

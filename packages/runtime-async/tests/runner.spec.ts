@@ -295,6 +295,135 @@ describe.each([
   // it('should throw an error if runModel is called while another is already in progress')
 })
 
+describe('spawnAsyncModelRunner with wasmBinary', () => {
+  // The worker derives the output values from the `wasmBinary` that it receives, which
+  // stands in for a real Wasm binary being handed to an Emscripten module factory
+  const workerWithBinaryDerivedOutputs = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const values = new Float64Array(initArgs.wasmBinary)
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1', '_output_2'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([...values, ...values])
+    }
+  })
+})
+
+})()
+`
+
+  it('should pass the Wasm binary to the worker init function', async () => {
+    const wasmBinary = new Float64Array([10, 11, 12]).buffer
+    const runner = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
+    try {
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+      expect(outputs.getSeriesForVar('_output_2')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+
+  it('should copy the Wasm binary so that it can be reused after the runner is spawned', async () => {
+    const wasmBinary = new Float64Array([10, 11, 12]).buffer
+
+    // Spawn one runner, then spawn a second one using the same binary; this only works
+    // if the binary is copied (and not transferred) when it is sent to the worker
+    const runner1 = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
+    try {
+      // The binary should not have been detached
+      expect(wasmBinary.byteLength).toBe(24)
+
+      const runner2 = await spawnAsyncModelRunner({ source: workerWithBinaryDerivedOutputs }, { wasmBinary })
+      try {
+        const outputs = await runner2.runModel([], runner2.createOutputs())
+        expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+      } finally {
+        await runner2.terminate()
+      }
+    } finally {
+      await runner1.terminate()
+    }
+  })
+
+  it('should accept the Wasm binary as a Uint8Array (including a view into a larger buffer)', async () => {
+    // This worker reads the binary the same way that an Emscripten module factory does
+    // (using `new Uint8Array(wasmBinary)`), so that it works for both an `ArrayBuffer`
+    // and a `Uint8Array`
+    const workerSource = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const bytes = new Uint8Array(initArgs.wasmBinary)
+  const values = new Float64Array(bytes.slice().buffer)
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([...values])
+    }
+  })
+})
+
+})()
+`
+
+    // Create a view that covers only the middle of a larger buffer
+    const largerBuffer = new Float64Array([1, 10, 11, 12, 2]).buffer
+    const wasmBinary = new Uint8Array(largerBuffer, 8, 24)
+    const runner = await spawnAsyncModelRunner({ source: workerSource }, { wasmBinary })
+    try {
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 10), p(2001, 11), p(2002, 12)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+
+  it('should not pass any init args to the worker init function when wasmBinary is undefined', async () => {
+    // The worker reports whether it received an init args value
+    const workerSource = `\
+;(async () => {
+
+const { MockWasmModule } = await import('@sdeverywhere/runtime')
+const { exposeModelWorker } = await import('@sdeverywhere/runtime-async')
+
+exposeModelWorker(async initArgs => {
+  const received = initArgs === undefined ? 1 : 2
+  return new MockWasmModule({
+    initialTime: 2000,
+    finalTime: 2002,
+    outputVarIds: ['_output_1'],
+    onRunModel: (_inputs, outputs) => {
+      outputs.set([received, received, received])
+    }
+  })
+})
+
+})()
+`
+
+    const runner = await spawnAsyncModelRunner({ source: workerSource })
+    try {
+      const outputs = await runner.runModel([], runner.createOutputs())
+      expect(outputs.getSeriesForVar('_output_1')!.points).toEqual([p(2000, 1), p(2001, 1), p(2002, 1)])
+    } finally {
+      await runner.terminate()
+    }
+  })
+})
+
 describe('spawnAsyncModelRunner initialization failure', () => {
   it('should terminate the worker when model initialization fails', async () => {
     const tempDir = mkdtempSync(join(tmpdir(), 'sde-runner-'))

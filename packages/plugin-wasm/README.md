@@ -104,6 +104,35 @@ wasmPlugin({
 })
 ```
 
+### Writing the Wasm binary to a separate file
+
+By default, the Wasm binary is embedded in the generated JS file as a base64-encoded string, as described in the previous section.
+You can use the `outputWasmPath` option to write the Wasm binary to a separate `.wasm` file instead.
+This makes the download smaller (base64 encoding adds about 33% before compression), and allows the browser to compile the binary while it is being downloaded:
+
+```js
+wasmPlugin({
+  outputJsPath: joinPath(__dirname, 'packages', 'core', 'src', 'model', 'generated', 'generated-model.js'),
+  outputWasmPath: joinPath(__dirname, 'packages', 'core', 'src', 'model', 'generated', 'generated-model.wasm')
+})
+```
+
+In this case, your application is responsible for loading the Wasm binary and passing it to the function exported by the generated JS file:
+
+```js
+import loadGeneratedModel from './generated/generated-model.js'
+
+const wasmUrl = new URL('./generated/generated-model.wasm', import.meta.url)
+const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
+const generatedModel = await loadGeneratedModel({ wasmBinary })
+```
+
+When running the model in a worker, pass the binary to the worker using the `wasmBinary` option of `spawnAsyncModelRunner` (from `@sdeverywhere/runtime-async`), and the worker will take care of passing it along to the generated model:
+
+```js
+const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
+```
+
 ### Configuring the Emscripten SDK location
 
 If the plugin cannot find your `emsdk` directory automatically, set `emsdkDir` to an absolute path (or to a function that returns one, which is useful if the location is only known at build time):

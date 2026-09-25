@@ -2,7 +2,7 @@
 
 # Function: defaultEmccArgs()
 
-> **defaultEmccArgs**(): `string`[]
+> **defaultEmccArgs**(`options?`): `string`[]
 
 Return the default set of arguments that the plugin passes to `emcc`, which are tuned
 for (and known to work with) Emscripten versions 2.0.34 and 3.1.46, among others.
@@ -28,6 +28,20 @@ set, for example:
     emccArgs: [...defaultEmccArgs(), '-sASSERTIONS=1']
   })
 ```
+
+If `singleFile` is false, the returned arguments omit `-sSINGLE_FILE=1` (so that `emcc`
+writes the Wasm binary to a separate `.wasm` file) and include
+`-sINCOMING_MODULE_JS_API=['wasmBinary']` (so that the binary can be passed to the
+generated module factory function, which is otherwise not allowed with `-sSTRICT=1`).
+These are the arguments that the plugin uses by default when the `outputWasmPath`
+option is defined.
+
+## Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `options?` | \{ `singleFile?`: `boolean`; \} | The options for the default arguments. |
+| `options.singleFile?` | `boolean` | Whether the Wasm binary is embedded in the generated JS file (the default) or written to a separate `.wasm` file. |
 
 ## Returns
 

@@ -78,6 +78,25 @@ Module["modelListing"] = ${modelListingJs}
     // Generate the Wasm binary (wrapped in a JS file)
     await buildWasm(context, context.config.prepDir, stagedOutputJsPath, this.options)
 
+    // If requested, add a staged file entry for the separate Wasm binary (which `emcc`
+    // writes next to the JS file)
+    const outputWasmPath = this.options?.outputWasmPath
+    if (outputWasmPath !== undefined) {
+      const stagedOutputWasmFile = stagedOutputJsFile.replace(/\.js$/, '.wasm')
+      const stagedOutputWasmPath = context.prepareStagedFile(
+        'model',
+        stagedOutputWasmFile,
+        dirname(outputWasmPath),
+        basename(outputWasmPath)
+      )
+      if (!existsSync(stagedOutputWasmPath)) {
+        throw new Error(
+          'The `outputWasmPath` option is defined, but emcc did not write a separate Wasm binary ' +
+            '(make sure that `emccArgs` does not include `-sSINGLE_FILE=1`)'
+        )
+      }
+    }
+
     // context.log('info', '  Done!')
 
     return content
@@ -85,7 +104,13 @@ Module["modelListing"] = ${modelListingJs}
 }
 
 /**
- * Generate a JS file (containing an embedded Wasm blob) from the C file.
+ * Generate the Wasm files from the C file.
+ *
+ * If `outputWasmPath` is defined, this will generate a `.wasm` file containing the Wasm binary
+ * and a `.js` file containing the glue code.
+ *
+ * If `outputWasmPath` is not defined, this will generate a single `.js` file containing both the
+ * base64-encoded Wasm binary and the glue code.
  */
 async function buildWasm(
   context: BuildContext,
@@ -151,7 +176,7 @@ async function buildWasm(
     }
     normalizeEmccArgs(argsArray).forEach(addArg)
   } else {
-    defaultEmccArgs().forEach(addArg)
+    defaultEmccArgs({ singleFile: options?.outputWasmPath === undefined }).forEach(addArg)
   }
 
   // context.log('verbose', `    emcc args: ${args}`)

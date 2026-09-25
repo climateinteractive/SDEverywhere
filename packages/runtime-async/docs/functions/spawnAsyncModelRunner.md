@@ -2,7 +2,7 @@
 
 # Function: spawnAsyncModelRunner()
 
-> **spawnAsyncModelRunner**(`workerSpec`): `Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
+> **spawnAsyncModelRunner**(`workerSpec`, `options?`): `Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
 
 Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker
 (a Web Worker when running in a browser environment, or a worker thread
@@ -40,6 +40,7 @@ exits unexpectedly.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `workerSpec` | [`WorkerSpec`](../type-aliases/WorkerSpec.md) | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
+| `options?` | [`AsyncModelRunnerOptions`](../interfaces/AsyncModelRunnerOptions.md) | Additional options, such as the Wasm binary to use when the model was compiled without embedding the binary in the generated JS file. |
 
 ## Returns
 

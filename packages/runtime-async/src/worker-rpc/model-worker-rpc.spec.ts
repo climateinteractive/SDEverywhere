@@ -92,6 +92,22 @@ describe('model worker protocol', () => {
     expect(clientPort.posted[0]).toEqual({ message: { kind: 'init' }, transferables: undefined })
   })
 
+  it('should pass the init arguments to the worker without transferring them', async () => {
+    const [clientPort, workerPort] = createLinkedPorts()
+    const initModel = vi.fn(() => initResult())
+    serveModelWorker(workerPort, {
+      initModel,
+      runModel: buffer => buffer
+    })
+    const client = createModelWorkerClient(clientPort)
+    const wasmBinary = new ArrayBuffer(8)
+    const initArgs = { wasmBinary }
+
+    await expect(client.initModel(initArgs)).resolves.toEqual(initResult())
+    expect(clientPort.posted[0]).toEqual({ message: { kind: 'init', args: initArgs }, transferables: undefined })
+    expect(initModel).toHaveBeenCalledWith(initArgs)
+  })
+
   it('should run the model and transfer the buffer in both directions', async () => {
     const [clientPort, workerPort] = createLinkedPorts()
     serveModelWorker(workerPort, {

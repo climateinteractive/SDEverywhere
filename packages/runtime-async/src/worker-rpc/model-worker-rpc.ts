@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
+import type { ModelInitArgs } from '../model-init-args'
 import type { WorkerHandle, WorkerPort } from './worker-port'
 
 /** The model metadata returned after the worker initializes the model. */
@@ -18,7 +19,7 @@ export interface InitResult {
 }
 
 /** A request sent from the runner to the model worker. */
-type ModelWorkerRequest = { kind: 'init' } | { kind: 'run'; buffer: ArrayBuffer }
+type ModelWorkerRequest = { kind: 'init'; args?: ModelInitArgs } | { kind: 'run'; buffer: ArrayBuffer }
 
 /** A response sent from the model worker to the runner. */
 type ModelWorkerResponse =
@@ -28,16 +29,25 @@ type ModelWorkerResponse =
 
 /** The operations that can be performed by the model worker. */
 export interface ModelWorkerMethods {
-  /** Initialize the model and return its metadata. */
-  initModel(): InitResult | Promise<InitResult>
+  /**
+   * Initialize the model and return its metadata.
+   *
+   * @param args The arguments that were passed by the runner, if any.
+   */
+  initModel(args?: ModelInitArgs): InitResult | Promise<InitResult>
   /** Run the model using the parameters encoded in the given buffer. */
   runModel(buffer: ArrayBuffer): ArrayBuffer | Promise<ArrayBuffer>
 }
 
 /** A client for the operations exposed by the model worker. */
 export interface ModelWorkerClient {
-  /** Initialize the model and return its metadata. */
-  initModel(): Promise<InitResult>
+  /**
+   * Initialize the model and return its metadata.
+   *
+   * @param args The arguments to pass to the worker's model initialization function.  These
+   * are copied (not transferred) when they are sent to the worker.
+   */
+  initModel(args?: ModelInitArgs): Promise<InitResult>
   /** Run the model using the parameters encoded in the given buffer. */
   runModel(buffer: ArrayBuffer): Promise<ArrayBuffer>
   /** Make the client terminal and reject its pending request. */
@@ -139,8 +149,9 @@ export function createModelWorkerClient(port: WorkerHandle): ModelWorkerClient {
   }
 
   return {
-    async initModel(): Promise<InitResult> {
-      const response = await send({ kind: 'init' })
+    async initModel(args?: ModelInitArgs): Promise<InitResult> {
+      const request: ModelWorkerRequest = args !== undefined ? { kind: 'init', args } : { kind: 'init' }
+      const response = await send(request)
       if (response.kind !== 'initialized') {
         throw unexpectedResponse(response.kind, 'model initialization')
       }
@@ -178,7 +189,7 @@ export function serveModelWorker(port: WorkerPort, methods: ModelWorkerMethods):
     async function handleRequest(): Promise<void> {
       try {
         if (request.kind === 'init') {
-          const result = await methods.initModel()
+          const result = await methods.initModel(request.args)
           port.postMessage({ kind: 'initialized', result } satisfies ModelWorkerResponse)
         } else {
           const buffer = await methods.runModel(request.buffer)

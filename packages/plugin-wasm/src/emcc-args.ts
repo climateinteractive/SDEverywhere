@@ -26,10 +26,21 @@
  *   })
  * ```
  *
+ * If `singleFile` is false, the returned arguments omit `-sSINGLE_FILE=1` (so that `emcc`
+ * writes the Wasm binary to a separate `.wasm` file) and include
+ * `-sINCOMING_MODULE_JS_API=['wasmBinary']` (so that the binary can be passed to the
+ * generated module factory function, which is otherwise not allowed with `-sSTRICT=1`).
+ * These are the arguments that the plugin uses by default when the `outputWasmPath`
+ * option is defined.
+ *
+ * @param options The options for the default arguments.
+ * @param options.singleFile Whether the Wasm binary is embedded in the generated JS file
+ * (the default) or written to a separate `.wasm` file.
  * @returns A new array containing the default `emcc` arguments.
  */
-export function defaultEmccArgs(): string[] {
-  return [
+export function defaultEmccArgs(options?: { singleFile?: boolean }): string[] {
+  const singleFile = options?.singleFile !== false
+  const args = [
     '-Wall',
     '-Os',
     '-sSTRICT=1',
@@ -49,6 +60,15 @@ export function defaultEmccArgs(): string[] {
     `-sEXPORTED_FUNCTIONS=['_malloc','_free','_getInitialTime','_getFinalTime','_getSaveper','_setLookup','_runModelWithBuffers']`,
     `-sEXPORTED_RUNTIME_METHODS=['cwrap']`
   ]
+  if (singleFile) {
+    return args
+  } else {
+    return [
+      ...args.filter(arg => arg !== '-sSINGLE_FILE=1'),
+      // Allow the Wasm binary to be passed to the module factory function
+      `-sINCOMING_MODULE_JS_API=['wasmBinary']`
+    ]
+  }
 }
 
 /**
