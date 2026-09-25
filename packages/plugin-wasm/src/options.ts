@@ -36,6 +36,7 @@ export interface WasmPluginOptions {
    * to the configured `prepDir`.
    */
   outputJsPath?: string
+
   /**
    * The path of the resulting Wasm binary.  If undefined (the default), the Wasm binary is
    * embedded in the generated JS file as a base64-encoded string (using `-sSINGLE_FILE=1`).
