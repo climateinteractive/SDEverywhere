@@ -104,8 +104,13 @@ Module["modelListing"] = ${modelListingJs}
 }
 
 /**
- * Generate a JS file (containing an embedded Wasm blob, unless `outputWasmPath` is defined)
- * from the C file.
+ * Generate the Wasm files from the C file.
+ *
+ * If `outputWasmPath` is defined, this will generate a `.wasm` file containing the Wasm binary
+ * and a `.js` file containing the glue code.
+ *
+ * If `outputWasmPath` is not defined, this will generate a single `.js` file containing both the
+ * base64-encoded Wasm binary and the glue code.
  */
 async function buildWasm(
   context: BuildContext,

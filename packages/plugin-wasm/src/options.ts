@@ -31,9 +31,14 @@ export interface WasmPluginOptions {
   emccArgs?: string[] | (() => string[])
 
   /**
-   * The path of the resulting JS file (containing the embedded Wasm model, unless
-   * `outputWasmPath` is defined).  If undefined, the plugin will write `generated-model.js`
-   * to the configured `prepDir`.
+   * The path of the resulting JS file.  If undefined (the default), the plugin will write
+   * a file named `generated-model.js` to the configured `prepDir`.
+   *
+   * If `outputWasmPath` is not defined, this JS file will contain both the base64-encoded
+   * Wasm binary and the glue code.
+   *
+   * If `outputWasmPath` is defined, this JS file will contain only the glue code, and the
+   * Wasm binary will be written separately to `outputWasmPath`.
    */
   outputJsPath?: string
 
