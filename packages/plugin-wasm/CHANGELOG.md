@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.10...plugin-wasm-v0.2.11) (2026-09-25)
+
+
+### Features
+
+* allow for generating Wasm binary in a separate file ([#925](https://github.com/climateinteractive/SDEverywhere/issues/925)) ([c34a10c](https://github.com/climateinteractive/SDEverywhere/commit/c34a10cabcdd53832d4fca2294980586feb95387)), closes [#924](https://github.com/climateinteractive/SDEverywhere/issues/924)
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-wasm-v0.2.9...plugin-wasm-v0.2.10) (2026-09-20)
 
 

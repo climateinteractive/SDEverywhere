@@ -5,13 +5,13 @@
   "packages/cli": "0.7.49",
   "packages/check-core": "0.1.15",
   "packages/check-ui-shell": "0.2.27",
-  "packages/plugin-check": "0.3.38",
+  "packages/plugin-check": "0.3.39",
   "packages/plugin-config": "0.2.14",
   "packages/plugin-vite": "0.2.4",
-  "packages/plugin-wasm": "0.2.10",
-  "packages/plugin-worker": "0.2.16",
+  "packages/plugin-wasm": "0.2.11",
+  "packages/plugin-worker": "0.2.17",
   "packages/runtime": "0.2.11",
-  "packages/runtime-async": "0.2.11",
+  "packages/runtime-async": "0.2.12",
   "packages/create": "0.2.44",
   "packages/plugin-deploy": "0.1.3"
 }

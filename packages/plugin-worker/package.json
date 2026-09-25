@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "files": [
     "dist/**",
     "template-worker/**"
@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@sdeverywhere/runtime": "^0.2.11",
-    "@sdeverywhere/runtime-async": "^0.2.11",
+    "@sdeverywhere/runtime-async": "^0.2.12",
     "vite": "^8.3.0"
   },
   "peerDependencies": {

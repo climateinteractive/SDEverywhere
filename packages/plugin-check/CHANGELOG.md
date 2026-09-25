@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.39](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.38...plugin-check-v0.3.39) (2026-09-25)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime-async bumped from ^0.2.11 to ^0.2.12
+
 ## [0.3.38](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.37...plugin-check-v0.3.38) (2026-09-20)
 
 
