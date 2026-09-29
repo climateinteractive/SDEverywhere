@@ -70,7 +70,11 @@ static double __cdf_unit_normal(double x) {
   static const double base = 0.39894228040143267794;  // 1/sqrt(2*pi)
   return 1.0 - (base * exp(-(x * x) / 2.0)) * y;
 }
+// Vensim uses a standard deviation of at least 0.05 for the normal curve. A
+// smaller width, including zero, gives the same allocations as a width of 0.05.
+#define MIN_NORMAL_WIDTH 0.05
 static double __cdf_normal(double x, double mu, double sigma) {
+  sigma = fmax(sigma, MIN_NORMAL_WIDTH);
   if (x < mu) {
     return 1.0 - __cdf_unit_normal(-(x - mu) / sigma);
   } else {
@@ -168,7 +172,8 @@ static double* __allocations_at_price(double* quantities, double* profiles, doub
 // is, where the CDF reaches 1 (or 0 on the other side). These match the bounds
 // Vensim uses for its FIND MARKET PRICE search: the ends of the support for the
 // rectangular and triangular curves, five standard deviations for the normal
-// curve, and ten scale widths for the exponential (Laplace) curve.
+// curve (using the minimum normal width), and ten scale widths for the
+// exponential (Laplace) curve.
 static double __saturation_offset(int ptype, double width) {
   width = fabs(width);
   switch (ptype) {
@@ -176,7 +181,7 @@ static double __saturation_offset(int ptype, double width) {
     case PTYPE_TRIANGULAR:
       return width / 2.0;
     case PTYPE_NORMAL:
-      return 5.0 * width;
+      return 5.0 * fmax(width, MIN_NORMAL_WIDTH);
     case PTYPE_EXPONENTIAL:
       return 10.0 * width;
     default:
