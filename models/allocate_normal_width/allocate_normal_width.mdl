@@ -1,0 +1,72 @@
+{UTF-8}
+
+pprofile : ptype, ppriority, pwidth, pextra ~~|
+width case : (w0-w7) ~~|
+agent : (a1-a2) ~~|
+
+width[width case] = 0, 0.001, 0.01, 0.03, 0.05, 0.06, 0.1, 1
+  ~~ Vensim uses a standard deviation of at least 0.05 for the normal curve, so \
+  cases w0 through w4 all give the same results. |
+
+base priority = 10 ~~|
+priority offset[agent] = 0, 0.03 ~~|
+
+profile[width case,agent,ptype] = 3 ~~|
+profile[width case,agent,ppriority] = base priority + priority offset[agent] ~~|
+profile[width case,agent,pwidth] = width[width case] ~~|
+profile[width case,agent,pextra] = 0 ~~|
+
+quantity[width case,agent] = 1 ~~|
+
+sweep = (Time - INITIAL TIME) / (FINAL TIME - INITIAL TIME) ~~|
+
+test price = base priority - 0.3 + 0.66 * sweep
+  ~~ Sweeps across both priority curves, out to six standard deviations for the \
+  minimum normal width. |
+
+amount supplied[width case,agent] = SUPPLY AT PRICE(
+  quantity[width case,agent],
+  profile[width case,agent,ptype],
+  test price) ~~|
+
+amount demanded[width case,agent] = DEMAND AT PRICE(
+  quantity[width case,agent],
+  profile[width case,agent,ptype],
+  test price) ~~|
+
+fixed profile[width case,agent,pprofile] = 0 ~~|
+market demand[width case,a1] = 2.4 * sweep ~~|
+market demand[width case,a2] = 0 ~~|
+
+market price[width case] = FIND MARKET PRICE(
+  market demand[width case,a1],
+  fixed profile[width case,a1,ptype],
+  quantity[width case,a1],
+  profile[width case,a1,ptype])
+  ~~ Demand is zero at the start (supply exceeds demand, so the price is the \
+  lowest priority minus five standard deviations) and exceeds the total supply \
+  once sweep > 5/6 (so the price is the highest priority plus five standard \
+  deviations). |
+
+market amount supplied[width case,agent] = SUPPLY AT PRICE(
+  quantity[width case,agent],
+  profile[width case,agent,ptype],
+  market price[width case]) ~~|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 12 ~~|
+TIME STEP = 0.125 ~~|
+SAVEPER = TIME STEP ~~|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
+///---\\\
+:L<%^E!@
