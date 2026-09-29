@@ -206,6 +206,38 @@ static double __total_at_price(double* quantities, double* profiles, double pric
   return total;
 }
 
+// Fill in the ALLOCATE AVAILABLE allocations at point x on the priority axis and return their total.
+// Total allocations decrease as x increases.
+static double __allocate_available_at(double x, double* requested_quantities, double* priority_profiles,
+    size_t num_requesters, double total_requests, double available_resource, bool equal_priorities,
+    double* allocations) {
+  double total_allocations = 0.0;
+  for (size_t i = 0; i < num_requesters; i++) {
+    if (requested_quantities[i] > 0.0) {
+      int ptype = (int)__get_pp(priority_profiles, i, PTYPE);
+      if (ptype == PTYPE_FIXED || equal_priorities) {
+        // The fixed priority type allocates proportionally to each request.
+        // This is also the fallback allocation when all priorities are equal.
+        if (total_requests > available_resource) {
+          allocations[i] = (requested_quantities[i] / total_requests) * available_resource;
+        } else {
+          allocations[i] = requested_quantities[i];
+        }
+      } else {
+        // Calculate the allocation using the specified priority curve.
+        double priority = __get_pp(priority_profiles, i, PPRIORITY);
+        double width = __get_pp(priority_profiles, i, PWIDTH);
+        double fraction = __allocate_by_priority(ptype, x, priority, width, true);
+        allocations[i] = requested_quantities[i] * fraction;
+      }
+    } else {
+      allocations[i] = 0.0;
+    }
+    total_allocations += allocations[i];
+  }
+  return total_allocations;
+}
+
 // Allocate the available resource to the requesters using their priority profiles.
 double* _ALLOCATE_AVAILABLE(
     double* requested_quantities, double* priority_profiles, double available_resource, size_t num_requesters) {
@@ -224,12 +256,17 @@ double* _ALLOCATE_AVAILABLE(
   }
   // Limit the search to this number of steps.
   const size_t max_steps = 100;
-  // If the available resource is more than the total requests, clamp to the total requests so we don't overallocate.
   double total_requests = 0.0;
   for (size_t i = 0; i < num_requesters; i++) {
     total_requests += requested_quantities[i];
   }
-  available_resource = fmin(available_resource, total_requests);
+  // If the available resource covers the total requests, every requester receives its full request.
+  if (available_resource >= total_requests) {
+    for (size_t i = 0; i < num_requesters; i++) {
+      allocations[i] = requested_quantities[i] > 0.0 ? requested_quantities[i] : 0.0;
+    }
+    return allocations;
+  }
 #ifdef PRINT_ALLOCATIONS_DEBUG_INFO
   fprintf(stderr, "\n_ALLOCATE_AVAILABLE time=%g num_requesters=%zu, available_resource=%f, total_requests=%f\n", _time,
       num_requesters, available_resource, total_requests);
@@ -238,55 +275,56 @@ double* _ALLOCATE_AVAILABLE(
         __get_pp(priority_profiles, i, PPRIORITY), __get_pp(priority_profiles, i, PWIDTH));
   }
 #endif
-  // Find the minimum and maximum means in the priority curves.
+  // Find the minimum and maximum means in the priority curves, and bracket the search between
+  // the points where the curves saturate. The curves can be much wider than the spread of the
+  // means, so the bracket must include the widths.
   double min_mean = DBL_MAX;
   double max_mean = -DBL_MAX;
+  double x_lo = DBL_MAX;
+  double x_hi = -DBL_MAX;
   for (size_t i = 0; i < num_requesters; i++) {
-    min_mean = fmin(__get_pp(priority_profiles, i, PPRIORITY), min_mean);
-    max_mean = fmax(__get_pp(priority_profiles, i, PPRIORITY), max_mean);
+    double priority = __get_pp(priority_profiles, i, PPRIORITY);
+    double offset = __saturation_offset(
+        (int)__get_pp(priority_profiles, i, PTYPE), __get_pp(priority_profiles, i, PWIDTH));
+    min_mean = fmin(priority, min_mean);
+    max_mean = fmax(priority, max_mean);
+    x_lo = fmin(priority - offset, x_lo);
+    x_hi = fmax(priority + offset, x_hi);
   }
-  // Start the search in the midpoint of the means, with a big first jump scaled
-  // to the spread of the means.
+  bool equal_priorities = __isEqual(min_mean, max_mean);
+  // The normal and exponential curves only approach saturation at the bracket ends, so widen the
+  // bracket until the total allocations there straddle the available resource.
+  const size_t max_widenings = 64;
+  double span = fmax(x_hi - x_lo, 1.0);
+  for (size_t k = 0; k < max_widenings; k++) {
+    double total_at_lo = __allocate_available_at(x_lo, requested_quantities, priority_profiles, num_requesters,
+        total_requests, available_resource, equal_priorities, allocations);
+    if (total_at_lo >= available_resource) break;
+    x_lo -= span;
+    span *= 2.0;
+  }
+  span = fmax(x_hi - x_lo, 1.0);
+  for (size_t k = 0; k < max_widenings; k++) {
+    double total_at_hi = __allocate_available_at(x_hi, requested_quantities, priority_profiles, num_requesters,
+        total_requests, available_resource, equal_priorities, allocations);
+    if (total_at_hi <= available_resource) break;
+    x_hi += span;
+    span *= 2.0;
+  }
+  // Bisect the bracket until the total allocations equal the available resource up to the
+  // built-in tolerance.
   double total_allocations = 0.0;
-  double x = (max_mean + min_mean) / 2.0;
-  double delta = (max_mean - min_mean) / 2.0;
   size_t num_steps = 0;
-  double last_delta_sign = 1.0;
-  size_t num_jumps_in_same_direction = 0;
   do {
-    // Calculate allocations for each requester.
-    for (size_t i = 0; i < num_requesters; i++) {
-      if (requested_quantities[i] > 0.0) {
-        int ptype = (int)__get_pp(priority_profiles, i, PTYPE);
-        if (ptype == PTYPE_FIXED || __isEqual(min_mean, max_mean)) {
-          // The fixed priority type allocates proportionally to each request.
-          // This is also the fallback allocation when all priorities are equal.
-          if (total_requests > available_resource) {
-            allocations[i] = (requested_quantities[i] / total_requests) * available_resource;
-          } else {
-            allocations[i] = requested_quantities[i];
-          }
-        } else {
-          // Calculate the allocation using the specified priority curve.
-          double priority = __get_pp(priority_profiles, i, PPRIORITY);
-          double width = __get_pp(priority_profiles, i, PWIDTH);
-          double fraction = __allocate_by_priority(ptype, x, priority, width, true);
-          allocations[i] = requested_quantities[i] * fraction;
-        }
-      } else {
-        allocations[i] = 0.0;
-      }
-    }
-    // Sum the allocations for comparison with the available resource.
-    total_allocations = 0.0;
-    for (size_t i = 0; i < num_requesters; i++) {
-      total_allocations += allocations[i];
-    }
+    double x = (x_lo + x_hi) / 2.0;
+    total_allocations = __allocate_available_at(x, requested_quantities, priority_profiles, num_requesters,
+        total_requests, available_resource, equal_priorities, allocations);
 #ifdef PRINT_ALLOCATIONS_DEBUG_INFO
     fprintf(stderr,
-        "x=%-+14g delta=%-+14g diff=%-14g%% total_allocations=%-+14g "
+        "x=%-+14g x_lo=%-+14g x_hi=%-+14g diff=%-14g%% total_allocations=%-+14g "
         "available_resource=%-+14g\n",
-        x, delta, __difference(total_allocations, available_resource) * 100.0, total_allocations, available_resource);
+        x, x_lo, x_hi, __difference(total_allocations, available_resource) * 100.0, total_allocations,
+        available_resource);
 #endif
     if (++num_steps >= max_steps) {
       fprintf(stderr,
@@ -294,19 +332,11 @@ double* _ALLOCATE_AVAILABLE(
           _time, total_allocations, available_resource);
       break;
     }
-    // Set up the next x value by computing a new delta that is usually half the size of the
-    // previous delta, that is, do a binary search of the x axis. We may jump over the target
-    // x value, so we may need to change direction.
-    double delta_sign = total_allocations < available_resource ? -1.0 : 1.0;
-    // Too many jumps in the same direction can result in the search converging on a point
-    // that falls short of the target x value. Stop halving the delta when that happens until
-    // we jump over the target again.
-    num_jumps_in_same_direction = delta_sign == last_delta_sign ? num_jumps_in_same_direction + 1 : 0;
-    last_delta_sign = delta_sign;
-    delta = (delta_sign * fabs(delta)) / (num_jumps_in_same_direction < 3 ? 2.0 : 1.0);
-    x += delta;
-    // The search terminates when the total allocations are equal to the
-    // available resource up to the built-in tolerance.
+    if (total_allocations > available_resource) {
+      x_lo = x;
+    } else {
+      x_hi = x;
+    }
   } while (!__isEqual(total_allocations, available_resource));
 #ifdef PRINT_ALLOCATIONS_DEBUG_INFO
   fprintf(stderr, "converged with diff=%g%% in %zu steps\n",

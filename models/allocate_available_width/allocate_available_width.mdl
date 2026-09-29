@@ -1,0 +1,49 @@
+{UTF-8}
+
+pprofile : ptype, ppriority, pwidth, pextra ~~|
+priority curve : rectangular, triangular, normal, exponential ~~|
+width case : narrow, unit, wide ~~|
+agent : (a1-a2) ~~|
+
+curve type[priority curve] = 1, 2, 3, 4 ~~|
+width[width case] = 0.1, 1, 10 ~~|
+
+priority[agent] = 10, 10.03
+  ~~ The priorities are close together relative to the widths, so the allocation \
+  search must range well beyond the spread of the priorities. |
+
+profile[priority curve,width case,agent,ptype] = curve type[priority curve] ~~|
+profile[priority curve,width case,agent,ppriority] = priority[agent] ~~|
+profile[priority curve,width case,agent,pwidth] = width[width case] ~~|
+profile[priority curve,width case,agent,pextra] = 0 ~~|
+
+request[priority curve,width case,a1] = 1 ~~|
+request[priority curve,width case,a2] = 0.5 ~~|
+
+sweep = (Time - INITIAL TIME) / (FINAL TIME - INITIAL TIME) ~~|
+
+available = 1.8 * sweep
+  ~~ Sweeps from zero to more than the total request of 1.5 (once sweep > 5/6). |
+
+amount allocated[priority curve,width case,agent] = ALLOCATE AVAILABLE(
+  request[priority curve,width case,agent],
+  profile[priority curve,width case,agent,ptype],
+  available) ~~|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 12 ~~|
+TIME STEP = 0.125 ~~|
+SAVEPER = TIME STEP ~~|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
+///---\\\
+:L<%^E!@

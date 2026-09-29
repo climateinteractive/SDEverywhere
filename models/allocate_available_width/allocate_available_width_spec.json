@@ -1,0 +1,30 @@
+{
+  "name": "allocate available with wide priority curves test model",
+  "outputVarNames": [
+    "Time",
+    "amount allocated[rectangular,narrow,a1]",
+    "amount allocated[rectangular,narrow,a2]",
+    "amount allocated[rectangular,unit,a1]",
+    "amount allocated[rectangular,unit,a2]",
+    "amount allocated[rectangular,wide,a1]",
+    "amount allocated[rectangular,wide,a2]",
+    "amount allocated[triangular,narrow,a1]",
+    "amount allocated[triangular,narrow,a2]",
+    "amount allocated[triangular,unit,a1]",
+    "amount allocated[triangular,unit,a2]",
+    "amount allocated[triangular,wide,a1]",
+    "amount allocated[triangular,wide,a2]",
+    "amount allocated[normal,narrow,a1]",
+    "amount allocated[normal,narrow,a2]",
+    "amount allocated[normal,unit,a1]",
+    "amount allocated[normal,unit,a2]",
+    "amount allocated[normal,wide,a1]",
+    "amount allocated[normal,wide,a2]",
+    "amount allocated[exponential,narrow,a1]",
+    "amount allocated[exponential,narrow,a2]",
+    "amount allocated[exponential,unit,a1]",
+    "amount allocated[exponential,unit,a2]",
+    "amount allocated[exponential,wide,a1]",
+    "amount allocated[exponential,wide,a2]"
+  ]
+}
