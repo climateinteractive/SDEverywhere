@@ -12,6 +12,9 @@ export function vitePlugin(options: VitePluginOptions): Plugin {
 }
 
 class VitePlugin implements Plugin {
+  /** Whether the plugin has not yet run its `postBuild` step. */
+  private initialBuild = true
+
   constructor(private readonly options: VitePluginOptions) {}
 
   async postGenerate(context: BuildContext): Promise<boolean> {
@@ -20,6 +23,22 @@ class VitePlugin implements Plugin {
   }
 
   async postBuild(context: BuildContext): Promise<boolean> {
+    const initialBuild = this.initialBuild
+    this.initialBuild = false
+
+    if (initialBuild && context.config.mode === 'development' && this.options.apply?.development === 'watch') {
+      // When the plugin is configured to use 'watch' mode, `vite build` is run in watch mode
+      // in the `watch` callback, but that callback is only called after the initial build pass
+      // is complete.  Run a normal build in the `postBuild` phase of the initial build pass so
+      // that the output is available to plugins that run later in the same pass (for example,
+      // a plugin that depends on a library that is built by this plugin).  Note that this runs
+      // in the `postBuild` phase (rather than `postGenerate`) so that any staged files (which
+      // are copied into place after the `postGenerate` phase) are available to the build.
+      context.log('info', `Building ${this.options.name}`)
+      await build(this.options.config)
+      return true
+    }
+
     // Only build if the plugin is configured to run for 'post-build'
     return this.buildIfNeeded(context, 'post-build')
   }

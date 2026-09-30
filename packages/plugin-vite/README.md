@@ -128,6 +128,9 @@ The full set of values is:
 
 Use `'post-generate'` when a later plugin needs the output of this Vite build; use `'post-build'` (the default) otherwise.
 
+With `'watch'`, the plugin runs a normal `vite build` in the `postBuild` phase of the initial build, so that the output is available to plugins that run later in that build (for example, a plugin that loads a library built by this plugin).
+After the initial build, it runs `vite build` in watch mode, which rebuilds the library whenever its sources change.
+
 ### Using more than one instance
 
 A project can include as many `vitePlugin` instances as it needs; give each one a distinct `name` so that log messages are easy to follow.
