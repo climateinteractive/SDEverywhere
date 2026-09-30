@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.4...plugin-vite-v0.2.5) (2026-09-30)
+
+
+### Bug Fixes
+
+* run initial build step when plugin-vite used in watch mode ([#930](https://github.com/climateinteractive/SDEverywhere/issues/930)) ([3da92fd](https://github.com/climateinteractive/SDEverywhere/commit/3da92fd60d89221497255caf364420eacd4e7dc7)), closes [#929](https://github.com/climateinteractive/SDEverywhere/issues/929)
+
 ## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.3...plugin-vite-v0.2.4) (2026-09-20)
 
 
