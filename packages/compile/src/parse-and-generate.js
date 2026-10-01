@@ -9,6 +9,7 @@ import { readXlsx } from './_shared/helpers.js'
 import { readDat } from './_shared/read-dat.js'
 import { printSubscripts } from './_shared/subscript.js'
 import { cName } from './_shared/var-names.js'
+import { writeFullListing } from './_shared/write-full-listing.js'
 import Model from './model/model.js'
 import { getDirectSubscripts } from './model/read-subscripts.js'
 import { generateCode } from './generate/gen-code.js'
@@ -93,9 +94,11 @@ export async function parseAndGenerate(input, modelKind, spec, operations, model
     writeOutput(`${modelName}_vars.txt`, Model.printVarList())
     // Write subscripts to a text file.
     writeOutput(`${modelName}_subs.txt`, printSubscripts())
-    // Write variables and subscripts to a JSON file.
+    // Write variables and subscripts to a JSON file. The full listing is
+    // streamed to disk so that very large models do not exceed V8's maximum
+    // string length when the listing is encoded to JSON.
     const jsonList = Model.jsonList()
-    writeOutput(`${modelName}.json`, JSON.stringify(jsonList.full, null, 2))
+    writeFullListing(path.join(buildDir, `${modelName}.json`), jsonList.full)
     // Write minimal variable index and dimension specs to a JSON file used
     // by the runtime package to initialize a `ModelListing` instance).
     writeOutput(`${modelName}_min.json`, JSON.stringify(jsonList.minimal, null, 2))
