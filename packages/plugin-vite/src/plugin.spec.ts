@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
+import type { InlineConfig } from 'vite'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { BuildContext } from '@sdeverywhere/build'
@@ -10,7 +11,7 @@ import { vitePlugin } from './plugin'
 // Replace the Vite functions with mocks that record how they were called
 const viteMocks = vi.hoisted(() => {
   return {
-    build: vi.fn(async () => undefined),
+    build: vi.fn<(viteConfig: InlineConfig) => Promise<undefined>>(async () => undefined),
     createServer: vi.fn(async () => ({ listen: vi.fn(async () => undefined) }))
   }
 })
@@ -29,6 +30,17 @@ function fakeContext(mode: 'development' | 'production'): BuildContext {
     config: { mode },
     log: () => {}
   } as unknown as BuildContext
+}
+
+/**
+ * Add an empty `build` property to the given config object (if not already defined), which
+ * simulates how Vite 8 modifies the config object that is passed to `build`.
+ *
+ * @param viteConfig The Vite config object to modify.
+ */
+async function addBuildProperty(viteConfig: InlineConfig): Promise<undefined> {
+  viteConfig.build ??= {}
+  return undefined
 }
 
 /**
@@ -75,6 +87,41 @@ describe('vitePlugin', () => {
       await plugin.watch(undefined)
       expect(viteMocks.build).toHaveBeenCalledTimes(1)
       expect(viteMocks.build).toHaveBeenCalledWith({ build: { watch: {} }, ...config })
+    })
+
+    it('should run `vite build` in watch mode even if Vite modified the config during the initial build', async () => {
+      // Vite 8 adds a `build` property to the given config object when resolving it, so
+      // simulate that here for the initial build
+      viteMocks.build.mockImplementationOnce(addBuildProperty)
+      const localConfig: InlineConfig = { configFile: 'vite.config.js' }
+      const plugin = vitePlugin({ name: 'test', config: localConfig, apply: { development: 'watch' } })
+
+      await plugin.postBuild(fakeContext('development'), undefined)
+      await plugin.watch(undefined)
+      expect(viteMocks.build).toHaveBeenCalledTimes(2)
+      expect(viteMocks.build).toHaveBeenLastCalledWith({ configFile: 'vite.config.js', build: { watch: {} } })
+    })
+
+    it('should not modify the config object that is passed in the plugin options', async () => {
+      // Simulate Vite 8 adding a `build` property to the given config object for both builds
+      viteMocks.build.mockImplementationOnce(addBuildProperty).mockImplementationOnce(addBuildProperty)
+      const localConfig: InlineConfig = { configFile: 'vite.config.js' }
+      const plugin = vitePlugin({ name: 'test', config: localConfig, apply: { development: 'watch' } })
+
+      await plugin.postBuild(fakeContext('development'), undefined)
+      await plugin.watch(undefined)
+      expect(localConfig).toEqual({ configFile: 'vite.config.js' })
+    })
+
+    it('should preserve other build options from the given config when enabling watch mode', async () => {
+      const localConfig: InlineConfig = { configFile: 'vite.config.js', build: { outDir: 'dist' } }
+      const plugin = vitePlugin({ name: 'test', config: localConfig, apply: { development: 'watch' } })
+
+      await plugin.watch(undefined)
+      expect(viteMocks.build).toHaveBeenCalledWith({
+        configFile: 'vite.config.js',
+        build: { outDir: 'dist', watch: {} }
+      })
     })
   })
 
