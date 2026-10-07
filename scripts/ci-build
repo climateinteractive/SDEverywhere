@@ -57,24 +57,34 @@ run_in_workspaces parallel clean
 echo_separator BUILD
 run_in_workspaces ordered build
 
-# Run prettier on the files in the top-level directory, and then in all packages
+# Run prettier on the files in the top-level directory, then on the helper scripts,
+# and then in all packages
 echo_separator PRETTIER
 pnpm run prettier-local:check
 echo
+pnpm run prettier-scripts:check
+echo
 run_in_workspaces parallel prettier:check
 
-# Run lint command in all packages
+# Run lint command on the helper scripts and in all packages
 echo_separator LINT
+pnpm run lint-scripts
+echo
 run_in_workspaces parallel lint
 
-# Run type-check in all packages.  Note that for packages that use `tsup` to generate
-# .d.ts files, the build step will have already performed type checking, but `tsup`
-# doesn't type check the test files, so we do that here just to cover all bases.
+# Run type-check on the helper scripts and in all packages.  Note that for packages that
+# use `tsdown` to generate .d.ts files, the build step will have already performed type
+# checking, but `tsdown` doesn't type check the test files, so we do that here just to
+# cover all bases.
 echo_separator "TYPE CHECK"
+pnpm run type-check-scripts
+echo
 run_in_workspaces parallel type-check
 
-# Run test command in all packages
+# Run test command on the helper scripts and in all packages
 echo_separator TEST
+pnpm run test:scripts
+echo
 run_in_workspaces parallel test:ci
 
 # Generate API docs for all packages

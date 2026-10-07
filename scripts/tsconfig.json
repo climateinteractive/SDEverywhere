@@ -1,0 +1,10 @@
+// This exists so that editors pick up the same TypeScript configuration that
+// `pnpm type-check-scripts` uses. Editors look for the nearest `tsconfig.json`
+// when opening a file, and without this they find none for the `scripts`
+// directory and fall back to their default compiler options (which target ES5),
+// which reports spurious errors for things like iterating over a `matchAll`
+// result. Note that the `include` patterns are inherited from the extended
+// config, so they are still resolved relative to the top-level directory.
+{
+  "extends": "../tsconfig-scripts.json"
+}
