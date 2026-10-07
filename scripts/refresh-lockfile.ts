@@ -362,10 +362,19 @@ function main(): void {
   }
 
   // Write the pruned lockfile, then let pnpm re-resolve the missing entries and
-  // rewrite the file in its own canonical format
+  // rewrite the file in its own canonical format.
+  //
+  // Note that `--fix-lockfile` is essential here.  A plain `pnpm install` compares the
+  // lockfile against the `package.json` manifests to decide whether to re-resolve, and
+  // pruning a transitive package doesn't change any importer's declared dependencies, so
+  // pnpm reports "Lockfile is up to date, resolution step is skipped" and never rewrites
+  // the file.  That leaves the lockfile in the `yaml` package's formatting (double-quoted
+  // keys, no blank line separators), which shows up as a diff of several thousand
+  // cosmetic lines.  `--fix-lockfile` treats the missing entries as breakage to repair,
+  // so pnpm re-resolves just those and writes the file back in its own format.
   writeFileSync(lockPath, stringifyYaml(lock, { lineWidth: 0 }))
   console.log('Running `pnpm install`...')
-  execFileSync('pnpm', ['install'], { cwd: projDir, stdio: 'inherit' })
+  execFileSync('pnpm', ['install', '--fix-lockfile'], { cwd: projDir, stdio: 'inherit' })
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
