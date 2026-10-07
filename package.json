@@ -5,25 +5,32 @@
   "type": "module",
   "scripts": {
     "clean": "pnpm -r clean",
+    "lint-scripts": "eslint scripts --max-warnings 0",
     "lint-pkgs": "pnpm -r lint",
-    "lint": "pnpm lint-pkgs",
+    "lint": "run-s lint-scripts lint-pkgs",
     "prettier-local:check": "prettier --check \"./*.{js,json,md,yaml}\"",
     "prettier-local:fix": "prettier --write \"./*.{js,json,md,yaml}\"",
+    "prettier-scripts:check": "prettier --check scripts",
+    "prettier-scripts:fix": "prettier --write scripts",
     "prettier-pkgs:check": "pnpm -r prettier:check",
     "prettier-pkgs:fix": "pnpm -r prettier:fix",
-    "prettier:check": "run-s prettier-local:check prettier-pkgs:check",
-    "prettier:fix": "run-s prettier-local:fix prettier-pkgs:fix",
+    "prettier:check": "run-s prettier-local:check prettier-scripts:check prettier-pkgs:check",
+    "prettier:fix": "run-s prettier-local:fix prettier-scripts:fix prettier-pkgs:fix",
+    "type-check-scripts": "tsc -p tsconfig-scripts.json --noEmit",
     "precommit": "pnpm -r precommit",
     "build": "pnpm run -r --workspace-concurrency=1 build",
+    "test:scripts": "vitest run",
     "test:pkgs": "pnpm -r test",
     "test:c-int": "./tests/run-c-int-tests",
     "test:js-int": "./tests/run-js-int-tests",
-    "test": "run-s test:pkgs test:c-int test:js-int"
+    "test": "run-s test:scripts test:pkgs test:c-int test:js-int"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.56.1",
+    "@types/node": "^20.14.8",
+    "@types/semver": "^7.8.0",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitest/browser": "^4.1.10",
@@ -39,12 +46,14 @@
     "playwright": "^1.56.1",
     "prettier": "^3.6.2",
     "prettier-plugin-svelte": "^3.4.0",
+    "semver": "^7.8.5",
     "svelte-eslint-parser": "^1.8.0",
     "tsdown": "^0.23.0",
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.12.0",
     "typescript": "^5.2.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "yaml": "^2.9.0"
   },
   "pnpm": {
     "peerDependencyRules": {
