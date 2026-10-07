@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.5...plugin-vite-v0.2.6) (2026-10-07)
+
+
+### Bug Fixes
+
+* ensure plugin-vite starts watch mode correctly with Vite 8 ([#939](https://github.com/climateinteractive/SDEverywhere/issues/939)) ([b1cc5c2](https://github.com/climateinteractive/SDEverywhere/commit/b1cc5c27b5feb6f9ffe0a8a418f552eb989e716d)), closes [#938](https://github.com/climateinteractive/SDEverywhere/issues/938)
+
 ## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.4...plugin-vite-v0.2.5) (2026-09-30)
 
 
