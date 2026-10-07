@@ -19,7 +19,7 @@
     "type-check-scripts": "tsc -p tsconfig-scripts.json --noEmit",
     "precommit": "pnpm -r precommit",
     "build": "pnpm run -r --workspace-concurrency=1 build",
-    "test:scripts": "vitest run",
+    "test:scripts": "vitest run --config vitest-scripts.config.js",
     "test:pkgs": "pnpm -r test",
     "test:c-int": "./tests/run-c-int-tests",
     "test:js-int": "./tests/run-js-int-tests",
