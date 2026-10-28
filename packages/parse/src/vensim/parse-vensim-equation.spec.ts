@@ -141,4 +141,27 @@ describe('parseVensimEquation', () => {
       )
     )
   })
+
+  it('should parse a lookup definition (with lookup range and reference line points)', () => {
+    // The reference line points that follow the range are only used by the Vensim
+    // Graph Lookup Editor, so they are not included in the lookup definition
+    const eqn = `x( [(0,0)-(2,2),(0,1),(2,1)], (0,0),(0.5,0.7),(1,1),(2,1.3) ) ~~|`
+    expect(parseVensimEquation(eqn)).toEqual(
+      lookupVarEqn(
+        varDef('x'),
+        lookupDef(
+          [
+            [0, 0],
+            [0.5, 0.7],
+            [1, 1],
+            [2, 1.3]
+          ],
+          {
+            min: [0, 0],
+            max: [2, 2]
+          }
+        )
+      )
+    )
+  })
 })

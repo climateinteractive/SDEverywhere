@@ -395,6 +395,17 @@ describe('generateEquation (Vensim -> C)', () => {
     expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
   })
 
+  it('should work for lookup definition (with reference line points in the range)', () => {
+    const vars = readInlineModel(`
+      x( [(0,0)-(2,2),(0,1),(2,1)], (0,0),(0.1,0.01),(0.5,0.7),(1,1),(1.5,1.2),(2,1.3) ) ~~|
+    `)
+    expect(vars.size).toBe(1)
+    expect(genC(vars.get('_x'), 'decl')).toEqual([
+      'double _x_data_[12] = { 0.0, 0.0, 0.1, 0.01, 0.5, 0.7, 1.0, 1.0, 1.5, 1.2, 2.0, 1.3 };'
+    ])
+    expect(genC(vars.get('_x'), 'init-lookups')).toEqual(['_x = __new_lookup(6, /*copy=*/false, _x_data_);'])
+  })
+
   it('should work for lookup definition (1D, apply-to-all)', () => {
     const vars = readInlineModel(`
       DimA: A1, A2 ~~|

@@ -195,7 +195,10 @@ export class EquationReader extends ModelVisitor {
   }
 
   visitLookupRange(ctx) {
-    this.lookupRange = ctx.lookupPoint().map(p => this.getPoint(p))
+    // Only keep the min and max points of the range.  The range can also include
+    // optional reference line points (in `ctx.refPoints`), but those are only used
+    // to draw reference lines in the Vensim Graph Lookup Editor, so we ignore them.
+    this.lookupRange = [this.getPoint(ctx.minPoint), this.getPoint(ctx.maxPoint)]
     super.visitLookupRange(ctx)
   }
 

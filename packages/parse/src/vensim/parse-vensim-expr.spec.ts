@@ -243,6 +243,26 @@ describe('parseVensimExpr', () => {
     )
   })
 
+  it('should parse a "WITH LOOKUP" function call expr (with lookup range and reference line points)', () => {
+    expect(parseVensimExpr('WITH LOOKUP( t , ([(0,0)-(2,2),(0,1),(2,1)], (0,0), (1,1), (2,2)) )')).toEqual(
+      call(
+        'WITH LOOKUP',
+        varRef('t'),
+        lookupDef(
+          [
+            [0, 0],
+            [1, 1],
+            [2, 2]
+          ],
+          {
+            min: [0, 0],
+            max: [2, 2]
+          }
+        )
+      )
+    )
+  })
+
   it('should parse a "GET DIRECT CONSTANTS" function call (with string arguments)', () => {
     expect(parseVensimExpr("GET DIRECT CONSTANTS('data/a.csv', ',', 'B2')")).toEqual(
       call('GET DIRECT CONSTANTS', stringLiteral('data/a.csv'), stringLiteral(','), stringLiteral('B2'))
