@@ -186,3 +186,4 @@ export { runSuite } from './suite/suite-runner'
 export * from './suite/suite-report-types'
 
 export { suiteSummaryFromReport } from './suite/suite-reporting'
+export * from './suite/suite-export'
