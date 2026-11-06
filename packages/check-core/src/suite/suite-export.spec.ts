@@ -628,47 +628,114 @@ describe('formatSuiteExportAsMarkdown', () => {
   it('should include a header with the compared bundles', () => {
     const md = formatSuiteExportAsMarkdown(exp)
     expect(md).toMatch(/^# Model check report\n/)
-    expect(md).toContain('Comparing `my-branch` (right, current) to `develop` (left, baseline).')
+    expect(md).toContain(
+      [
+        '# Model check report',
+        '',
+        'Comparing `my-branch` (right, current) to `develop` (left, baseline).',
+        'Generated 2026-10-28T18:15:00.000Z in 8.5 s.',
+        '',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should summarize checks and list each failure with its message', () => {
     const md = formatSuiteExportAsMarkdown(exp)
-    expect(md).toContain('## Checks')
-    expect(md).toContain('2 tests: 1 passed, 1 failed, 0 errors, 0 skipped.')
     expect(md).toContain(
-      '- **Emissions > should be below 50** (failed): when all inputs are at default... then Emissions...' +
-        ' should be < 50 but got 61.5 (expected < 50) in 2030'
+      [
+        '## Checks',
+        '',
+        '2 tests: 1 passed, 1 failed, 0 errors, 0 skipped.',
+        '',
+        '- **Emissions > should be below 50** (failed): when all inputs are at default... then Emissions...' +
+          ' should be < 50 but got 61.5 (expected < 50) in 2030',
+        '',
+        ''
+      ].join('\n')
     )
   })
 
   it('should include a performance table with the change', () => {
     const md = formatSuiteExportAsMarkdown(exp)
-    expect(md).toContain('## Performance')
-    expect(md).toContain('| develop | 1000 | 100 | 73.3 | 72.6 | 99.6 |')
-    expect(md).toContain('| my-branch | 900 | 100 | 45.1 | 41.2 | 99.1 |')
+    expect(md).toContain(
+      [
+        '## Performance',
+        '',
+        '| Bundle | Model size (bytes) | Data size (bytes) | Avg time (ms) | Min time (ms) | Max time (ms) |',
+        '|---|---|---|---|---|---|',
+        '| develop | 1000 | 100 | 73.3 | 72.6 | 99.6 |',
+        '| my-branch | 900 | 100 | 45.1 | 41.2 | 99.1 |',
+        '',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should include the baseline scenario diffs with values and direction', () => {
     const md = formatSuiteExportAsMarkdown(exp)
-    expect(md).toContain('## Baseline scenario (all inputs at default)')
-    expect(md).toContain('| Temperature | 1.71% | 0.37% | 2100 | 3.3361 | 3.2752 | down |')
-    expect(md).toContain('| New output | – | – | – | – | – | added |')
-    expect(md).toContain('| Old output | – | – | – | – | – | removed |')
+    expect(md).toContain(
+      [
+        '## Baseline scenario (all inputs at default)',
+        '',
+        '| Dataset | Max diff | Avg diff | Time of max diff | Left | Right | Change |',
+        '|---|---|---|---|---|---|---|',
+        '| Temperature | 1.71% | 0.37% | 2100 | 3.3361 | 3.2752 | down |',
+        '| New output | – | – | – | – | – | added |',
+        '| Old output | – | – | – | – | – | removed |',
+        '',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should include the dataset and scenario summary tables', () => {
     const md = formatSuiteExportAsMarkdown(exp)
-    expect(md).toContain('## Datasets with differences')
-    expect(md).toContain('| Emissions | 22.95% | 1 | Input A at maximum |')
-    expect(md).toContain('## Scenarios with differences')
-    expect(md).toContain('| Input A at maximum | 2 | 22.95% | Emissions |')
+    expect(md).toContain(
+      [
+        '## Datasets with differences',
+        '',
+        '| Dataset | Max diff | Scenarios with diffs | Worst scenario |',
+        '|---|---|---|---|',
+        '| Emissions | 22.95% | 1 | Input A at maximum |',
+        '| Temperature | 1.71% | 2 | All inputs at default |',
+        '| New output | 0.00% | 1 | All inputs at default |',
+        '| Old output | 0.00% | 1 | All inputs at default |',
+        '',
+        ''
+      ].join('\n')
+    )
+    // (this is the last section, so it should run to the end of the document)
+    expect(md.slice(md.indexOf('## Scenarios with differences'))).toBe(
+      [
+        '## Scenarios with differences',
+        '',
+        '| Scenario | Datasets with diffs | Max diff | Worst dataset |',
+        '|---|---|---|---|',
+        '| Input A at maximum | 2 | 22.95% | Emissions |',
+        '| All inputs at default | 3 | 1.71% | Temperature |',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should include the overall status', () => {
     const md = formatSuiteExportAsMarkdown(exp)
-    expect(md).toContain('**Status:** checks failed, differences found.')
+    expect(md).toContain(
+      [
+        'Generated 2026-10-28T18:15:00.000Z in 8.5 s.',
+        '',
+        '**Status:** checks failed, differences found.',
+        '',
+        ''
+      ].join('\n')
+    )
     const same = { ...exp, status: { checks: 'passed', comparison: 'same', differencesFound: false } as const }
-    expect(formatSuiteExportAsMarkdown(same)).toContain('**Status:** checks passed, no differences.')
+    expect(formatSuiteExportAsMarkdown(same)).toContain(
+      ['Generated 2026-10-28T18:15:00.000Z in 8.5 s.', '', '**Status:** checks passed, no differences.', '', ''].join(
+        '\n'
+      )
+    )
   })
 
   it('should list the inputs and outputs that were added, removed, or changed', () => {
@@ -684,13 +751,22 @@ describe('formatSuiteExportAsMarkdown', () => {
       }
     }
     const md = formatSuiteExportAsMarkdown(changed)
-    expect(md).toContain('## Inputs and outputs')
-    expect(md).toContain('- Added inputs: `New input`')
-    expect(md).toContain('- Removed inputs: `Old input`, `Other input`')
-    expect(md).toContain('- Added outputs: `New output`')
-    expect(md).toContain('- Removed outputs: `Old output`')
-    expect(md).toContain('| Input | Setting | Left | Right |')
-    expect(md).toContain('| Input B | maxValue | 100 | 200 |')
+    expect(md).toContain(
+      [
+        '## Inputs and outputs',
+        '',
+        '- Added inputs: `New input`',
+        '- Removed inputs: `Old input`, `Other input`',
+        '- Added outputs: `New output`',
+        '- Removed outputs: `Old output`',
+        '',
+        '| Input | Setting | Left | Right |',
+        '|---|---|---|---|',
+        '| Input B | maxValue | 100 | 200 |',
+        '',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should say so when no inputs or outputs changed', () => {
@@ -702,7 +778,9 @@ describe('formatSuiteExportAsMarkdown', () => {
         outputs: { added: [], removed: [] }
       }
     }
-    expect(formatSuiteExportAsMarkdown(none)).toContain('No inputs or outputs were added, removed, or changed.')
+    expect(formatSuiteExportAsMarkdown(none)).toContain(
+      ['## Inputs and outputs', '', 'No inputs or outputs were added, removed, or changed.', '', ''].join('\n')
+    )
   })
 
   it('should summarize the graphs that were added, removed, or changed', () => {
@@ -727,15 +805,24 @@ describe('formatSuiteExportAsMarkdown', () => {
       }
     }
     const md = formatSuiteExportAsMarkdown(changed)
-    expect(md).toContain('## Graphs')
-    expect(md).toContain('4 of 5 graphs changed: 1 added, 1 removed, 1 with metadata changes, 2 with dataset changes.')
-    expect(md).toContain('| Graph | Change | Max diff |')
-    // (the pipes in values are escaped, so that they don't break the table)
-    expect(md).toContain('| 1: Temperature | metadata (units: C → K\\|F), datasets | 1.71% |')
-    expect(md).toContain('| 2: Emissions | datasets | 22.95% |')
-    expect(md).toContain('| 5: New graph | added | – |')
-    expect(md).toContain('| 3: Old graph | removed | – |')
-    expect(formatSuiteExportAsMarkdown(exp)).toContain('No graphs changed.')
+    expect(md).toContain(
+      [
+        '## Graphs',
+        '',
+        '4 of 5 graphs changed: 1 added, 1 removed, 1 with metadata changes, 2 with dataset changes.',
+        '',
+        '| Graph | Change | Max diff |',
+        '|---|---|---|',
+        // (the pipes in values are escaped, so that they don't break the table)
+        '| 1: Temperature | metadata (units: C → K\\|F), datasets | 1.71% |',
+        '| 2: Emissions | datasets | 22.95% |',
+        '| 5: New graph | added | – |',
+        '| 3: Old graph | removed | – |',
+        '',
+        ''
+      ].join('\n')
+    )
+    expect(formatSuiteExportAsMarkdown(exp)).toContain(['## Graphs', '', 'No graphs changed.', '', ''].join('\n'))
   })
 
   it('should list the scenarios that were not compared', () => {
@@ -755,16 +842,33 @@ describe('formatSuiteExportAsMarkdown', () => {
       }
     }
     const md = formatSuiteExportAsMarkdown(notCompared)
-    expect(md).toContain('## Scenarios that were not compared')
-    expect(md).toContain('- Input Gone at maximum: could not be run for the right bundle (unknown input `Input Gone`)')
-    expect(md).toContain('- All inputs at minimum: skipped')
+    expect(md).toContain(
+      [
+        '## Scenarios that were not compared',
+        '',
+        '- Input Gone at maximum: could not be run for the right bundle (unknown input `Input Gone`)',
+        '- All inputs at minimum: skipped',
+        '',
+        ''
+      ].join('\n')
+    )
     expect(formatSuiteExportAsMarkdown(exp)).not.toContain('## Scenarios that were not compared')
   })
 
   it('should truncate long tables and point to the JSON file', () => {
     const md = formatSuiteExportAsMarkdown(exp, { maxRows: 1 })
-    expect(md).toContain('| Emissions | 22.95% | 1 | Input A at maximum |')
-    expect(md).not.toContain('| Temperature | 1.71% | 2 |')
-    expect(md).toContain('Showing 1 of 4 datasets; see `report.json` for the full list.')
+    expect(md).toContain(
+      [
+        '## Datasets with differences',
+        '',
+        '| Dataset | Max diff | Scenarios with diffs | Worst scenario |',
+        '|---|---|---|---|',
+        '| Emissions | 22.95% | 1 | Input A at maximum |',
+        '',
+        'Showing 1 of 4 datasets; see `report.json` for the full list.',
+        '',
+        ''
+      ].join('\n')
+    )
   })
 })
