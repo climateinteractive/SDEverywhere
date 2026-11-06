@@ -122,20 +122,18 @@ export interface ExportedDiffPoint {
   change: number
 }
 
-/** The result of a single comparison (one dataset under one scenario) that has a difference. */
+/**
+ * The result of a single comparison (one dataset under one scenario) that has a difference.
+ * The scenario and dataset are referred to by key; their names are in the scenario and
+ * dataset summaries.
+ */
 export interface ExportedDiff {
-  /** The key of the scenario. */
+  /** The key of the scenario (see `ExportedComparison.scenarios`). */
   scenarioKey: string
-  /** The scenario title and subtitle. */
-  scenario: string
-  /** Whether this is the baseline scenario (all inputs at default). */
-  baseline: boolean
-  /** The key of the dataset. */
+  /** The key of the dataset (see `ExportedComparison.datasets`). */
   datasetKey: string
-  /** The name of the dataset. */
-  dataset: string
-  /** Whether the dataset exists in both models, or only one of them. */
-  validity: DiffValidity
+  /** Set only when the dataset exists in just one of the models. */
+  validity?: DiffValidity
   /** The largest difference, as a percentage of the combined value range. */
   maxDiff: number
   /** The average difference, as a percentage of the combined value range. */
@@ -212,19 +210,20 @@ export interface ExportedComparison {
   thresholds: number[]
   /** The counts of comparison tests, scenarios, and datasets. */
   counts: ExportedComparisonCounts
+  /** The key of the baseline scenario (all inputs at default), if there is one. */
+  baselineScenarioKey?: string
   /** Every comparison that has a difference, sorted by largest difference first. */
   diffs: ExportedDiff[]
-  /** A summary for each dataset with differences, sorted by largest difference first. */
+  /** A summary (including the name) for each dataset with differences, sorted by largest difference first. */
   datasets: ExportedDatasetSummary[]
-  /** A summary for each scenario with differences, sorted by largest difference first. */
+  /** A summary (including the name) for each scenario with differences, sorted by largest difference first. */
   scenarios: ExportedScenarioSummary[]
 }
 
 /**
- * A self-contained, machine-readable version of a `SuiteReport`, with all keys
- * resolved to human-readable names.  This is intended to be written to a JSON
- * file so that the results can be read by tools (including LLMs) without
- * running the model-check web app.
+ * A self-contained, machine-readable version of a `SuiteReport`.  This is intended
+ * to be written to a JSON file so that the results can be read by tools (including
+ * LLMs) without running the model-check web app.
  */
 export interface SuiteExport {
   /** The version of this export format. */
@@ -245,7 +244,9 @@ export interface SuiteExport {
 const notes = [
   'Diff values (maxDiff, avgDiff, minDiff) are not relative changes: each is the absolute difference between the left and right values, expressed as a percentage of the combined value range of both datasets (or as a relative change when both datasets are constant).',
   'The left bundle is the baseline and the right bundle is the current version; `change` is `valueR - valueL` at the time of the largest difference.',
-  'Only comparisons with a nonzero difference, or with a dataset that exists in just one of the models, are included in `diffs`.'
+  'Only comparisons with a nonzero difference, or with a dataset that exists in just one of the models, are included in `diffs`.',
+  'To keep the file small, each entry in `diffs` refers to its scenario and dataset by key; look up the names (and scenario input settings) in `scenarios` and `datasets`, for example with jq: `(.comparison.scenarios | INDEX(.scenarioKey)) as $s | .comparison.diffs[] | .scenario = $s[.scenarioKey].scenario`.',
+  'Diff values and model values are rounded to 6 significant digits.'
 ]
 
 /**
@@ -403,12 +404,13 @@ function isBaseline(scenario: ComparisonScenario | undefined): boolean {
 }
 
 /**
- * Round the given number to remove floating point noise.
+ * Round the given number to 6 significant digits to remove floating point noise
+ * and keep the exported file small.
  *
  * @param x The number to round.
  */
 function round(x: number): number {
-  return Number(x.toPrecision(10))
+  return Number(x.toPrecision(6))
 }
 
 /**
@@ -466,46 +468,54 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     return dataset?.outputVarR?.varName || dataset?.outputVarL?.varName || datasetKey
   }
 
+  /**
+   * Return the label for the given scenario key.
+   *
+   * @param scenarioKey The scenario key.
+   */
+  function scenarioName(scenarioKey: string): string {
+    return scenarioLabel(scenarios.getScenario(scenarioKey), scenarioKey)
+  }
+
   // Convert each comparison test that has a difference
   const diffs: ExportedDiff[] = []
   const baselineMaxDiffs = new Map<string, number>()
+  let baselineScenarioKey: string
   for (const testReport of comparisonReport.testReports) {
     const diffReport = testReport.diffReport
     if (diffReport === undefined) {
       continue
     }
-    const scenario = scenarios.getScenario(testReport.scenarioKey)
-    const baseline = isBaseline(scenario)
-    if (baseline) {
-      baselineMaxDiffs.set(testReport.datasetKey, diffReport.maxDiff)
+    if (isBaseline(scenarios.getScenario(testReport.scenarioKey))) {
+      baselineScenarioKey = testReport.scenarioKey
+      baselineMaxDiffs.set(testReport.datasetKey, round(diffReport.maxDiff))
     }
     if (diffReport.maxDiff === 0 && diffReport.validity === 'both') {
       continue
     }
     const diff: ExportedDiff = {
       scenarioKey: testReport.scenarioKey,
-      scenario: scenarioLabel(scenario, testReport.scenarioKey),
-      baseline,
       datasetKey: testReport.datasetKey,
-      dataset: datasetName(testReport.datasetKey),
-      validity: diffReport.validity,
-      maxDiff: diffReport.maxDiff,
-      avgDiff: diffReport.avgDiff,
-      minDiff: diffReport.minDiff,
+      maxDiff: round(diffReport.maxDiff),
+      avgDiff: round(diffReport.avgDiff),
+      minDiff: round(diffReport.minDiff),
       bucket: getBucketIndex(diffReport.maxDiff, thresholds)
+    }
+    if (diffReport.validity !== 'both') {
+      diff.validity = diffReport.validity
     }
     const point = diffReport.maxDiffPoint
     if (diffReport.validity === 'both' && point !== undefined) {
       diff.maxDiffPoint = {
         time: point.time,
-        valueL: point.valueL,
-        valueR: point.valueR,
+        valueL: round(point.valueL),
+        valueR: round(point.valueR),
         change: round(point.valueR - point.valueL)
       }
     }
     diffs.push(diff)
   }
-  sortByDiff(diffs, d => `${d.dataset} ${d.scenario}`)
+  sortByDiff(diffs, d => `${datasetName(d.datasetKey)} ${scenarioName(d.scenarioKey)}`)
 
   // Summarize the diffs for each dataset and scenario (the diffs are already
   // sorted, so the first diff seen for each dataset or scenario is the worst)
@@ -516,13 +526,13 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     if (ds === undefined) {
       ds = {
         datasetKey: diff.datasetKey,
-        dataset: diff.dataset,
+        dataset: datasetName(diff.datasetKey),
         maxDiff: diff.maxDiff,
         scenariosWithDiffs: 0,
-        worstScenario: diff.scenario,
+        worstScenario: scenarioName(diff.scenarioKey),
         baselineMaxDiff: baselineMaxDiffs.get(diff.datasetKey)
       }
-      if (diff.validity !== 'both') {
+      if (diff.validity !== undefined) {
         ds.validity = diff.validity
       }
       datasetSummaries.set(diff.datasetKey, ds)
@@ -533,11 +543,11 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     if (ss === undefined) {
       ss = {
         scenarioKey: diff.scenarioKey,
-        scenario: diff.scenario,
+        scenario: scenarioName(diff.scenarioKey),
         inputs: scenarioInputs(scenarios.getScenario(diff.scenarioKey)),
         maxDiff: diff.maxDiff,
         datasetsWithDiffs: 0,
-        worstDataset: diff.dataset
+        worstDataset: datasetName(diff.datasetKey)
       }
       scenarioSummaries.set(diff.scenarioKey, ss)
     }
@@ -558,6 +568,7 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
       datasets: [...datasets.getAllDatasets()].length,
       datasetsWithDiffs: datasetSummaries.size
     },
+    baselineScenarioKey,
     diffs,
     datasets: sortByDiff([...datasetSummaries.values()], d => d.dataset),
     scenarios: sortByDiff([...scenarioSummaries.values()], s => s.scenario)
@@ -676,16 +687,18 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
   )
 
   // Baseline scenario
+  const datasetNames = new Map(c.datasets.map(d => [d.datasetKey, d.dataset]))
   const baselineRows = c.diffs
-    .filter(d => d.baseline)
+    .filter(d => d.scenarioKey === c.baselineScenarioKey)
     .map(d => {
-      if (d.validity !== 'both' || d.maxDiffPoint === undefined) {
+      const dataset = datasetNames.get(d.datasetKey) || d.datasetKey
+      if (d.validity !== undefined || d.maxDiffPoint === undefined) {
         const status = d.validity === 'right-only' ? 'added' : d.validity === 'left-only' ? 'removed' : d.validity
-        return [d.dataset, '–', '–', '–', '–', '–', status]
+        return [dataset, '–', '–', '–', '–', '–', status]
       }
       const p = d.maxDiffPoint
       const direction = p.change > 0 ? 'up' : p.change < 0 ? 'down' : 'same'
-      return [d.dataset, pct(d.maxDiff), pct(d.avgDiff), String(p.time), num(p.valueL), num(p.valueR), direction]
+      return [dataset, pct(d.maxDiff), pct(d.avgDiff), String(p.time), num(p.valueL), num(p.valueR), direction]
     })
   lines.push('', '## Baseline scenario (all inputs at default)', '')
   if (baselineRows.length > 0) {

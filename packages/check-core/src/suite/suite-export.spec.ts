@@ -185,6 +185,10 @@ describe('exportSuiteReport', () => {
     expect(exp.notes.join(' ')).toMatch(/percentage of the combined value range/)
   })
 
+  it('should explain how to look up scenario and dataset names', () => {
+    expect(exp.notes.join(' ')).toMatch(/look up .* in `scenarios` and `datasets`/)
+  })
+
   it('should count check tests by status and flatten failures with fail values', () => {
     expect(exp.checks.counts).toEqual({ total: 2, passed: 1, failed: 1, error: 0, skipped: 0 })
     expect(exp.checks.tests).toEqual([
@@ -226,32 +230,59 @@ describe('exportSuiteReport', () => {
     })
   })
 
-  it('should list only diffs that changed, with resolved names and signed change, sorted by max diff', () => {
+  it('should list only diffs that changed, referring to scenarios and datasets by key, sorted by max diff', () => {
     const diffs = exp.comparison.diffs
-    expect(diffs.map(d => [d.scenario, d.dataset])).toEqual([
-      ['Input A at maximum', 'Emissions'],
-      ['All inputs at default', 'Temperature'],
-      ['Input A at maximum', 'Temperature'],
-      ['All inputs at default', 'New output'],
-      ['All inputs at default', 'Old output']
+    expect(diffs.map(d => [d.scenarioKey, d.datasetKey])).toEqual([
+      ['2', emis],
+      ['1', temp],
+      ['2', temp],
+      ['1', newOut],
+      ['1', oldOut]
     ])
     expect(diffs[0]).toEqual({
       scenarioKey: '2',
-      scenario: 'Input A at maximum',
-      baseline: false,
       datasetKey: emis,
-      dataset: 'Emissions',
-      validity: 'both',
       maxDiff: 22.95,
       avgDiff: 7.46,
       minDiff: 0,
       bucket: 4,
       maxDiffPoint: { time: 2036, valueL: 8.0515, valueR: 10.0611, change: 2.0096 }
     })
-    expect(diffs[1].baseline).toBe(true)
-    expect(diffs[1].maxDiffPoint.change).toBeCloseTo(-0.0609, 6)
+    expect(diffs[1].maxDiffPoint.change).toBe(-0.0609)
     expect(diffs[3].validity).toBe('right-only')
     expect(diffs[4].validity).toBe('left-only')
+  })
+
+  it('should include the key of the baseline scenario', () => {
+    expect(exp.comparison.baselineScenarioKey).toBe('1')
+  })
+
+  it('should round diff values to 6 significant digits', () => {
+    const noisyReport: SuiteReport = {
+      checkReport,
+      comparisonReport: {
+        ...comparisonReport,
+        testReports: [
+          testRpt(
+            aAtMax,
+            temp,
+            diff(50.448037676699734, 8.659383992928626, 2036, 0.5466984274204733, 0.28177259617798744)
+          )
+        ]
+      }
+    }
+    const c = exportSuiteReport(config, noisyReport, exportOptions).comparison
+    expect(c.diffs[0]).toEqual({
+      scenarioKey: '2',
+      datasetKey: temp,
+      maxDiff: 50.448,
+      avgDiff: 8.65938,
+      minDiff: 0,
+      bucket: 4,
+      maxDiffPoint: { time: 2036, valueL: 0.546698, valueR: 0.281773, change: -0.264926 }
+    })
+    expect(c.datasets[0].maxDiff).toBe(50.448)
+    expect(c.scenarios[0].maxDiff).toBe(50.448)
   })
 
   it('should summarize each dataset with diffs, including its baseline diff', () => {

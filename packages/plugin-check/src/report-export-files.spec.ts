@@ -41,6 +41,11 @@ describe('writeReportExportFiles', () => {
     expect(md).toContain('1 tests: 1 passed, 0 failed, 0 errors, 0 skipped.')
   })
 
+  it('should write report.json in compact form', async () => {
+    await writeReportExportFiles(reportDir, config, suiteReport, 0)
+    expect(readFileSync(joinPath(reportDir, 'report.json'), 'utf8')).not.toContain('\n')
+  })
+
   it('should create the report directory if it does not exist', async () => {
     const nestedDir = joinPath(reportDir, 'nested', 'check-report')
     await writeReportExportFiles(nestedDir, config, suiteReport, 0)
