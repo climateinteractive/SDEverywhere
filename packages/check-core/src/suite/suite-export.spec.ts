@@ -30,6 +30,7 @@ import type { Config } from '../config/config-types'
 import type { PerfReport } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
+import type { SuiteExport } from './suite-export'
 import { exportSuiteReport, formatSuiteExportAsMarkdown } from './suite-export'
 
 //
@@ -551,6 +552,80 @@ describe('formatSuiteExportAsMarkdown', () => {
     expect(md).toContain('| Emissions | 22.95% | 1 | Input A at maximum |')
     expect(md).toContain('## Scenarios with differences')
     expect(md).toContain('| Input A at maximum | 2 | 22.95% | Emissions |')
+  })
+
+  it('should include the overall status', () => {
+    const md = formatSuiteExportAsMarkdown(exp)
+    expect(md).toContain('**Status:** checks failed, differences found.')
+    const same = { ...exp, status: { checks: 'passed', comparison: 'same', differencesFound: false } as const }
+    expect(formatSuiteExportAsMarkdown(same)).toContain('**Status:** checks passed, no differences.')
+  })
+
+  it('should list the inputs and outputs that were added, removed, or changed', () => {
+    const changed = {
+      ...exp,
+      comparison: {
+        ...exp.comparison,
+        inputs: {
+          added: ['New input'],
+          removed: ['Old input', 'Other input'],
+          changed: [{ input: 'Input B', changes: [{ field: 'maxValue', valueL: 100, valueR: 200 }] }]
+        }
+      }
+    }
+    const md = formatSuiteExportAsMarkdown(changed)
+    expect(md).toContain('## Inputs and outputs')
+    expect(md).toContain('- Added inputs: `New input`')
+    expect(md).toContain('- Removed inputs: `Old input`, `Other input`')
+    expect(md).toContain('- Added outputs: `New output`')
+    expect(md).toContain('- Removed outputs: `Old output`')
+    expect(md).toContain('| Input | Setting | Left | Right |')
+    expect(md).toContain('| Input B | maxValue | 100 | 200 |')
+  })
+
+  it('should say so when no inputs or outputs changed', () => {
+    const none: SuiteExport = {
+      ...exp,
+      comparison: {
+        ...exp.comparison,
+        inputs: { added: [], removed: [], changed: [] },
+        outputs: { added: [], removed: [] }
+      }
+    }
+    expect(formatSuiteExportAsMarkdown(none)).toContain('No inputs or outputs were added, removed, or changed.')
+  })
+
+  it('should summarize the graphs that were added, removed, or changed', () => {
+    const changed = {
+      ...exp,
+      comparison: {
+        ...exp.comparison,
+        graphs: {
+          counts: { total: 5, added: 1, removed: 1, metadataChanged: 1, datasetsChanged: 2 },
+          changes: [
+            {
+              graphId: '1',
+              title: 'Temperature',
+              metadata: [{ key: 'units', valueL: 'C', valueR: 'K|F' }],
+              maxDiff: 1.71
+            },
+            { graphId: '2', title: 'Emissions', maxDiff: 22.95 },
+            { graphId: '5', title: 'New graph', inclusion: 'right-only' as const },
+            { graphId: '3', title: 'Old graph', inclusion: 'left-only' as const }
+          ]
+        }
+      }
+    }
+    const md = formatSuiteExportAsMarkdown(changed)
+    expect(md).toContain('## Graphs')
+    expect(md).toContain('4 of 5 graphs changed: 1 added, 1 removed, 1 with metadata changes, 2 with dataset changes.')
+    expect(md).toContain('| Graph | Change | Max diff |')
+    // (the pipes in values are escaped, so that they don't break the table)
+    expect(md).toContain('| 1: Temperature | metadata (units: C → K\\|F), datasets | 1.71% |')
+    expect(md).toContain('| 2: Emissions | datasets | 22.95% |')
+    expect(md).toContain('| 5: New graph | added | – |')
+    expect(md).toContain('| 3: Old graph | removed | – |')
+    expect(formatSuiteExportAsMarkdown(exp)).toContain('No graphs changed.')
   })
 
   it('should truncate long tables and point to the JSON file', () => {

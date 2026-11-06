@@ -857,11 +857,110 @@ function pct(x: number): string {
 function table(header: string[], rows: string[][], maxRows: number, noun: string): string[] {
   const lines = [`| ${header.join(' | ')} |`, `|${header.map(() => '---').join('|')}|`]
   for (const row of rows.slice(0, maxRows)) {
-    lines.push(`| ${row.join(' | ')} |`)
+    // (escape the pipes in the cells, so that they don't break the table)
+    lines.push(`| ${row.map(cell => cell.replace(/\|/g, '\\|')).join(' | ')} |`)
   }
   if (rows.length > maxRows) {
     lines.push('', `Showing ${maxRows} of ${rows.length} ${noun}; see \`report.json\` for the full list.`)
   }
+  return lines
+}
+
+/** The descriptions of the check statuses. */
+const checksStatusText: Record<ExportedStatus['checks'], string> = {
+  passed: 'checks passed',
+  failed: 'checks failed',
+  none: 'no checks'
+}
+
+/** The descriptions of the comparison statuses. */
+const comparisonStatusText: Record<ExportedStatus['comparison'], string> = {
+  same: 'no differences',
+  changed: 'differences found',
+  skipped: 'comparisons skipped',
+  none: 'comparisons not run'
+}
+
+/**
+ * Return a short description of the overall status (for example, "checks passed, no differences").
+ *
+ * @param status The status.
+ */
+function statusText(status: ExportedStatus): string {
+  return `${checksStatusText[status.checks]}, ${comparisonStatusText[status.comparison]}`
+}
+
+/**
+ * Return the lines of the Markdown section that lists the inputs and outputs that were added,
+ * removed, or changed.
+ *
+ * @param c The exported comparison results.
+ * @param maxRows The maximum number of rows to include in the table.
+ */
+function inputsAndOutputsSection(c: ExportedComparison, maxRows: number): string[] {
+  const lines = ['', '## Inputs and outputs', '']
+  const names = (list: string[]) => list.map(name => `\`${name}\``).join(', ')
+  const lists: [string, string[]][] = [
+    ['Added inputs', c.inputs.added],
+    ['Removed inputs', c.inputs.removed],
+    ['Added outputs', c.outputs.added],
+    ['Removed outputs', c.outputs.removed]
+  ]
+  for (const [label, list] of lists) {
+    if (list.length > 0) {
+      lines.push(`- ${label}: ${names(list)}`)
+    }
+  }
+  const rows = c.inputs.changed.flatMap(i => i.changes.map(f => [i.input, f.field, String(f.valueL), String(f.valueR)]))
+  if (rows.length > 0) {
+    if (lines.length > 3) {
+      lines.push('')
+    }
+    lines.push(...table(['Input', 'Setting', 'Left', 'Right'], rows, maxRows, 'input settings'))
+  }
+  if (lines.length === 3) {
+    lines.push('No inputs or outputs were added, removed, or changed.')
+  }
+  return lines
+}
+
+/**
+ * Return the lines of the Markdown section that summarizes the graphs that were added, removed,
+ * or changed.
+ *
+ * @param c The exported comparison results.
+ * @param maxRows The maximum number of rows to include in the table.
+ */
+function graphsSection(c: ExportedComparison, maxRows: number): string[] {
+  const lines = ['', '## Graphs', '']
+  const { counts, changes } = c.graphs
+  if (changes.length === 0) {
+    lines.push('No graphs changed.')
+    return lines
+  }
+  lines.push(
+    `${changes.length} of ${counts.total} graphs changed: ${counts.added} added, ${counts.removed} removed, ` +
+      `${counts.metadataChanged} with metadata changes, ${counts.datasetsChanged} with dataset changes.`,
+    ''
+  )
+  const rows = changes.map(g => {
+    let change: string
+    if (g.inclusion !== undefined) {
+      change = g.inclusion === 'right-only' ? 'added' : 'removed'
+    } else {
+      const parts: string[] = []
+      if (g.metadata) {
+        const fields = g.metadata.map(m => `${m.key}: ${m.valueL ?? '(none)'} → ${m.valueR ?? '(none)'}`)
+        parts.push(`metadata (${fields.join(', ')})`)
+      }
+      if (g.maxDiff) {
+        parts.push('datasets')
+      }
+      change = parts.join(', ')
+    }
+    return [`${g.graphId}: ${g.title}`, change, g.maxDiff ? pct(g.maxDiff) : '–']
+  })
+  lines.push(...table(['Graph', 'Change', 'Max diff'], rows, maxRows, 'graphs'))
   return lines
 }
 
@@ -881,6 +980,7 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
     lines.push(`Comparing \`${c.bundleL.name}\` (left, baseline) to \`${c.bundleR.name}\` (right, current).`)
   }
   lines.push(`Generated ${suiteExport.date} in ${(suiteExport.elapsedMillis / 1000).toFixed(1)} s.`, '')
+  lines.push(`**Status:** ${statusText(suiteExport.status)}.`, '')
   for (const note of suiteExport.notes) {
     lines.push(`- ${note}`)
   }
@@ -937,6 +1037,8 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
     '',
     `${cc.testsWithDiffs} of ${cc.tests} comparisons have differences, across ${cc.scenariosWithDiffs} of ${cc.scenarios} scenarios and ${cc.datasetsWithDiffs} of ${cc.datasets} datasets.`
   )
+
+  lines.push(...inputsAndOutputsSection(c, maxRows), ...graphsSection(c, maxRows))
 
   // Baseline scenario
   const datasetNames = new Map(c.datasets.map(d => [d.datasetKey, d.dataset]))
