@@ -436,6 +436,74 @@ describe('exportSuiteReport', () => {
     })
   })
 
+  describe('status', () => {
+    const passedCheckReport: CheckReport = { groups: [checkReport.groups[0]] }
+    const sameTestReports = comparisonReport.testReports.slice(0, 2).map(t => ({ ...t, diffReport: noDiff() }))
+    const same = mockBundle('develop', 1000, ['Input A'], ['Temperature', 'Emissions'])
+    const sameConfig: Config = { check: checkConfig, comparison: { ...comparisonConfig, bundleL: same, bundleR: same } }
+    const sameReport: SuiteReport = {
+      checkReport: passedCheckReport,
+      comparisonReport: { ...comparisonReport, testReports: sameTestReports }
+    }
+
+    it('should say whether checks failed and whether the comparisons found differences', () => {
+      expect(exp.status).toEqual({ checks: 'failed', comparison: 'changed', differencesFound: true })
+    })
+
+    it('should say that nothing changed when the checks passed and the comparisons found no differences', () => {
+      expect(exportSuiteReport(sameConfig, sameReport, exportOptions).status).toEqual({
+        checks: 'passed',
+        comparison: 'same',
+        differencesFound: false
+      })
+    })
+
+    it('should count a change to a graph or an input as a difference, even if no datasets differ', () => {
+      const graph = (units: string): BundleGraphSpec => ({
+        id: '1',
+        title: 'Temperature',
+        legendItems: [],
+        datasets: [],
+        metadata: new Map([['units', units]])
+      })
+      const l = mockBundle('develop', 1000, ['Input A'], ['Temperature', 'Emissions'])
+      const r = mockBundle('my-branch', 1000, ['Input A'], ['Temperature', 'Emissions'])
+      l.modelSpec.graphSpecs = [graph('C')]
+      r.modelSpec.graphSpecs = [graph('K')]
+      const graphConfig: Config = { check: checkConfig, comparison: { ...comparisonConfig, bundleL: l, bundleR: r } }
+      expect(exportSuiteReport(graphConfig, sameReport, exportOptions).status.comparison).toBe('changed')
+
+      const i = mockBundle('my-branch', 1000, ['Input A'], ['Temperature', 'Emissions'])
+      const [varIdA, inputA] = [...i.modelSpec.inputVars.entries()][0]
+      i.modelSpec.inputVars.set(varIdA, { ...(inputA as SliderInputVar), maxValue: 200 })
+      const inputConfig: Config = { check: checkConfig, comparison: { ...comparisonConfig, bundleL: same, bundleR: i } }
+      expect(exportSuiteReport(inputConfig, sameReport, exportOptions).status.comparison).toBe('changed')
+    })
+
+    it('should say that the comparisons were skipped when every comparison test was skipped', () => {
+      const skippedReport: SuiteReport = {
+        checkReport: passedCheckReport,
+        comparisonReport: {
+          ...comparisonReport,
+          testReports: sameTestReports.map(t => ({ ...t, diffReport: undefined }))
+        }
+      }
+      expect(exportSuiteReport(sameConfig, skippedReport, exportOptions).status).toEqual({
+        checks: 'passed',
+        comparison: 'skipped',
+        differencesFound: false
+      })
+    })
+
+    it('should say "none" when there are no checks or comparisons', () => {
+      expect(exportSuiteReport({ check: checkConfig }, { checkReport: { groups: [] } }, exportOptions).status).toEqual({
+        checks: 'none',
+        comparison: 'none',
+        differencesFound: false
+      })
+    })
+  })
+
   it('should omit the comparison section when comparisons were not run', () => {
     const checksOnly = exportSuiteReport({ check: checkConfig }, { checkReport }, exportOptions)
     expect(checksOnly.comparison).toBeUndefined()

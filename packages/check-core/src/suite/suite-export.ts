@@ -302,6 +302,22 @@ export interface ExportedComparison {
 }
 
 /**
+ * The overall status of a suite run, for tools (for example, CI jobs) that only need to know
+ * whether the report is worth looking at.
+ */
+export interface ExportedStatus {
+  /** `failed` if any check test failed or had an error, `passed` if not, or `none` if there are no check tests. */
+  checks: 'passed' | 'failed' | 'none'
+  /**
+   * `changed` if any dataset, input, output, or graph differs between the two bundles, `same` if
+   * not, `skipped` if every comparison test was skipped, or `none` if comparisons were not run.
+   */
+  comparison: 'same' | 'changed' | 'skipped' | 'none'
+  /** True if the comparison status is `changed`. */
+  differencesFound: boolean
+}
+
+/**
  * A self-contained, machine-readable version of a `SuiteReport`.  This is intended
  * to be written to a JSON file so that the results can be read by tools (including
  * LLMs) without running the model-check web app.
@@ -315,6 +331,8 @@ export interface SuiteExport {
   elapsedMillis: number
   /** Notes that explain how to interpret the values. */
   notes: string[]
+  /** The overall status of the checks and comparisons. */
+  status: ExportedStatus
   /** The check results. */
   checks: ExportedChecks
   /** The comparison results (only defined if comparisons were run). */
@@ -327,7 +345,8 @@ const notes = [
   'The left bundle is the baseline and the right bundle is the current version; `change` is `valueR - valueL` at the time of the largest difference.',
   'Only comparisons with a nonzero difference, or with a dataset that exists in just one of the models, are included in `diffs`.',
   'To keep the file small, each entry in `diffs` refers to its scenario and dataset by key; look up the names (and scenario input settings) in `scenarios` and `datasets`, for example with jq: `(.comparison.scenarios | INDEX(.scenarioKey)) as $s | .comparison.diffs[] | .scenario = $s[.scenarioKey].scenario`.',
-  'Diff values and model values are rounded to 6 significant digits.'
+  'Diff values and model values are rounded to 6 significant digits.',
+  '`status` summarizes the results: `status.differencesFound` is true if any dataset, input, output, or graph differs between the two bundles (see `comparison.inputs`, `comparison.outputs`, and `comparison.graphs`).'
 ]
 
 /**
@@ -344,14 +363,57 @@ export function exportSuiteReport(config: Config, suiteReport: SuiteReport, opti
     comparison = exportComparison(config.comparison, suiteReport.comparisonReport)
   }
 
+  const checks = exportChecks(suiteReport.checkReport)
   return {
     schemaVersion: 1,
     date: options?.date || new Date().toISOString(),
     elapsedMillis: options?.elapsedMillis || 0,
     notes,
-    checks: exportChecks(suiteReport.checkReport),
+    status: exportStatus(checks, comparison, suiteReport.comparisonReport),
+    checks,
     comparison
   }
+}
+
+/**
+ * Return the overall status of the checks and comparisons.
+ *
+ * @param checks The exported check results.
+ * @param comparison The exported comparison results, if comparisons were run.
+ * @param comparisonReport The comparison report, if comparisons were run.
+ * @returns The status.
+ */
+function exportStatus(
+  checks: ExportedChecks,
+  comparison: ExportedComparison | undefined,
+  comparisonReport: ComparisonReport | undefined
+): ExportedStatus {
+  let checksStatus: ExportedStatus['checks']
+  if (checks.counts.total === 0) {
+    checksStatus = 'none'
+  } else if (checks.counts.failed > 0 || checks.counts.error > 0) {
+    checksStatus = 'failed'
+  } else {
+    checksStatus = 'passed'
+  }
+
+  let comparisonStatus: ExportedStatus['comparison']
+  const testReports = comparisonReport?.testReports || []
+  if (comparison === undefined) {
+    comparisonStatus = 'none'
+  } else if (testReports.length > 0 && testReports.every(t => t.diffReport === undefined)) {
+    comparisonStatus = 'skipped'
+  } else {
+    const { inputs, outputs, graphs } = comparison
+    const changed =
+      comparison.diffs.length > 0 ||
+      inputs.added.length + inputs.removed.length + inputs.changed.length > 0 ||
+      outputs.added.length + outputs.removed.length > 0 ||
+      graphs.changes.length > 0
+    comparisonStatus = changed ? 'changed' : 'same'
+  }
+
+  return { checks: checksStatus, comparison: comparisonStatus, differencesFound: comparisonStatus === 'changed' }
 }
 
 /**
