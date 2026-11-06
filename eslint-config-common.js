@@ -74,6 +74,15 @@ export const svelteRules = {
   }
 }
 
-export const allRules = [eslint.configs.recommended, jsAndTsRules, svelteRules, prettier]
+// Require braces around the body of every `if`, `else`, `for`, `while`, and `do` statement.
+// This must come after the `prettier` config, which turns off the `curly` rule (the `all`
+// option is compatible with Prettier).
+export const styleRules = {
+  rules: {
+    curly: ['error', 'all']
+  }
+}
+
+export const allRules = [eslint.configs.recommended, jsAndTsRules, svelteRules, prettier, styleRules]
 
 export default allRules
