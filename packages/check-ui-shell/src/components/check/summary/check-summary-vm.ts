@@ -10,7 +10,7 @@ import type {
   CheckStatus,
   CheckScenario
 } from '@sdeverywhere/check-core'
-import { scenarioMessage, datasetMessage, predicateMessage } from '@sdeverywhere/check-core'
+import { countCheckPredicates, datasetMessage, predicateMessage, scenarioMessage } from '@sdeverywhere/check-core'
 
 import { CheckSummaryGraphBoxViewModel } from './check-summary-graph-box-vm'
 import type { CheckSummaryRowViewModel } from './check-summary-row-vm'
@@ -320,53 +320,7 @@ export function createCheckSummaryViewModel(
   dataCoordinator: CheckDataCoordinator,
   checkReport: CheckReport
 ): CheckSummaryViewModel {
-  let passed = 0
-  let failed = 0
-  let errors = 0
-  let skipped = 0
-
-  for (const group of checkReport.groups) {
-    for (const test of group.tests) {
-      // Check if this test was skipped (has no scenarios)
-      if (test.scenarios.length === 0) {
-        skipped++
-        continue
-      }
-
-      for (const scenario of test.scenarios) {
-        if (scenario.datasets.length === 0) {
-          errors++
-          continue
-        }
-        for (const dataset of scenario.datasets) {
-          if (dataset.predicates.length === 0) {
-            errors++
-            continue
-          }
-          for (const predicate of dataset.predicates) {
-            switch (predicate.result.status) {
-              case 'passed':
-                passed++
-                break
-              case 'failed':
-                failed++
-                break
-              case 'error':
-                errors++
-                break
-              case 'skipped':
-                skipped++
-                break
-              default:
-                break
-            }
-          }
-        }
-      }
-    }
-  }
-
-  const total = passed + failed + errors + skipped
+  const { total, passed, failed, errors, skipped } = countCheckPredicates(checkReport)
   let percents: [number, number, number, number]
   if (total > 0) {
     percents = [(passed / total) * 100, (failed / total) * 100, (errors / total) * 100, (skipped / total) * 100]

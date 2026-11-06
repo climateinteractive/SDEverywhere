@@ -17,7 +17,11 @@ import type {
   ComparisonViewGroup,
   DatasetKey
 } from '@sdeverywhere/check-core'
-import { categorizeComparisonTestSummaries, getScoresForTestSummaries } from '@sdeverywhere/check-core'
+import {
+  categorizeComparisonTestSummaries,
+  countComparisonGroupsWithDiffs,
+  getScoresForTestSummaries
+} from '@sdeverywhere/check-core'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
 import { hasSignificantDiffs } from '../_shared/buckets'
@@ -412,10 +416,7 @@ function createSectionViewModel(
  * Return the number of rows with differences for a given set of group summaries.
  */
 function rowsWithDiffs(groupSummaries: Readable<ComparisonGroupSummariesByCategory>): Readable<number> {
-  return derived(groupSummaries, $groupSummaries => {
-    const rowsWithoutDiffsCount = $groupSummaries.withoutDiffs?.length || 0
-    return $groupSummaries.allGroupSummaries.size - rowsWithoutDiffsCount
-  })
+  return derived(groupSummaries, $groupSummaries => countComparisonGroupsWithDiffs($groupSummaries))
 }
 
 /**
