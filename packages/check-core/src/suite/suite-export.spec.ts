@@ -19,7 +19,12 @@ import {
 import { allAtPos as checkAllAtPos } from '../check/_mocks/mock-check-scenario'
 
 import type { ComparisonScenario } from '../comparison/_shared/comparison-resolved-types'
-import { allAtPos, inputVar, scenarioWithInputVar } from '../comparison/_shared/_mocks/mock-resolved-types'
+import {
+  allAtPos,
+  inputVar,
+  scenarioWithInput,
+  scenarioWithInputVar
+} from '../comparison/_shared/_mocks/mock-resolved-types'
 import type { ComparisonConfig } from '../comparison/config/comparison-config'
 import { getComparisonDatasets } from '../comparison/config/comparison-datasets'
 import { getComparisonScenarios } from '../comparison/config/comparison-scenarios'
@@ -96,6 +101,13 @@ const a = [...bundleR.modelSpec.inputVars.values()][0]
 
 const baseline = allAtPos('1', 'at-default', { title: 'All inputs', subtitle: 'at default' })
 const aAtMax = scenarioWithInputVar('2', a, 'at-maximum')
+// (a scenario that sets an input that only the left bundle has, so it can't be run for the right)
+const goneAtMax = scenarioWithInput('3', 'Input Gone', 'at-maximum', a, undefined, aAtMax.specL, undefined, {
+  title: 'Input Gone',
+  subtitle: 'at maximum'
+})
+// (a scenario that was filtered out, so that none of its comparisons were run)
+const filtered = allAtPos('4', 'at-minimum', { title: 'All inputs', subtitle: 'at minimum' })
 
 const temp = 'Model_temperature'
 const emis = 'Model_emissions'
@@ -481,6 +493,19 @@ describe('exportSuiteReport', () => {
       expect(exportSuiteReport(inputConfig, sameReport, exportOptions).status.comparison).toBe('changed')
     })
 
+    it('should count a scenario that could not be run as a difference', () => {
+      const invalidConfig: Config = {
+        check: checkConfig,
+        comparison: {
+          ...comparisonConfig,
+          bundleL: same,
+          bundleR: same,
+          scenarios: getComparisonScenarios([baseline, goneAtMax])
+        }
+      }
+      expect(exportSuiteReport(invalidConfig, sameReport, exportOptions).status.comparison).toBe('changed')
+    })
+
     it('should say that the comparisons were skipped when every comparison test was skipped', () => {
       const skippedReport: SuiteReport = {
         checkReport: passedCheckReport,
@@ -503,6 +528,64 @@ describe('exportSuiteReport', () => {
         differencesFound: false
       })
     })
+  })
+
+  it('should list the scenarios that could not be run, and leave their datasets out of the diffs', () => {
+    const c = exportSuiteReport(
+      {
+        check: checkConfig,
+        comparison: { ...comparisonConfig, scenarios: getComparisonScenarios([baseline, aAtMax, goneAtMax]) }
+      },
+      {
+        checkReport,
+        comparisonReport: {
+          ...comparisonReport,
+          testReports: [
+            ...comparisonReport.testReports,
+            {
+              scenarioKey: goneAtMax.key,
+              datasetKey: temp,
+              diffReport: { ...noDiff(), validity: 'left-only' as const }
+            }
+          ]
+        }
+      },
+      exportOptions
+    ).comparison
+    expect(c.invalidScenarios).toEqual([
+      {
+        scenarioKey: '3',
+        scenario: 'Input Gone at maximum',
+        side: 'right',
+        errors: [{ input: 'Input Gone', side: 'right', kind: 'unknown-input' }]
+      }
+    ])
+    expect(c.diffs.map(d => d.scenarioKey)).not.toContain('3')
+    expect(c.counts.testsWithDiffs).toBe(5)
+  })
+
+  it('should list the scenarios that were skipped', () => {
+    const c = exportSuiteReport(
+      {
+        check: checkConfig,
+        comparison: { ...comparisonConfig, scenarios: getComparisonScenarios([baseline, aAtMax, filtered]) }
+      },
+      {
+        checkReport,
+        comparisonReport: {
+          ...comparisonReport,
+          testReports: [
+            ...comparisonReport.testReports,
+            { scenarioKey: filtered.key, datasetKey: temp, diffReport: undefined },
+            { scenarioKey: filtered.key, datasetKey: emis, diffReport: undefined }
+          ]
+        }
+      },
+      exportOptions
+    ).comparison
+    expect(c.skippedScenarios).toEqual([{ scenarioKey: '4', scenario: 'All inputs at minimum' }])
+    expect(exp.comparison.invalidScenarios).toEqual([])
+    expect(exp.comparison.skippedScenarios).toEqual([])
   })
 
   it('should omit the comparison section when comparisons were not run', () => {
@@ -626,6 +709,29 @@ describe('formatSuiteExportAsMarkdown', () => {
     expect(md).toContain('| 5: New graph | added | – |')
     expect(md).toContain('| 3: Old graph | removed | – |')
     expect(formatSuiteExportAsMarkdown(exp)).toContain('No graphs changed.')
+  })
+
+  it('should list the scenarios that were not compared', () => {
+    const notCompared: SuiteExport = {
+      ...exp,
+      comparison: {
+        ...exp.comparison,
+        invalidScenarios: [
+          {
+            scenarioKey: '3',
+            scenario: 'Input Gone at maximum',
+            side: 'right',
+            errors: [{ input: 'Input Gone', side: 'right', kind: 'unknown-input' }]
+          }
+        ],
+        skippedScenarios: [{ scenarioKey: '4', scenario: 'All inputs at minimum' }]
+      }
+    }
+    const md = formatSuiteExportAsMarkdown(notCompared)
+    expect(md).toContain('## Scenarios that were not compared')
+    expect(md).toContain('- Input Gone at maximum: could not be run for the right bundle (unknown input `Input Gone`)')
+    expect(md).toContain('- All inputs at minimum: skipped')
+    expect(formatSuiteExportAsMarkdown(exp)).not.toContain('## Scenarios that were not compared')
   })
 
   it('should truncate long tables and point to the JSON file', () => {

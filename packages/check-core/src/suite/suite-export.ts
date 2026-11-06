@@ -3,7 +3,7 @@
 import type { ModelSpec } from '../bundle/bundle-types'
 import type { CheckReport, CheckStatus } from '../check/check-report'
 import { datasetMessage, predicateMessage, scenarioMessage } from '../check/check-report'
-import type { ComparisonScenario } from '../comparison/_shared/comparison-resolved-types'
+import type { ComparisonResolverError, ComparisonScenario } from '../comparison/_shared/comparison-resolved-types'
 import type { ComparisonConfig } from '../comparison/config/comparison-config'
 import type { DiffValidity } from '../comparison/diff-datasets/diff-datasets'
 import type { GraphComparisonMetadataReport } from '../comparison/diff-graphs/diff-graphs'
@@ -175,6 +175,39 @@ export interface ExportedGraphChanges {
   changes: ExportedGraphChange[]
 }
 
+/** Which of the bundles something applies to. */
+export type ExportedSide = 'left' | 'right' | 'both'
+
+/** An input (or input setting group) of a scenario that could not be resolved. */
+export interface ExportedScenarioInputError {
+  /** The requested name of the input (or the ID of the input setting group). */
+  input: string
+  /** The bundles in which it could not be resolved. */
+  side: ExportedSide
+  /** The kind of error. */
+  kind: ComparisonResolverError['kind']
+}
+
+/** A scenario that could not be run for one or both bundles, so its datasets were not compared. */
+export interface ExportedInvalidScenario {
+  /** The key of the scenario. */
+  scenarioKey: string
+  /** The scenario title and subtitle. */
+  scenario: string
+  /** The bundles for which the scenario could not be run. */
+  side: ExportedSide
+  /** The inputs that could not be resolved. */
+  errors: ExportedScenarioInputError[]
+}
+
+/** A scenario whose comparisons were all skipped (for example, because it was filtered out). */
+export interface ExportedSkippedScenario {
+  /** The key of the scenario. */
+  scenarioKey: string
+  /** The scenario title and subtitle. */
+  scenario: string
+}
+
 /** The run time statistics for one of the bundles being compared. */
 export interface ExportedPerf {
   /** The average (trimmed mean) run time, in milliseconds. */
@@ -283,6 +316,10 @@ export interface ExportedComparison {
   outputs: ExportedOutputChanges
   /** The graphs that were added, removed, or changed (matched by graph ID). */
   graphs: ExportedGraphChanges
+  /** The scenarios that could not be run for one or both bundles (their datasets are not in `diffs`). */
+  invalidScenarios: ExportedInvalidScenario[]
+  /** The scenarios whose comparisons were all skipped. */
+  skippedScenarios: ExportedSkippedScenario[]
   /** The run time statistics for the left bundle. */
   perfL: ExportedPerf
   /** The run time statistics for the right bundle. */
@@ -309,8 +346,9 @@ export interface ExportedStatus {
   /** `failed` if any check test failed or had an error, `passed` if not, or `none` if there are no check tests. */
   checks: 'passed' | 'failed' | 'none'
   /**
-   * `changed` if any dataset, input, output, or graph differs between the two bundles, `same` if
-   * not, `skipped` if every comparison test was skipped, or `none` if comparisons were not run.
+   * `changed` if any dataset, input, output, or graph differs between the two bundles (or a
+   * scenario could not be run for one of them), `same` if not, `skipped` if every comparison test
+   * was skipped, or `none` if comparisons were not run.
    */
   comparison: 'same' | 'changed' | 'skipped' | 'none'
   /** True if the comparison status is `changed`. */
@@ -409,7 +447,8 @@ function exportStatus(
       comparison.diffs.length > 0 ||
       inputs.added.length + inputs.removed.length + inputs.changed.length > 0 ||
       outputs.added.length + outputs.removed.length > 0 ||
-      graphs.changes.length > 0
+      graphs.changes.length > 0 ||
+      comparison.invalidScenarios.length > 0
     comparisonStatus = changed ? 'changed' : 'same'
   }
 
@@ -620,13 +659,31 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     return scenarioLabel(scenarios.getScenario(scenarioKey), scenarioKey)
   }
 
-  // Convert each comparison test that has a difference
+  // Find the scenarios that could not be run for one or both bundles, and the ones whose
+  // comparisons were all skipped
+  const invalidScenarios: ExportedInvalidScenario[] = []
+  const skippedScenarios: ExportedSkippedScenario[] = []
+  for (const scenario of scenarios.getAllScenarios()) {
+    const invalid = exportInvalidScenario(scenario)
+    if (invalid !== undefined) {
+      invalidScenarios.push(invalid)
+      continue
+    }
+    const scenarioTests = comparisonReport.testReports.filter(t => t.scenarioKey === scenario.key)
+    if (scenarioTests.length > 0 && scenarioTests.every(t => t.diffReport === undefined)) {
+      skippedScenarios.push({ scenarioKey: scenario.key, scenario: scenarioName(scenario.key) })
+    }
+  }
+  const invalidScenarioKeys = new Set(invalidScenarios.map(s => s.scenarioKey))
+
+  // Convert each comparison test that has a difference (the datasets of a scenario that could not
+  // be run only exist on one side, which is not a difference between the bundles)
   const diffs: ExportedDiff[] = []
   const baselineMaxDiffs = new Map<string, number>()
   let baselineScenarioKey: string
   for (const testReport of comparisonReport.testReports) {
     const diffReport = testReport.diffReport
-    if (diffReport === undefined) {
+    if (diffReport === undefined || invalidScenarioKeys.has(testReport.scenarioKey)) {
       continue
     }
     if (isBaseline(scenarios.getScenario(testReport.scenarioKey))) {
@@ -703,6 +760,8 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     inputs: exportInputChanges(bundleL.modelSpec, bundleR.modelSpec),
     outputs: exportOutputChanges(bundleL.modelSpec, bundleR.modelSpec),
     graphs: exportGraphChanges(bundleL.modelSpec, bundleR.modelSpec, diffs),
+    invalidScenarios,
+    skippedScenarios,
     perfL: exportPerf(comparisonReport.perfReportL),
     perfR: exportPerf(comparisonReport.perfReportR),
     thresholds,
@@ -718,6 +777,37 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     diffs,
     datasets: sortByDiff([...datasetSummaries.values()], d => d.dataset),
     scenarios: sortByDiff([...scenarioSummaries.values()], s => s.scenario)
+  }
+}
+
+/**
+ * Return the given scenario as an invalid scenario if it could not be run for one or both bundles
+ * (because an input or input setting group could not be resolved), or undefined if it can be run.
+ *
+ * @param scenario The scenario.
+ */
+function exportInvalidScenario(scenario: ComparisonScenario): ExportedInvalidScenario | undefined {
+  const side = (left: boolean, right: boolean): ExportedSide | undefined =>
+    left && right ? 'both' : left ? 'left' : right ? 'right' : undefined
+  const scenarioSide = side(scenario.specL === undefined, scenario.specR === undefined)
+  if (scenarioSide === undefined) {
+    return undefined
+  }
+  const errors: ExportedScenarioInputError[] = []
+  if (scenario.settings.kind === 'input-settings') {
+    for (const input of scenario.settings.inputs) {
+      const errorSide = side(input.stateL.error !== undefined, input.stateR.error !== undefined)
+      if (errorSide !== undefined) {
+        const kind = (input.stateL.error || input.stateR.error).kind
+        errors.push({ input: input.requestedName, side: errorSide, kind })
+      }
+    }
+  }
+  return {
+    scenarioKey: scenario.key,
+    scenario: scenarioLabel(scenario, scenario.key),
+    side: scenarioSide,
+    errors
   }
 }
 
@@ -964,6 +1054,34 @@ function graphsSection(c: ExportedComparison, maxRows: number): string[] {
   return lines
 }
 
+/** The descriptions of the kinds of scenario input errors. */
+const inputErrorText: Record<ComparisonResolverError['kind'], string> = {
+  'unknown-input': 'unknown input',
+  'unknown-input-setting-group': 'unknown input setting group'
+}
+
+/**
+ * Return the lines of the Markdown section that lists the scenarios that could not be run or were
+ * skipped (or no lines if there are none).
+ *
+ * @param c The exported comparison results.
+ */
+function notComparedSection(c: ExportedComparison): string[] {
+  if (c.invalidScenarios.length === 0 && c.skippedScenarios.length === 0) {
+    return []
+  }
+  const lines = ['', '## Scenarios that were not compared', '']
+  for (const s of c.invalidScenarios) {
+    const bundles = s.side === 'both' ? 'left and right bundles' : `${s.side} bundle`
+    const errors = s.errors.map(e => `${inputErrorText[e.kind]} \`${e.input}\``).join(', ')
+    lines.push(`- ${s.scenario}: could not be run for the ${bundles}${errors ? ` (${errors})` : ''}`)
+  }
+  for (const s of c.skippedScenarios) {
+    lines.push(`- ${s.scenario}: skipped`)
+  }
+  return lines
+}
+
 /**
  * Format a `SuiteExport` as a Markdown summary.
  *
@@ -1038,7 +1156,7 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
     `${cc.testsWithDiffs} of ${cc.tests} comparisons have differences, across ${cc.scenariosWithDiffs} of ${cc.scenarios} scenarios and ${cc.datasetsWithDiffs} of ${cc.datasets} datasets.`
   )
 
-  lines.push(...inputsAndOutputsSection(c, maxRows), ...graphsSection(c, maxRows))
+  lines.push(...inputsAndOutputsSection(c, maxRows), ...graphsSection(c, maxRows), ...notComparedSection(c))
 
   // Baseline scenario
   const datasetNames = new Map(c.datasets.map(d => [d.datasetKey, d.dataset]))
