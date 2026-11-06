@@ -9,8 +9,8 @@ import { exportSuiteReport, formatSuiteExportAsMarkdown } from '@sdeverywhere/ch
 /**
  * Write machine-readable versions of the suite report (`report.json` and `report.md`)
  * to the given report directory.  The JSON is written in compact form to keep the file
- * small (use a tool like `jq .` to pretty-print it).  These files allow tools (including LLMs) to read
- * the check and comparison results without running the model-check web app.
+ * small (use a tool like `jq .` to pretty-print it).  These files allow tools (including
+ * LLMs) to read the check and comparison results without running the model-check web app.
  *
  * @param reportDir The directory where the files will be written.
  * @param config The configuration that was used to run the suite.
