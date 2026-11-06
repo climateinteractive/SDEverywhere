@@ -558,9 +558,15 @@ function exportChecks(checkReport: CheckReport): ExportedChecks {
               datasetMsg,
               predicateMessage(predicate, plain)
             )
-            if (result.failValue !== undefined) f.failValue = result.failValue
-            if (result.failRefValue !== undefined) f.failRefValue = result.failRefValue
-            if (result.failTime !== undefined) f.failTime = result.failTime
+            if (result.failValue !== undefined) {
+              f.failValue = result.failValue
+            }
+            if (result.failRefValue !== undefined) {
+              f.failRefValue = result.failRefValue
+            }
+            if (result.failTime !== undefined) {
+              f.failTime = result.failTime
+            }
             failures.push(f)
           }
         }
