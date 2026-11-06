@@ -6,6 +6,8 @@ import { datasetMessage, predicateMessage, scenarioMessage } from '../check/chec
 import type { ComparisonScenario } from '../comparison/_shared/comparison-resolved-types'
 import type { ComparisonConfig } from '../comparison/config/comparison-config'
 import type { DiffValidity } from '../comparison/diff-datasets/diff-datasets'
+import type { GraphComparisonMetadataReport } from '../comparison/diff-graphs/diff-graphs'
+import { diffGraphs } from '../comparison/diff-graphs/diff-graphs'
 import type { ComparisonReport } from '../comparison/report/comparison-report-types'
 import { getBucketIndex } from '../comparison/report/buckets'
 import type { Config } from '../config/config-types'
@@ -137,6 +139,42 @@ export interface ExportedOutputChanges {
   removed: string[]
 }
 
+/** A graph that was added, removed, or changed between the two bundles. */
+export interface ExportedGraphChange {
+  /** The ID of the graph. */
+  graphId: string
+  /** The title of the graph (in the right bundle, if it is there). */
+  title: string
+  /** Set only when the graph is in just one of the bundles. */
+  inclusion?: 'left-only' | 'right-only'
+  /** The metadata fields whose values differ (omitted if none). */
+  metadata?: GraphComparisonMetadataReport[]
+  /** The largest difference among the datasets of the graph, in any scenario (omitted if none). */
+  maxDiff?: number
+}
+
+/** The counts of graphs that were added, removed, or changed. */
+export interface ExportedGraphCounts {
+  /** The total number of graphs (in either bundle). */
+  total: number
+  /** The number of graphs that are only in the right ("current") bundle. */
+  added: number
+  /** The number of graphs that are only in the left ("baseline") bundle. */
+  removed: number
+  /** The number of graphs (in both bundles) whose metadata differs. */
+  metadataChanged: number
+  /** The number of graphs (in both bundles) that have a dataset with a difference in any scenario. */
+  datasetsChanged: number
+}
+
+/** The graphs that differ between the two bundles. */
+export interface ExportedGraphChanges {
+  /** The counts of graphs that were added, removed, or changed. */
+  counts: ExportedGraphCounts
+  /** The graphs that were added, removed, or changed, in the order of the right bundle, then the removed graphs. */
+  changes: ExportedGraphChange[]
+}
+
 /** The run time statistics for one of the bundles being compared. */
 export interface ExportedPerf {
   /** The average (trimmed mean) run time, in milliseconds. */
@@ -243,6 +281,8 @@ export interface ExportedComparison {
   inputs: ExportedInputChanges
   /** The output variables that were added or removed (matched by dataset key). */
   outputs: ExportedOutputChanges
+  /** The graphs that were added, removed, or changed (matched by graph ID). */
+  graphs: ExportedGraphChanges
   /** The run time statistics for the left bundle. */
   perfL: ExportedPerf
   /** The run time statistics for the right bundle. */
@@ -600,6 +640,7 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     bundleR: exportBundle(bundleR),
     inputs: exportInputChanges(bundleL.modelSpec, bundleR.modelSpec),
     outputs: exportOutputChanges(bundleL.modelSpec, bundleR.modelSpec),
+    graphs: exportGraphChanges(bundleL.modelSpec, bundleR.modelSpec, diffs),
     perfL: exportPerf(comparisonReport.perfReportL),
     perfR: exportPerf(comparisonReport.perfReportR),
     thresholds,
@@ -664,6 +705,64 @@ function exportOutputChanges(specL: ModelSpec, specR: ModelSpec): ExportedOutput
   const only = (a: ModelSpec, b: ModelSpec) =>
     [...a.outputVars].filter(([datasetKey]) => !b.outputVars.has(datasetKey)).map(([, v]) => v.varName)
   return { added: only(specR, specL), removed: only(specL, specR) }
+}
+
+/**
+ * Return the graphs that were added, removed, or changed between the two model specs.
+ *
+ * @param specL The model spec of the left ("baseline") bundle.
+ * @param specR The model spec of the right ("current") bundle.
+ * @param diffs The comparisons that have a difference.
+ * @returns The graph changes.
+ */
+function exportGraphChanges(specL: ModelSpec, specR: ModelSpec, diffs: ExportedDiff[]): ExportedGraphChanges {
+  // Find the largest difference for each dataset (in any scenario)
+  const maxDiffs = new Map<string, number>()
+  for (const diff of diffs) {
+    if (diff.validity === undefined) {
+      maxDiffs.set(diff.datasetKey, Math.max(maxDiffs.get(diff.datasetKey) ?? 0, diff.maxDiff))
+    }
+  }
+
+  // Compare the graphs in the order of the right bundle, then the graphs that were removed
+  const graphsL = specL.graphSpecs || []
+  const graphsR = specR.graphSpecs || []
+  const graphIds = [...new Set([...graphsR.map(g => g.id), ...graphsL.map(g => g.id)])]
+  const counts: ExportedGraphCounts = {
+    total: graphIds.length,
+    added: 0,
+    removed: 0,
+    metadataChanged: 0,
+    datasetsChanged: 0
+  }
+  const changes: ExportedGraphChange[] = []
+  for (const graphId of graphIds) {
+    const graphL = graphsL.find(g => g.id === graphId)
+    const graphR = graphsR.find(g => g.id === graphId)
+    const change: ExportedGraphChange = { graphId, title: (graphR || graphL).title }
+    // (the dataset diffs are found below, from the diffs in all scenarios, so no scenario is given here)
+    const report = diffGraphs(graphL, graphR, undefined, [])
+    if (report.inclusion === 'left-only' || report.inclusion === 'right-only') {
+      change.inclusion = report.inclusion
+      counts[report.inclusion === 'right-only' ? 'added' : 'removed']++
+      changes.push(change)
+      continue
+    }
+    if (report.metadataReports.length > 0) {
+      change.metadata = report.metadataReports
+      counts.metadataChanged++
+    }
+    const datasetKeys = [...graphL.datasets, ...graphR.datasets].map(d => d.datasetKey)
+    const maxDiff = Math.max(0, ...datasetKeys.map(key => maxDiffs.get(key) ?? 0))
+    if (maxDiff > 0) {
+      change.maxDiff = maxDiff
+      counts.datasetsChanged++
+    }
+    if (change.metadata || change.maxDiff) {
+      changes.push(change)
+    }
+  }
+  return { counts, changes }
 }
 
 /**

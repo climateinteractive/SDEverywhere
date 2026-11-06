@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { DatasetKey } from '../_shared/types'
-import type { BundleModel, LoadedBundle, ModelSpec } from '../bundle/bundle-types'
+import type { BundleGraphSpec, BundleModel, LoadedBundle, ModelSpec } from '../bundle/bundle-types'
 import type { OutputVar, SliderInputVar } from '../bundle/var-types'
 
 import type { CheckConfig } from '../check/check-config'
@@ -380,6 +380,60 @@ describe('exportSuiteReport', () => {
     ).comparison
     expect(c.inputs).toEqual({ added: [], removed: [], changed: [] })
     expect(c.outputs).toEqual({ added: [], removed: [] })
+  })
+
+  it('should summarize the graphs that were added, removed, or changed (in their metadata or data)', () => {
+    const graph = (id: string, title: string, datasetKey: DatasetKey, metadata: [string, string][] = []) => {
+      const spec: BundleGraphSpec = {
+        id,
+        title,
+        legendItems: [],
+        datasets: [{ datasetKey, varName: title, color: 'red' }],
+        metadata: new Map(metadata)
+      }
+      return spec
+    }
+    const l = mockBundle('develop', 1000, ['Input A'], ['Temperature', 'Emissions', 'Old output'])
+    const r = mockBundle('my-branch', 1000, ['Input A'], ['Temperature', 'Emissions', 'New output'])
+    l.modelSpec.graphSpecs = [
+      graph('1', 'Temperature', temp, [['units', 'C']]),
+      graph('2', 'Emissions', emis),
+      graph('3', 'Old graph', oldOut),
+      graph('4', 'Unchanged', 'Model_other', [['units', 'm']])
+    ]
+    r.modelSpec.graphSpecs = [
+      graph('1', 'Temperature', temp, [['units', 'K']]),
+      graph('2', 'Emissions', emis),
+      graph('4', 'Unchanged', 'Model_other', [['units', 'm']]),
+      graph('5', 'New graph', newOut)
+    ]
+    const c = exportSuiteReport(
+      { check: checkConfig, comparison: { ...comparisonConfig, bundleL: l, bundleR: r } },
+      suiteReport,
+      exportOptions
+    ).comparison
+    // (a graph's max diff is the largest diff of its datasets in any scenario)
+    expect(c.graphs).toEqual({
+      counts: { total: 5, added: 1, removed: 1, metadataChanged: 1, datasetsChanged: 2 },
+      changes: [
+        {
+          graphId: '1',
+          title: 'Temperature',
+          metadata: [{ key: 'units', valueL: 'C', valueR: 'K' }],
+          maxDiff: 1.71
+        },
+        { graphId: '2', title: 'Emissions', maxDiff: 22.95 },
+        { graphId: '5', title: 'New graph', inclusion: 'right-only' },
+        { graphId: '3', title: 'Old graph', inclusion: 'left-only' }
+      ]
+    })
+  })
+
+  it('should have no graph changes when the bundles have no graphs', () => {
+    expect(exp.comparison.graphs).toEqual({
+      counts: { total: 0, added: 0, removed: 0, metadataChanged: 0, datasetsChanged: 0 },
+      changes: []
+    })
   })
 
   it('should omit the comparison section when comparisons were not run', () => {
