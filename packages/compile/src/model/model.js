@@ -153,9 +153,13 @@ function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
 
   // Dimensions must be defined before reading variables that use them.
   readDimensionDefs(parsedModel, modelDirname)
-  if (opts?.stopAfterReadSubscripts) return
+  if (opts?.stopAfterReadSubscripts) {
+    return
+  }
   resolveDimensions(spec.dimensionFamilies)
-  if (opts?.stopAfterResolveSubscripts) return
+  if (opts?.stopAfterResolveSubscripts) {
+    return
+  }
 
   // Read variables from the model parse tree.
   const vars = readVariables(parsedModel, specialSeparationDims, separateAllVarsWithDims)
@@ -224,7 +228,9 @@ function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
 
   // Add the variables to the `Model`
   vars.forEach(addVariable)
-  if (opts?.stopAfterReadVariables) return
+  if (opts?.stopAfterReadVariables) {
+    return
+  }
 
   if (parsedModel.kind === 'xmile') {
     // XXX: In the case of XMILE, we need to resolve any wildcards used in dimension
@@ -257,7 +263,9 @@ function readModel(parsedModel, spec, extData, directData, modelDirname, opts) {
 
   // Analyze model equations to fill in more details about variables.
   analyze(parsedModel.kind, spec?.inputVars, opts)
-  if (opts?.stopAfterAnalyze) return
+  if (opts?.stopAfterAnalyze) {
+    return
+  }
 
   // Check that all input and output vars in the spec actually exist in the model.
   checkSpecVars(spec)
@@ -425,7 +433,9 @@ function analyze(modelKind, inputVars, opts) {
     let reduceMode = opts?.reduceVariables || process.env.SDE_NONPUBLIC_REDUCE_VARIABLES || 'default'
     reduceVariables(variables, inputVars || [], reduceMode)
   }
-  if (opts?.stopAfterReduceVariables === true) return
+  if (opts?.stopAfterReduceVariables === true) {
+    return
+  }
 
   // Read the RHS to list the refIds of vars that are referenced and set the var type.
   variables.forEach(v => {
@@ -941,8 +951,12 @@ function sortVarsOfType(varType) {
   }
 
   // Sort into an lhs dependency list.
-  if (PRINT_AUX_GRAPH) printDepsGraph(graph, 'AUX')
-  if (PRINT_LEVEL_GRAPH) printDepsGraph(graph, 'LEVEL')
+  if (PRINT_AUX_GRAPH) {
+    printDepsGraph(graph, 'AUX')
+  }
+  if (PRINT_LEVEL_GRAPH) {
+    printDepsGraph(graph, 'LEVEL')
+  }
   let deps = toposort(graph).reverse()
 
   // Turn the dependency-sorted var name list into a var list.
@@ -1035,7 +1049,9 @@ function sortInitVars() {
   for (let refId of depsMap.keys()) {
     R.forEach(dep => graph.push([refId, dep]), depsMap.get(refId))
   }
-  if (PRINT_INIT_GRAPH) printDepsGraph(graph, 'INIT')
+  if (PRINT_INIT_GRAPH) {
+    printDepsGraph(graph, 'INIT')
+  }
 
   // Sort into a reference id dependency list.
   let deps = toposort(graph).reverse()
