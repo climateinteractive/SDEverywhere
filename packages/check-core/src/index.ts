@@ -187,3 +187,4 @@ export * from './suite/suite-report-types'
 
 export { suiteSummaryFromReport } from './suite/suite-reporting'
 export * from './suite/suite-export'
+export * from './suite/suite-tab-status'
