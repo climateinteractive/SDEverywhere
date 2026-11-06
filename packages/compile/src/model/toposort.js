@@ -28,7 +28,9 @@ function toposort(nodes, edges) {
   })
 
   while (i--) {
-    if (!visited[i]) visit(nodes[i], i, new Set())
+    if (!visited[i]) {
+      visit(nodes[i], i, new Set())
+    }
   }
 
   return sorted
@@ -63,7 +65,9 @@ function toposort(nodes, edges) {
       )
     }
 
-    if (visited[i]) return
+    if (visited[i]) {
+      return
+    }
     visited[i] = true
 
     var outgoing = outgoingEdges.get(node) || new Set()
@@ -166,8 +170,12 @@ function makeOutgoingEdges(arr) {
   var edges = new Map()
   for (var i = 0, len = arr.length; i < len; i++) {
     var edge = arr[i]
-    if (!edges.has(edge[0])) edges.set(edge[0], new Set())
-    if (!edges.has(edge[1])) edges.set(edge[1], new Set())
+    if (!edges.has(edge[0])) {
+      edges.set(edge[0], new Set())
+    }
+    if (!edges.has(edge[1])) {
+      edges.set(edge[1], new Set())
+    }
     edges.get(edge[0]).add(edge[1])
   }
   return edges
