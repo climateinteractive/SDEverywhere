@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Climate Interactive / New Venture Fund
 
+import type { ModelSpec } from '../bundle/bundle-types'
 import type { CheckReport, CheckStatus } from '../check/check-report'
 import { datasetMessage, predicateMessage, scenarioMessage } from '../check/check-report'
 import type { ComparisonScenario } from '../comparison/_shared/comparison-resolved-types'
@@ -98,6 +99,42 @@ export interface ExportedBundle {
   inputs: number
   /** The number of output variables. */
   outputs: number
+}
+
+/** A setting of an input variable that differs between the two bundles. */
+export interface ExportedInputFieldChange {
+  /** The name of the setting (for example, `defaultValue` or `maxValue`). */
+  field: string
+  /** The value in the left ("baseline") bundle. */
+  valueL: number | string
+  /** The value in the right ("current") bundle. */
+  valueR: number | string
+}
+
+/** An input variable whose settings differ between the two bundles. */
+export interface ExportedInputChange {
+  /** The name of the input variable (in the right bundle). */
+  input: string
+  /** The settings that differ. */
+  changes: ExportedInputFieldChange[]
+}
+
+/** The input variables that differ between the two bundles. */
+export interface ExportedInputChanges {
+  /** The names of the input variables that are only in the right ("current") bundle. */
+  added: string[]
+  /** The names of the input variables that are only in the left ("baseline") bundle. */
+  removed: string[]
+  /** The input variables whose settings differ. */
+  changed: ExportedInputChange[]
+}
+
+/** The output variables that differ between the two bundles. */
+export interface ExportedOutputChanges {
+  /** The names of the output variables that are only in the right ("current") bundle. */
+  added: string[]
+  /** The names of the output variables that are only in the left ("baseline") bundle. */
+  removed: string[]
 }
 
 /** The run time statistics for one of the bundles being compared. */
@@ -202,6 +239,10 @@ export interface ExportedComparison {
   bundleL: ExportedBundle
   /** Metadata for the right ("current") bundle. */
   bundleR: ExportedBundle
+  /** The input variables that were added, removed, or changed (matched by variable ID). */
+  inputs: ExportedInputChanges
+  /** The output variables that were added or removed (matched by dataset key). */
+  outputs: ExportedOutputChanges
   /** The run time statistics for the left bundle. */
   perfL: ExportedPerf
   /** The run time statistics for the right bundle. */
@@ -557,6 +598,8 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
   return {
     bundleL: exportBundle(bundleL),
     bundleR: exportBundle(bundleR),
+    inputs: exportInputChanges(bundleL.modelSpec, bundleR.modelSpec),
+    outputs: exportOutputChanges(bundleL.modelSpec, bundleR.modelSpec),
     perfL: exportPerf(comparisonReport.perfReportL),
     perfR: exportPerf(comparisonReport.perfReportR),
     thresholds,
@@ -573,6 +616,54 @@ function exportComparison(comparisonConfig: ComparisonConfig, comparisonReport: 
     datasets: sortByDiff([...datasetSummaries.values()], d => d.dataset),
     scenarios: sortByDiff([...scenarioSummaries.values()], s => s.scenario)
   }
+}
+
+/** The settings of an input variable that are compared between the two bundles. */
+const inputFields = ['kind', 'defaultValue', 'minValue', 'maxValue', 'offValue', 'onValue'] as const
+
+/**
+ * Return the input variables that were added, removed, or changed between the two model specs.
+ *
+ * @param specL The model spec of the left ("baseline") bundle.
+ * @param specR The model spec of the right ("current") bundle.
+ * @returns The input changes.
+ */
+function exportInputChanges(specL: ModelSpec, specR: ModelSpec): ExportedInputChanges {
+  const added: string[] = []
+  const changed: ExportedInputChange[] = []
+  for (const [varId, inputR] of specR.inputVars) {
+    const inputL = specL.inputVars.get(varId)
+    if (inputL === undefined) {
+      added.push(inputR.varName)
+      continue
+    }
+    const changes: ExportedInputFieldChange[] = []
+    for (const field of inputFields) {
+      const valueL = (inputL as unknown as Record<string, number | string>)[field]
+      const valueR = (inputR as unknown as Record<string, number | string>)[field]
+      if (valueL !== valueR) {
+        changes.push({ field, valueL, valueR })
+      }
+    }
+    if (changes.length > 0) {
+      changed.push({ input: inputR.varName, changes })
+    }
+  }
+  const removed = [...specL.inputVars].filter(([varId]) => !specR.inputVars.has(varId)).map(([, v]) => v.varName)
+  return { added, removed, changed }
+}
+
+/**
+ * Return the output variables that were added or removed between the two model specs.
+ *
+ * @param specL The model spec of the left ("baseline") bundle.
+ * @param specR The model spec of the right ("current") bundle.
+ * @returns The output changes.
+ */
+function exportOutputChanges(specL: ModelSpec, specR: ModelSpec): ExportedOutputChanges {
+  const only = (a: ModelSpec, b: ModelSpec) =>
+    [...a.outputVars].filter(([datasetKey]) => !b.outputVars.has(datasetKey)).map(([, v]) => v.varName)
+  return { added: only(specR, specL), removed: only(specL, specR) }
 }
 
 /**

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { DatasetKey } from '../_shared/types'
 import type { BundleModel, LoadedBundle, ModelSpec } from '../bundle/bundle-types'
-import type { OutputVar } from '../bundle/var-types'
+import type { OutputVar, SliderInputVar } from '../bundle/var-types'
 
 import type { CheckConfig } from '../check/check-config'
 import type { CheckReport } from '../check/check-report'
@@ -343,6 +343,43 @@ describe('exportSuiteReport', () => {
         worstDataset: 'Temperature'
       }
     ])
+  })
+
+  it('should list the inputs and outputs that were added or removed, and the inputs whose settings changed', () => {
+    const l = mockBundle('develop', 1000, ['Input A', 'Input B', 'Old input'], ['Temperature', 'Old output'])
+    const r = mockBundle('my-branch', 1000, ['Input A', 'Input B', 'New input'], ['Temperature', 'New output'])
+    const [varIdB, inputB] = [...r.modelSpec.inputVars.entries()].find(([, v]) => v.varName === 'Input B')
+    r.modelSpec.inputVars.set(varIdB, { ...(inputB as SliderInputVar), defaultValue: 60, maxValue: 200 })
+    const c = exportSuiteReport(
+      { check: checkConfig, comparison: { ...comparisonConfig, bundleL: l, bundleR: r } },
+      { checkReport, comparisonReport: { ...comparisonReport, testReports: [] } },
+      exportOptions
+    ).comparison
+    expect(c.inputs).toEqual({
+      added: ['New input'],
+      removed: ['Old input'],
+      changed: [
+        {
+          input: 'Input B',
+          changes: [
+            { field: 'defaultValue', valueL: 50, valueR: 60 },
+            { field: 'maxValue', valueL: 100, valueR: 200 }
+          ]
+        }
+      ]
+    })
+    expect(c.outputs).toEqual({ added: ['New output'], removed: ['Old output'] })
+  })
+
+  it('should have empty lists of input and output changes when the model specs match', () => {
+    const same = mockBundle('develop', 1000, ['Input A'], ['Temperature'])
+    const c = exportSuiteReport(
+      { check: checkConfig, comparison: { ...comparisonConfig, bundleL: same, bundleR: same } },
+      { checkReport, comparisonReport: { ...comparisonReport, testReports: [] } },
+      exportOptions
+    ).comparison
+    expect(c.inputs).toEqual({ added: [], removed: [], changed: [] })
+    expect(c.outputs).toEqual({ added: [], removed: [] })
   })
 
   it('should omit the comparison section when comparisons were not run', () => {
