@@ -1154,7 +1154,7 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
   const lines: string[] = ['# Model check report', '']
 
   if (c) {
-    lines.push(`Comparing \`${c.bundleL.name}\` (left, baseline) to \`${c.bundleR.name}\` (right, current).`)
+    lines.push(`Comparing \`${c.bundleR.name}\` (right, current) to \`${c.bundleL.name}\` (left, baseline).`)
   }
   lines.push(`Generated ${suiteExport.date} in ${(suiteExport.elapsedMillis / 1000).toFixed(1)} s.`, '')
   lines.push(`**Status:** ${statusText(suiteExport.status)}.`, '')

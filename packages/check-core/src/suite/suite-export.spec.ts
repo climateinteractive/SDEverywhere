@@ -628,7 +628,7 @@ describe('formatSuiteExportAsMarkdown', () => {
   it('should include a header with the compared bundles', () => {
     const md = formatSuiteExportAsMarkdown(exp)
     expect(md).toMatch(/^# Model check report\n/)
-    expect(md).toContain('Comparing `develop` (left, baseline) to `my-branch` (right, current).')
+    expect(md).toContain('Comparing `my-branch` (right, current) to `develop` (left, baseline).')
   })
 
   it('should summarize checks and list each failure with its message', () => {
