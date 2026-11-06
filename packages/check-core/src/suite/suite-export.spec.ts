@@ -453,7 +453,15 @@ describe('exportSuiteReport', () => {
     const passedCheckReport: CheckReport = { groups: [checkReport.groups[0]] }
     const sameTestReports = comparisonReport.testReports.slice(0, 2).map(t => ({ ...t, diffReport: noDiff() }))
     const same = mockBundle('develop', 1000, ['Input A'], ['Temperature', 'Emissions'])
-    const sameConfig: Config = { check: checkConfig, comparison: { ...comparisonConfig, bundleL: same, bundleR: same } }
+    const sameConfig: Config = {
+      check: checkConfig,
+      comparison: {
+        ...comparisonConfig,
+        bundleL: same,
+        bundleR: same,
+        datasets: getComparisonDatasets(same.modelSpec, same.modelSpec, undefined)
+      }
+    }
     const sameReport: SuiteReport = {
       checkReport: passedCheckReport,
       comparisonReport: { ...comparisonReport, testReports: sameTestReports }
@@ -504,6 +512,25 @@ describe('exportSuiteReport', () => {
         }
       }
       expect(exportSuiteReport(invalidConfig, sameReport, exportOptions).status.comparison).toBe('changed')
+    })
+
+    it('should include the statuses of the summary tabs, as the report shows them', () => {
+      expect(exp.summaryTabs).toEqual({
+        checks: { status: 'failed', subtitle: '1 failed' },
+        comparisonsByScenario: { status: 'warning', subtitle: '2 scenarios with diffs' },
+        comparisonsByDataset: { status: 'warning', subtitle: '4 datasets with diffs' }
+      })
+      expect(exportSuiteReport(sameConfig, sameReport, exportOptions).summaryTabs).toEqual({
+        checks: { status: 'passed', subtitle: '1 passed' },
+        comparisonsByScenario: { status: 'passed', subtitle: 'all clear' },
+        comparisonsByDataset: { status: 'passed', subtitle: 'all clear' }
+      })
+      // (the comparison tabs are omitted when comparisons were not run)
+      expect(
+        exportSuiteReport({ check: checkConfig }, { checkReport: { groups: [] } }, exportOptions).summaryTabs
+      ).toEqual({
+        checks: { status: 'none', subtitle: 'no checks' }
+      })
     })
 
     it('should say that the comparisons were skipped when every comparison test was skipped', () => {

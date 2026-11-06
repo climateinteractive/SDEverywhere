@@ -8,12 +8,21 @@ import type { ComparisonConfig } from '../comparison/config/comparison-config'
 import type { DiffValidity } from '../comparison/diff-datasets/diff-datasets'
 import type { GraphComparisonMetadataReport } from '../comparison/diff-graphs/diff-graphs'
 import { diffGraphs } from '../comparison/diff-graphs/diff-graphs'
+import { categorizeComparisonTestSummaries } from '../comparison/report/comparison-grouping'
 import type { ComparisonReport } from '../comparison/report/comparison-report-types'
+import { comparisonSummaryFromReport } from '../comparison/report/comparison-reporting'
 import { getBucketIndex } from '../comparison/report/buckets'
 import type { Config } from '../config/config-types'
 import type { PerfReport } from '../perf/perf-stats'
 
 import type { SuiteReport } from './suite-report-types'
+import type { SuiteTabStatus } from './suite-tab-status'
+import {
+  countCheckPredicates,
+  countComparisonGroupsWithDiffs,
+  getChecksTabStatus,
+  getComparisonTabStatus
+} from './suite-tab-status'
 
 /**
  * Options for `exportSuiteReport`.
@@ -356,6 +365,19 @@ export interface ExportedStatus {
 }
 
 /**
+ * The statuses of the summary tabs of the model-check report, as the report shows them (computed
+ * with the same functions as the report UI).
+ */
+export interface ExportedSummaryTabs {
+  /** The status of the "Checks" tab (which counts check predicates rather than tests). */
+  checks: SuiteTabStatus
+  /** The status of the "Comparisons by scenario" tab (only defined if comparisons were run). */
+  comparisonsByScenario?: SuiteTabStatus
+  /** The status of the "Comparisons by dataset" tab (only defined if comparisons were run). */
+  comparisonsByDataset?: SuiteTabStatus
+}
+
+/**
  * A self-contained, machine-readable version of a `SuiteReport`.  This is intended
  * to be written to a JSON file so that the results can be read by tools (including
  * LLMs) without running the model-check web app.
@@ -371,6 +393,8 @@ export interface SuiteExport {
   notes: string[]
   /** The overall status of the checks and comparisons. */
   status: ExportedStatus
+  /** The statuses of the summary tabs of the report. */
+  summaryTabs: ExportedSummaryTabs
   /** The check results. */
   checks: ExportedChecks
   /** The comparison results (only defined if comparisons were run). */
@@ -384,7 +408,7 @@ const notes = [
   'Only comparisons with a nonzero difference, or with a dataset that exists in just one of the models, are included in `diffs`.',
   'To keep the file small, each entry in `diffs` refers to its scenario and dataset by key; look up the names (and scenario input settings) in `scenarios` and `datasets`, for example with jq: `(.comparison.scenarios | INDEX(.scenarioKey)) as $s | .comparison.diffs[] | .scenario = $s[.scenarioKey].scenario`.',
   'Diff values and model values are rounded to 6 significant digits.',
-  '`status` summarizes the results: `status.differencesFound` is true if any dataset, input, output, or graph differs between the two bundles (see `comparison.inputs`, `comparison.outputs`, and `comparison.graphs`).'
+  '`status` summarizes the results: `status.differencesFound` is true if any dataset, input, output, or graph differs between the two bundles (see `comparison.inputs`, `comparison.outputs`, and `comparison.graphs`), and `summaryTabs` has the status and subtitle of each summary tab, as the report shows them.'
 ]
 
 /**
@@ -408,9 +432,44 @@ export function exportSuiteReport(config: Config, suiteReport: SuiteReport, opti
     elapsedMillis: options?.elapsedMillis || 0,
     notes,
     status: exportStatus(checks, comparison, suiteReport.comparisonReport),
+    summaryTabs: exportSummaryTabs(config, suiteReport, comparison),
     checks,
     comparison
   }
+}
+
+/**
+ * Return the statuses of the summary tabs of the report, as the report UI shows them.
+ *
+ * @param config The configuration that was used to run the suite.
+ * @param suiteReport The full suite report.
+ * @param comparison The exported comparison results, if comparisons were run.
+ * @returns The statuses of the tabs.
+ */
+function exportSummaryTabs(
+  config: Config,
+  suiteReport: SuiteReport,
+  comparison: ExportedComparison | undefined
+): ExportedSummaryTabs {
+  const tabs: ExportedSummaryTabs = {
+    checks: getChecksTabStatus(countCheckPredicates(suiteReport.checkReport))
+  }
+  if (config.comparison && suiteReport.comparisonReport && comparison) {
+    // (the UI categorizes the terse test summaries in the same way; the sort mode does not
+    // affect the counts)
+    const testSummaries = comparisonSummaryFromReport(suiteReport.comparisonReport).testSummaries
+    const groups = categorizeComparisonTestSummaries(config.comparison, testSummaries, 'max-diff')
+    const skippedScenarioCount = comparison.skippedScenarios.length
+    tabs.comparisonsByScenario = getComparisonTabStatus(
+      { count: countComparisonGroupsWithDiffs(groups.byScenario), kind: 'scenario' },
+      skippedScenarioCount
+    )
+    tabs.comparisonsByDataset = getComparisonTabStatus(
+      { count: countComparisonGroupsWithDiffs(groups.byDataset), kind: 'dataset' },
+      skippedScenarioCount
+    )
+  }
+  return tabs
 }
 
 /**
