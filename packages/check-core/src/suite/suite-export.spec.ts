@@ -23,7 +23,9 @@ import {
   allAtPos,
   inputVar,
   scenarioWithInput,
-  scenarioWithInputVar
+  scenarioWithInputVar,
+  viewGroup,
+  viewWithScenario
 } from '../comparison/_shared/_mocks/mock-resolved-types'
 import type { ComparisonConfig } from '../comparison/config/comparison-config'
 import { getComparisonDatasets } from '../comparison/config/comparison-datasets'
@@ -530,6 +532,44 @@ describe('exportSuiteReport', () => {
         exportSuiteReport({ check: checkConfig }, { checkReport: { groups: [] } }, exportOptions).summaryTabs
       ).toEqual({
         checks: { status: 'none', subtitle: 'no checks' }
+      })
+    })
+
+    it('should include the status of the "Comparison views" tab when views are defined', () => {
+      // (the tab is omitted when no views are defined)
+      expect(exp.summaryTabs.comparisonViews).toBeUndefined()
+
+      // A view that shows the datasets of a scenario with diffs counts as a view with diffs
+      const datasetsView = viewWithScenario('Baseline', undefined, baseline, ['1'])
+      const datasetsConfig: Config = {
+        check: checkConfig,
+        comparison: { ...comparisonConfig, viewGroups: [viewGroup('Views', [datasetsView])] }
+      }
+      expect(exportSuiteReport(datasetsConfig, suiteReport, exportOptions).summaryTabs.comparisonViews).toEqual({
+        status: 'warning',
+        subtitle: '1 view with diffs'
+      })
+
+      // A view that shows graphs grouped by diffs counts the graphs with diffs
+      const graph = (units: string): BundleGraphSpec => ({
+        id: '1',
+        title: 'Temperature',
+        legendItems: [],
+        datasets: [{ datasetKey: temp, varName: 'Temperature', color: 'red' }],
+        metadata: new Map([['units', units]])
+      })
+      const l = mockBundle('develop', 1000, ['Input A'], ['Temperature', 'Emissions', 'Old output'])
+      const r = mockBundle('my-branch', 900, ['Input A'], ['Temperature', 'Emissions', 'New output'])
+      l.modelSpec.graphSpecs = [graph('C')]
+      r.modelSpec.graphSpecs = [graph('K')]
+      const graphsView = viewWithScenario('Baseline graphs', undefined, baseline, ['1'], 'grouped-by-diffs')
+      const graphsConfig: Config = {
+        check: checkConfig,
+        comparison: { ...comparisonConfig, bundleL: l, bundleR: r, viewGroups: [viewGroup('Views', [graphsView])] }
+      }
+      expect(exportSuiteReport(graphsConfig, suiteReport, exportOptions).summaryTabs.comparisonViews).toEqual({
+        status: 'warning',
+        subtitle: '1 graph with diffs'
       })
     })
 

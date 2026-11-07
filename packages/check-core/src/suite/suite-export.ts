@@ -9,6 +9,7 @@ import type { DiffValidity } from '../comparison/diff-datasets/diff-datasets'
 import type { GraphComparisonMetadataReport } from '../comparison/diff-graphs/diff-graphs'
 import { diffGraphs } from '../comparison/diff-graphs/diff-graphs'
 import { categorizeComparisonTestSummaries } from '../comparison/report/comparison-grouping'
+import { summarizeComparisonViews } from '../comparison/report/comparison-view-summaries'
 import type { ComparisonReport } from '../comparison/report/comparison-report-types'
 import { comparisonSummaryFromReport } from '../comparison/report/comparison-reporting'
 import { getBucketIndex } from '../comparison/report/buckets'
@@ -21,7 +22,8 @@ import {
   countCheckPredicates,
   countComparisonGroupsWithDiffs,
   getChecksTabStatus,
-  getComparisonTabStatus
+  getComparisonTabStatus,
+  getComparisonViewsTabDiffCount
 } from './suite-tab-status'
 
 /**
@@ -371,6 +373,8 @@ export interface ExportedStatus {
 export interface ExportedSummaryTabs {
   /** The status of the "Checks" tab (which counts check predicates rather than tests). */
   checks: SuiteTabStatus
+  /** The status of the "Comparison views" tab (only defined if comparisons were run and views are defined). */
+  comparisonViews?: SuiteTabStatus
   /** The status of the "Comparisons by scenario" tab (only defined if comparisons were run). */
   comparisonsByScenario?: SuiteTabStatus
   /** The status of the "Comparisons by dataset" tab (only defined if comparisons were run). */
@@ -460,6 +464,12 @@ function exportSummaryTabs(
     const testSummaries = comparisonSummaryFromReport(suiteReport.comparisonReport).testSummaries
     const groups = categorizeComparisonTestSummaries(config.comparison, testSummaries, 'max-diff')
     const skippedScenarioCount = comparison.skippedScenarios.length
+    if (config.comparison.viewGroups.length > 0) {
+      tabs.comparisonViews = getComparisonTabStatus(
+        getComparisonViewsTabDiffCount(summarizeComparisonViews(config.comparison, groups)),
+        skippedScenarioCount
+      )
+    }
     tabs.comparisonsByScenario = getComparisonTabStatus(
       { count: countComparisonGroupsWithDiffs(groups.byScenario), kind: 'scenario' },
       skippedScenarioCount
