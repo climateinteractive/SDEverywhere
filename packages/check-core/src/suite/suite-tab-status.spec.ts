@@ -18,12 +18,19 @@ import type {
   ComparisonGroupSummariesByCategory,
   ComparisonGroupSummary
 } from '../comparison/report/comparison-group-types'
+import type { ComparisonViewGroupSummary } from '../comparison/report/comparison-view-summaries'
+import {
+  allAtPos as comparisonAllAtPos,
+  viewGroup,
+  viewWithScenario
+} from '../comparison/_shared/_mocks/mock-resolved-types'
 
 import {
   countCheckPredicates,
   countComparisonGroupsWithDiffs,
   getChecksTabStatus,
-  getComparisonTabStatus
+  getComparisonTabStatus,
+  getComparisonViewsTabDiffCount
 } from './suite-tab-status'
 
 describe('countCheckPredicates', () => {
@@ -121,5 +128,43 @@ describe('countComparisonGroupsWithDiffs', () => {
     } as ComparisonGroupSummariesByCategory
     expect(countComparisonGroupsWithDiffs(groups)).toBe(2)
     expect(countComparisonGroupsWithDiffs({ ...groups, withoutDiffs: undefined })).toBe(3)
+  })
+})
+
+describe('getComparisonViewsTabDiffCount', () => {
+  const scenario = comparisonAllAtPos('1', 'at-default')
+  const graphsView = viewWithScenario('Graphs', undefined, scenario, ['1', '2'], 'grouped-by-diffs')
+  const defaultView = viewWithScenario('Default', undefined, scenario, ['1'])
+  const group = viewGroup('Group', [graphsView, defaultView])
+
+  it('should count the changed graphs in the views that show graphs grouped by diffs', () => {
+    const summaries: ComparisonViewGroupSummary[] = [
+      {
+        viewGroup: group,
+        viewSummaries: [
+          { view: graphsView, changedGraphCount: 2, hasDiffs: true },
+          { view: graphsView, changedGraphCount: 1, hasDiffs: true },
+          { view: defaultView, changedGraphCount: 5, hasDiffs: true }
+        ]
+      }
+    ]
+    expect(getComparisonViewsTabDiffCount(summaries)).toEqual({ count: 3, kind: 'graph' })
+  })
+
+  it('should count the views with diffs when no graphs changed', () => {
+    const summaries: ComparisonViewGroupSummary[] = [
+      {
+        viewGroup: group,
+        viewSummaries: [
+          { view: graphsView, changedGraphCount: 0, hasDiffs: false },
+          { view: defaultView, hasDiffs: true }
+        ]
+      },
+      {
+        viewGroup: group,
+        viewSummaries: [{ view: { kind: 'unresolved-view' }, hasDiffs: true }]
+      }
+    ]
+    expect(getComparisonViewsTabDiffCount(summaries)).toEqual({ count: 2, kind: 'view' })
   })
 })

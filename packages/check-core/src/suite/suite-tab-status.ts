@@ -8,6 +8,7 @@
 
 import type { CheckReport } from '../check/check-report'
 import type { ComparisonGroupSummariesByCategory } from '../comparison/report/comparison-group-types'
+import type { ComparisonViewGroupSummary } from '../comparison/report/comparison-view-summaries'
 
 /** The status of a summary tab, which determines its color. */
 export type SuiteTabStatusKind = 'passed' | 'warning' | 'failed' | 'none'
@@ -191,4 +192,47 @@ export function getComparisonTabStatus(
 export function countComparisonGroupsWithDiffs(groupSummaries: ComparisonGroupSummariesByCategory): number {
   const rowsWithoutDiffsCount = groupSummaries.withoutDiffs?.length || 0
   return groupSummaries.allGroupSummaries.size - rowsWithoutDiffsCount
+}
+
+/**
+ * Return the kind and number of items that have differences on the "Comparison views" tab.  If one
+ * or more views show graphs grouped by diffs and some of those graphs changed, this is the number of
+ * changed graphs; otherwise it is the number of views with differences.
+ *
+ * @param viewGroupSummaries The summaries of the comparison views.
+ * @returns The kind and number of items that have differences.
+ */
+export function getComparisonViewsTabDiffCount(
+  viewGroupSummaries: ComparisonViewGroupSummary[]
+): ComparisonTabDiffCount {
+  let changedGraphCount = 0
+  let viewsWithDiffsCount = 0
+  for (const viewGroupSummary of viewGroupSummaries) {
+    for (const viewSummary of viewGroupSummary.viewSummaries) {
+      // TODO: We may end up counting the same graph here multiple times if there are multiple
+      // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
+      // Ideally we would get the number of unique graphs with changes here instead.
+      const view = viewSummary.view
+      if (view.kind === 'view' && view.graphOrder === 'grouped-by-diffs') {
+        changedGraphCount += viewSummary.changedGraphCount || 0
+      }
+      if (viewSummary.hasDiffs) {
+        viewsWithDiffsCount++
+      }
+    }
+  }
+
+  if (changedGraphCount > 0) {
+    // Show "N graphs with diffs"
+    return {
+      count: changedGraphCount,
+      kind: 'graph'
+    }
+  } else {
+    // Show "N views with diffs"
+    return {
+      count: viewsWithDiffsCount,
+      kind: 'view'
+    }
+  }
 }
