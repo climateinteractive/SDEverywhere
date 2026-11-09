@@ -38,7 +38,18 @@ describe('writeReportExportFiles', () => {
 
     const md = readFileSync(joinPath(reportDir, 'report.md'), 'utf8')
     expect(md).toMatch(/^# Model check report\n/)
-    expect(md).toContain('1 tests: 1 passed, 0 failed, 0 errors, 0 skipped.')
+    expect(md).toContain(
+      [
+        '## Checks',
+        '',
+        '1 test: 1 passed, 0 failed, 0 errors, 0 skipped.',
+        '',
+        '## Comparisons',
+        '',
+        'Comparisons were not run.',
+        ''
+      ].join('\n')
+    )
   })
 
   it('should write report.json in compact form', async () => {
