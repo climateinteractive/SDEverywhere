@@ -1157,6 +1157,17 @@ function notComparedSection(c: ExportedComparison): string[] {
   return lines
 }
 
+/**
+ * Return the given count followed by the noun, using the plural form of the noun unless
+ * the count is 1 (for example, "1 test" or "2 tests").
+ *
+ * @param count The count.
+ * @param noun The singular form of the noun.
+ */
+function counted(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? '' : 's'}`
+}
+
 /** The heading for each list of checks that did not pass, in the order they appear in the summary. */
 const checkFailureHeadings: [Exclude<CheckStatus, 'passed'>, string][] = [
   ['failed', 'Failed checks'],
@@ -1194,7 +1205,7 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
     '',
     '## Checks',
     '',
-    `${counts.total} tests: ${counts.passed} passed, ${counts.failed} failed, ${counts.error} errors, ${counts.skipped} skipped.`
+    `${counted(counts.total, 'test')}: ${counts.passed} passed, ${counts.failed} failed, ${counted(counts.error, 'error')}, ${counts.skipped} skipped.`
   )
   for (const [status, heading] of checkFailureHeadings) {
     const failures = suiteExport.checks.failures.filter(f => f.status === status)

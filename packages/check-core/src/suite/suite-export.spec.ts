@@ -747,7 +747,7 @@ describe('formatSuiteExportAsMarkdown', () => {
       [
         '## Checks',
         '',
-        '4 tests: 1 passed, 1 failed, 1 errors, 1 skipped.',
+        '4 tests: 1 passed, 1 failed, 1 error, 1 skipped.',
         '',
         '### Failed checks',
         '',
@@ -774,6 +774,16 @@ describe('formatSuiteExportAsMarkdown', () => {
     }
     expect(formatSuiteExportAsMarkdown(passed)).toContain(
       ['## Checks', '', '2 tests: 2 passed, 0 failed, 0 errors, 0 skipped.', '', '## Performance', ''].join('\n')
+    )
+  })
+
+  it('should use the singular form of "test" and "error" when there is only one', () => {
+    const single: SuiteExport = {
+      ...exp,
+      checks: { ...exp.checks, counts: { total: 1, passed: 0, failed: 0, error: 1, skipped: 0 }, failures: [] }
+    }
+    expect(formatSuiteExportAsMarkdown(single)).toContain(
+      ['## Checks', '', '1 test: 0 passed, 0 failed, 1 error, 0 skipped.', '', ''].join('\n')
     )
   })
 
