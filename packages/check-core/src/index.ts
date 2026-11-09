@@ -142,7 +142,7 @@ export * from './comparison/report/comparison-group-scores'
 export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
 export * from './comparison/report/comparison-graph-grouping'
 export * from './comparison/report/comparison-view-summaries'
-export { hasSignificantDiffs } from './comparison/report/buckets'
+export { getBucketIndex, hasSignificantDiffs } from './comparison/report/buckets'
 
 export type { ComparisonSortMode } from './comparison/report/comparison-sort-mode'
 
