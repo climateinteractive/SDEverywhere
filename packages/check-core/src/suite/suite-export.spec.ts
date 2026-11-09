@@ -787,6 +787,15 @@ describe('formatSuiteExportAsMarkdown', () => {
     )
   })
 
+  it('should include a comparisons section that says when comparisons were not run', () => {
+    const checksOnly = exportSuiteReport({ check: checkConfig }, { checkReport }, exportOptions)
+    const md = formatSuiteExportAsMarkdown(checksOnly)
+    // (this is the last section, so it should run to the end of the document)
+    expect(md.slice(md.indexOf('## Comparisons'))).toBe(
+      ['## Comparisons', '', 'Comparisons were not run.', ''].join('\n')
+    )
+  })
+
   it('should include a performance table with the change', () => {
     const md = formatSuiteExportAsMarkdown(exp)
     expect(md).toContain(

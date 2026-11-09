@@ -1219,7 +1219,7 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
   }
 
   if (c === undefined) {
-    lines.push('', 'Comparisons were not run.', '')
+    lines.push('', '## Comparisons', '', 'Comparisons were not run.', '')
     return lines.join('\n')
   }
 
