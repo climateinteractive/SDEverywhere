@@ -680,6 +680,22 @@ describe('formatSuiteExportAsMarkdown', () => {
     )
   })
 
+  it('should include a section that explains how to read the report', () => {
+    const md = formatSuiteExportAsMarkdown(exp)
+    expect(md).toContain(
+      [
+        '**Status:** checks failed, differences found.',
+        '',
+        '## How to read this report',
+        '',
+        ...exp.notes.map(note => `- ${note}`),
+        '',
+        '## Checks',
+        ''
+      ].join('\n')
+    )
+  })
+
   it('should summarize checks and list each failure with its message', () => {
     const md = formatSuiteExportAsMarkdown(exp)
     expect(md).toContain(
@@ -688,11 +704,76 @@ describe('formatSuiteExportAsMarkdown', () => {
         '',
         '2 tests: 1 passed, 1 failed, 0 errors, 0 skipped.',
         '',
-        '- **Emissions > should be below 50** (failed): when all inputs are at default... then Emissions...' +
+        '### Failed checks',
+        '',
+        '- **Emissions > should be below 50**: when all inputs are at default... then Emissions...' +
           ' should be < 50 but got 61.5 (expected < 50) in 2030',
         '',
         ''
       ].join('\n')
+    )
+  })
+
+  it('should list the checks that failed, had errors, or were skipped under separate headings', () => {
+    const failed = exp.checks.failures[0]
+    const withErrors: SuiteExport = {
+      ...exp,
+      checks: {
+        ...exp.checks,
+        counts: { total: 4, passed: 1, failed: 1, error: 1, skipped: 1 },
+        failures: [
+          {
+            group: 'Temperature',
+            test: 'should be positive',
+            status: 'error',
+            scenario: 'when Input Gone is at maximum...',
+            dataset: '',
+            predicate: ''
+          },
+          failed,
+          {
+            group: 'Temperature',
+            test: 'should be below 5',
+            status: 'skipped',
+            scenario: 'when all inputs are at default...',
+            dataset: 'then Temperature...',
+            predicate: 'should be < 5'
+          }
+        ]
+      }
+    }
+    const md = formatSuiteExportAsMarkdown(withErrors)
+    expect(md).toContain(
+      [
+        '## Checks',
+        '',
+        '4 tests: 1 passed, 1 failed, 1 errors, 1 skipped.',
+        '',
+        '### Failed checks',
+        '',
+        '- **Emissions > should be below 50**: when all inputs are at default... then Emissions...' +
+          ' should be < 50 but got 61.5 (expected < 50) in 2030',
+        '',
+        '### Checks with errors',
+        '',
+        '- **Temperature > should be positive**: when Input Gone is at maximum...',
+        '',
+        '### Skipped checks',
+        '',
+        '- **Temperature > should be below 5**: when all inputs are at default... then Temperature... should be < 5',
+        '',
+        ''
+      ].join('\n')
+    )
+  })
+
+  it('should not list any failures when all checks passed', () => {
+    const passed: SuiteExport = {
+      ...exp,
+      checks: { ...exp.checks, counts: { total: 2, passed: 2, failed: 0, error: 0, skipped: 0 }, failures: [] }
+    }
+    expect(formatSuiteExportAsMarkdown(passed)).toContain(
+      ['## Checks', '', '2 tests: 2 passed, 0 failed, 0 errors, 0 skipped.', '', '## Performance', ''].join('\n')
     )
   })
 

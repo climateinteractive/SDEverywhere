@@ -1157,6 +1157,13 @@ function notComparedSection(c: ExportedComparison): string[] {
   return lines
 }
 
+/** The heading for each list of checks that did not pass, in the order they appear in the summary. */
+const checkFailureHeadings: [Exclude<CheckStatus, 'passed'>, string][] = [
+  ['failed', 'Failed checks'],
+  ['error', 'Checks with errors'],
+  ['skipped', 'Skipped checks']
+]
+
 /**
  * Format a `SuiteExport` as a Markdown summary.
  *
@@ -1174,6 +1181,9 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
   }
   lines.push(`Generated ${suiteExport.date} in ${(suiteExport.elapsedMillis / 1000).toFixed(1)} s.`, '')
   lines.push(`**Status:** ${statusText(suiteExport.status)}.`, '')
+
+  // Notes
+  lines.push('## How to read this report', '')
   for (const note of suiteExport.notes) {
     lines.push(`- ${note}`)
   }
@@ -1186,11 +1196,14 @@ export function formatSuiteExportAsMarkdown(suiteExport: SuiteExport, options?: 
     '',
     `${counts.total} tests: ${counts.passed} passed, ${counts.failed} failed, ${counts.error} errors, ${counts.skipped} skipped.`
   )
-  if (suiteExport.checks.failures.length > 0) {
-    lines.push('')
-    for (const f of suiteExport.checks.failures) {
-      const desc = [f.scenario, f.dataset, f.predicate].filter(s => s.length > 0).join(' ')
-      lines.push(`- **${f.group} > ${f.test}** (${f.status}): ${desc}`)
+  for (const [status, heading] of checkFailureHeadings) {
+    const failures = suiteExport.checks.failures.filter(f => f.status === status)
+    if (failures.length > 0) {
+      lines.push('', `### ${heading}`, '')
+      for (const f of failures) {
+        const desc = [f.scenario, f.dataset, f.predicate].filter(s => s.length > 0).join(' ')
+        lines.push(`- **${f.group} > ${f.test}**: ${desc}`)
+      }
     }
   }
 
