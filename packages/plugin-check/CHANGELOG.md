@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.40](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.39...plugin-check-v0.3.40) (2026-11-10)
+
+
+### Features
+
+* write machine-readable check+comparison results alongside model-check report ([#954](https://github.com/climateinteractive/SDEverywhere/issues/954)) ([1f66036](https://github.com/climateinteractive/SDEverywhere/commit/1f66036bef656e0583ec972f9b798559eff8c00b)), closes [#950](https://github.com/climateinteractive/SDEverywhere/issues/950)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.15 to ^0.1.16
+    * @sdeverywhere/check-ui-shell bumped from ^0.2.27 to ^0.2.28
+
 ## [0.3.39](https://github.com/climateinteractive/SDEverywhere/compare/plugin-check-v0.3.38...plugin-check-v0.3.39) (2026-09-25)
 
 

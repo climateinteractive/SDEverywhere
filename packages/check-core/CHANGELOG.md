@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.16](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.15...check-core-v0.1.16) (2026-11-10)
+
+
+### Features
+
+* write machine-readable check+comparison results alongside model-check report ([#954](https://github.com/climateinteractive/SDEverywhere/issues/954)) ([1f66036](https://github.com/climateinteractive/SDEverywhere/commit/1f66036bef656e0583ec972f9b798559eff8c00b)), closes [#950](https://github.com/climateinteractive/SDEverywhere/issues/950)
+
 ## [0.1.15](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.14...check-core-v0.1.15) (2026-09-20)
 
 
