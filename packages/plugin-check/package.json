@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.39",
+  "version": "0.3.40",
   "files": [
     "dist/**",
     "template-bundle/**",
@@ -32,8 +32,8 @@
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@sdeverywhere/check-core": "^0.1.15",
-    "@sdeverywhere/check-ui-shell": "^0.2.27",
+    "@sdeverywhere/check-core": "^0.1.16",
+    "@sdeverywhere/check-ui-shell": "^0.2.28",
     "@sdeverywhere/runtime": "^0.2.11",
     "@sdeverywhere/runtime-async": "^0.2.12",
     "assert-never": "^1.2.1",
