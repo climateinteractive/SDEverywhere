@@ -14,8 +14,7 @@ import type {
   GraphComparisonMetadataReport,
   GraphComparisonReport
 } from '@sdeverywhere/check-core'
-
-import { getBucketIndex } from '../_shared/buckets'
+import { getBucketIndex } from '@sdeverywhere/check-core'
 
 import { ContextGraphViewModel } from '../../graphs/context-graph-vm'
 
