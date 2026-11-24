@@ -10,7 +10,7 @@
     "noImplicitAny": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "types": ["vite/client"]
+    "types": []
   },
   "include": ["src/**/*"]
 }

@@ -40,6 +40,7 @@ export type CheckPredicateRefConstant = number
 export type CheckPredicateRefDataDatasetSpecial = 'inherit'
 export interface CheckPredicateRefDataDatasetSpec {
   name: string
+  source?: string
 }
 export type CheckPredicateRefDataScenarioSpecial = 'inherit'
 export interface CheckPredicateRefDataScenarioSpec {
@@ -47,8 +48,21 @@ export interface CheckPredicateRefDataScenarioSpec {
   input?: string
   at?: CheckScenarioPosition | number
 }
+export type CheckPredicateRefDataDatasetsOp = 'sum'
 export interface CheckPredicateRefData {
-  dataset: CheckPredicateRefDataDatasetSpecial | CheckPredicateRefDataDatasetSpec
+  /**
+   * A single referenced dataset.  Note that exactly one of `dataset` or (`op` and
+   * `datasets`) must be defined; this is enforced by the JSON schema.
+   */
+  dataset?: CheckPredicateRefDataDatasetSpecial | CheckPredicateRefDataDatasetSpec
+  /** The operation used to combine the datasets in `datasets` into a single dataset. */
+  op?: CheckPredicateRefDataDatasetsOp
+  /**
+   * The referenced datasets.  Each item can be either the name of a dataset, or an
+   * object that includes the `name` (and optional `source`) of a dataset.
+   */
+  datasets?: (string | CheckPredicateRefDataDatasetSpec)[]
+  /** The scenario used to produce the referenced dataset(s). */
   scenario?: CheckPredicateRefDataScenarioSpecial | CheckPredicateRefDataScenarioSpec
 }
 

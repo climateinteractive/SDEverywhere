@@ -6,72 +6,76 @@ Represents the outputs from a model run.
 
 ## Constructors
 
-### constructor
+### Constructor
 
-**new Outputs**(`varIds`, `startTime`, `endTime`, `saveFreq?`)
+> **new Outputs**(`varIds`, `startTime`, `endTime`, `saveFreq?`): `Outputs`
 
 #### Parameters
 
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
 | `varIds` | `string`[] | `undefined` | The output variable identifiers. |
 | `startTime` | `number` | `undefined` | The start time for the model. |
 | `endTime` | `number` | `undefined` | The end time for the model. |
 | `saveFreq` | `number` | `1` | The frequency with which output values are saved (aka `SAVEPER`). |
 
+#### Returns
+
+`Outputs`
+
 ## Properties
 
 ### seriesLength
 
- `Readonly` **seriesLength**: `number`
+> `readonly` **seriesLength**: `number`
 
 The number of data points in each series.
 
-___
+***
 
 ### varSeries
 
- `Readonly` **varSeries**: [`Series`](Series.md)[]
+> `readonly` **varSeries**: [`Series`](Series.md)[]
 
 The array of series, one for each output variable.
 
-___
+***
 
 ### varIds
 
- `Readonly` **varIds**: `string`[]
+> `readonly` **varIds**: `string`[]
 
 The output variable identifiers.
 
-___
+***
 
 ### startTime
 
- `Readonly` **startTime**: `number`
+> `readonly` **startTime**: `number`
 
 The start time for the model.
 
-___
+***
 
 ### endTime
 
- `Readonly` **endTime**: `number`
+> `readonly` **endTime**: `number`
 
 The end time for the model.
 
-___
+***
 
 ### saveFreq
 
- `Readonly` **saveFreq**: `number` = `1`
+> `readonly` **saveFreq**: `number` = `1`
 
 The frequency with which output values are saved (aka `SAVEPER`).
 
 ## Methods
 
-### updateFromBuffer
+### updateFromBuffer()
 
-**updateFromBuffer**(`outputsBuffer`, `rowLength`): `Result`<`void`, ``"invalid-point-count"``\>
+> **updateFromBuffer**(`outputsBuffer`, `rowLength`): `Result`\<`void`, `"invalid-point-count"`\>
 
 Parse the given raw float buffer (produced by the model) and store the values
 into this `Outputs` instance.
@@ -83,29 +87,29 @@ the time range in the buffer produced by the model.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `outputsBuffer` | `Float64Array` | The raw outputs buffer produced by the model. |
 | `rowLength` | `number` | The number of elements per row (one element per save point). |
 
 #### Returns
 
-`Result`<`void`, ``"invalid-point-count"``\>
+`Result`\<`void`, `"invalid-point-count"`\>
 
 An `ok` result if the buffer is valid, otherwise an `err` result.
 
-___
+***
 
-### getSeriesForVar
+### getSeriesForVar()
 
-**getSeriesForVar**(`varId`): [`Series`](Series.md)
+> **getSeriesForVar**(`varId`): [`Series`](Series.md)
 
 Return the series for the given output variable.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `varId` | `string` | The ID of the output variable (as used by SDEverywhere). |
 
 #### Returns

@@ -52,7 +52,7 @@ export function parseVensimModel(input: string, context?: VensimParseContext, so
         }
       }
       const msg = `Failed to parse Vensim model definition${linePart}:\n${def.def}\n\nDetail:\n  ${e.message}`
-      throw new Error(msg)
+      throw new Error(msg, { cause: e })
     }
 
     for (const dimensionDef of parsedModel.dimensions) {

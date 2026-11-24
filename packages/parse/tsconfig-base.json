@@ -6,6 +6,11 @@
     "outDir": "./dist",
     // Use "es2021" because this is the ES version for Node 16
     "target": "es2021",
+    // Include the default "es2021" libs plus "es2022.error", which declares the `cause`
+    // option on the `Error` constructor.  We only widen `lib` (not `target`) so that the
+    // emitted output is unchanged; `Error` `cause` is supported by all Node versions we
+    // target at runtime.
+    "lib": ["es2021", "es2022.error"],
     // Use "es2020" because this is a Node module (using ESM) and we need to
     // use dynamic imports
     "module": "es2020",

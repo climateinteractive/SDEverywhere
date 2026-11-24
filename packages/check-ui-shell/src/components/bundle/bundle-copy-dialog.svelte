@@ -2,6 +2,8 @@
 
 <!-- SCRIPT -->
 <script lang="ts">
+import { untrack } from 'svelte'
+
 import Button from '../_shared/button.svelte'
 import Dialog from '../_shared/dialog.svelte'
 import type { BundleSpec } from './bundle-spec'
@@ -19,7 +21,9 @@ interface Props {
 
 let { open = $bindable(false), srcBundle, initialName, onSave }: Props = $props()
 
-let bundleName = $state(initialName)
+// Note: only the initial value of `initialName` is captured here; the effect below
+// resyncs `bundleName` each time the dialog is opened
+let bundleName = $state(untrack(() => initialName))
 
 function handleSave() {
   onSave?.(srcBundle, bundleName)

@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf sde-prep",
+    "lint": "eslint . --max-warnings 0",
+    "prettier:check": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "build-js": "GEN_FORMAT=js sde bundle",
     "run-tests": "./run-tests.sh",
-    "ci:int-test": "run-s clean run-tests"
+    "ci:int-test": "run-s clean lint prettier:check run-tests"
   },
   "dependencies": {
     "@sdeverywhere/build": "workspace:*",

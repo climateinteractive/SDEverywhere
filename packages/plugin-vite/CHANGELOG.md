@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.2.6](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.5...plugin-vite-v0.2.6) (2026-10-07)
+
+
+### Bug Fixes
+
+* ensure plugin-vite starts watch mode correctly with Vite 8 ([#939](https://github.com/climateinteractive/SDEverywhere/issues/939)) ([b1cc5c2](https://github.com/climateinteractive/SDEverywhere/commit/b1cc5c27b5feb6f9ffe0a8a418f552eb989e716d)), closes [#938](https://github.com/climateinteractive/SDEverywhere/issues/938)
+
+## [0.2.5](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.4...plugin-vite-v0.2.5) (2026-09-30)
+
+
+### Bug Fixes
+
+* run initial build step when plugin-vite used in watch mode ([#930](https://github.com/climateinteractive/SDEverywhere/issues/930)) ([3da92fd](https://github.com/climateinteractive/SDEverywhere/commit/3da92fd60d89221497255caf364420eacd4e7dc7)), closes [#929](https://github.com/climateinteractive/SDEverywhere/issues/929)
+
+## [0.2.4](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.3...plugin-vite-v0.2.4) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+## [0.2.3](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.2...plugin-vite-v0.2.3) (2026-08-19)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
 ## [0.2.2](https://github.com/climateinteractive/SDEverywhere/compare/plugin-vite-v0.2.1...plugin-vite-v0.2.2) (2026-02-04)
 
 

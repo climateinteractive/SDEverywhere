@@ -35,5 +35,12 @@
   },
   "files.associations": {
     "*.svelte": "svelte"
-  }
+  },
+  // Use the version of TypeScript that the repository depends on, rather than the one
+  // bundled with the editor
+  "js/ts.tsdk.path": "node_modules/typescript/lib",
+  // Prompt to switch to the version above the first time the workspace is opened;
+  // without this, the setting has no effect until it is chosen manually via
+  // "TypeScript: Select TypeScript Version"
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true
 }

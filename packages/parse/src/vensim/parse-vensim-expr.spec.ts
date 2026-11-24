@@ -80,6 +80,60 @@ describe('parseVensimExpr', () => {
     expect(parseVensimExpr('(1 + 2) * 3')).toEqual(binaryOp(parens(binaryOp(one, '+', two)), '*', three))
   })
 
+  // The following tests exercise operator grouping.  Precedence in the Vensim grammar comes
+  // from the order of the alternatives in the (left-recursive) `expr` rule, so a change to
+  // that order silently changes how an expression evaluates without causing a parse error.
+  // For more details, see: https://github.com/climateinteractive/antlr4-vensim/issues/16
+
+  it('should parse an expr with ^ op binding tighter than a leading unary - op', () => {
+    expect(parseVensimExpr('-x^2')).toEqual(unaryOp('-', binaryOp(x, '^', two)))
+  })
+
+  it('should parse an expr with ^ op binding tighter than a leading unary + op', () => {
+    expect(parseVensimExpr('+x^2')).toEqual(unaryOp('+', binaryOp(x, '^', two)))
+  })
+
+  it('should parse an expr with ^ op binding tighter than a leading unary - op (with constant base)', () => {
+    expect(parseVensimExpr('-2^3')).toEqual(unaryOp('-', binaryOp(two, '^', three)))
+  })
+
+  it('should parse an expr with a negated exponent', () => {
+    expect(parseVensimExpr('x^-2')).toEqual(binaryOp(x, '^', unaryOp('-', two)))
+  })
+
+  it('should parse an expr with a negated base (with explicit parentheses)', () => {
+    expect(parseVensimExpr('(-x)^2')).toEqual(binaryOp(parens(unaryOp('-', x)), '^', two))
+  })
+
+  it('should parse a Gaussian kernel expr with the sign applied to the power', () => {
+    // This is the case that motivated the grammar fix; grouping this as `EXP(((-x)^2)/2)`
+    // drops the sign of the exponent, turning a decaying curve into a growing one
+    expect(parseVensimExpr('EXP(-x^2/2)')).toEqual(call('EXP', binaryOp(unaryOp('-', binaryOp(x, '^', two)), '/', two)))
+  })
+
+  it('should parse an expr with ^ op binding tighter than * op', () => {
+    expect(parseVensimExpr('x^2 * y')).toEqual(binaryOp(binaryOp(x, '^', two), '*', y))
+  })
+
+  it('should parse an expr with ^ op binding tighter than - op (used as subtraction)', () => {
+    expect(parseVensimExpr('x - y^2')).toEqual(binaryOp(x, '-', binaryOp(y, '^', two)))
+  })
+
+  it('should parse an expr with a negated power followed by a * op', () => {
+    expect(parseVensimExpr('-x^2 * y')).toEqual(binaryOp(unaryOp('-', binaryOp(x, '^', two)), '*', y))
+  })
+
+  it('should parse an expr with unary - op binding tighter than * op', () => {
+    // Unary sign still outranks `*` and `/`, so this grouping is unaffected by the
+    // precedence of the `^` op
+    expect(parseVensimExpr('-x * y')).toEqual(binaryOp(unaryOp('-', x), '*', y))
+  })
+
+  it('should parse an expr with left-associative ^ ops', () => {
+    // Left associative, so `2^3^2` is `(2^3)^2` (64), not `2^(3^2)` (512)
+    expect(parseVensimExpr('2^3^2')).toEqual(binaryOp(binaryOp(two, '^', three), '^', two))
+  })
+
   it('should parse an expr with binary = op', () => {
     expect(parseVensimExpr('x = y')).toEqual(binaryOp(x, '=', y))
   })

@@ -16,6 +16,7 @@ pnpm \
 --reporter=append-only \
 --workspace-concurrency=0 \
 -F parse \
+-F compile \
 -F build \
 -F check-core \
 -F check-ui-shell \

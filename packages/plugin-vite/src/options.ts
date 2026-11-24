@@ -19,8 +19,10 @@ export interface VitePluginOptions {
      * - `skip`: Don't run the plugin.
      * - `post-generate`: Run `vite build` in the `postGenerate` phase.
      * - `post-build`: Run `vite build` in the `postBuild` phase.
-     * - `watch`: Run `vite build` in the `watch` callback (rebuilds the library when
-     *   changes are detected in source files); useful for libraries.
+     * - `watch`: Run `vite build` in the `postBuild` phase of the initial build (so that
+     *   the output is available to other plugins in that build), and then run `vite build`
+     *   in watch mode in the `watch` callback (rebuilds the library when changes are
+     *   detected in source files); useful for libraries.
      * - `serve`: Run `vite dev` (sets up local server and refreshes the app
      *   automatically when changes are detected); useful for applications.
      */

@@ -1,5 +1,67 @@
 # Changelog
 
+## [0.2.44](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.43...create-v0.2.44) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.35 to ^0.7.36
+
+## [0.2.43](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.42...create-v0.2.43) (2026-09-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.34 to ^0.7.35
+
+## [0.2.42](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.41...create-v0.2.42) (2026-08-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.33 to ^0.7.34
+
+## [0.2.41](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.40...create-v0.2.41) (2026-08-19)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.32 to ^0.7.33
+
+## [0.2.40](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.39...create-v0.2.40) (2026-08-13)
+
+
+### Dependencies
+
+* require Node.js v22 as minimum supported version ([#870](https://github.com/climateinteractive/SDEverywhere/issues/870)) ([bf5f651](https://github.com/climateinteractive/SDEverywhere/commit/bf5f651a69535f22859597ea435bd7958137a229)), closes [#869](https://github.com/climateinteractive/SDEverywhere/issues/869)
+
+## [0.2.39](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.38...create-v0.2.39) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.31 to ^0.7.32
+
 ## [0.2.38](https://github.com/climateinteractive/SDEverywhere/compare/create-v0.2.37...create-v0.2.38) (2026-06-03)
 
 

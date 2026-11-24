@@ -48,19 +48,7 @@ export function createViteConfig(stagedModelDir: string, modelJsFile: string, ou
           find: '@_generatedModelFile_',
           replacement: resolvePath(stagedModelDir, modelJsFile)
         }
-      ],
-
-      // XXX: Prevent Vite from using the `browser` section of `threads/package.json`
-      // since we want to force the use of the general module (under dist) that chooses
-      // the correct implementation (Web Worker vs worker_threads) at runtime.  This
-      // gets the job done, but is fragile because it applies to all dependencies even
-      // though we really only need this workaround for the threads package.  Fortunately
-      // the worker template is very simple (only depends on `@sdeverywhere/runtime-async`,
-      // which in turn only depends on `@sdeverywhere/runtime` and `threads`, so we should
-      // be safe to use this workaround for a while.  Note that the default value of this
-      // property is `['browser', 'module', 'jsnext:main', 'jsnext']`, so we override it
-      // to omit the 'browser' item.
-      mainFields: ['module', 'jsnext:main', 'jsnext']
+      ]
     },
 
     build: {
@@ -74,19 +62,6 @@ export function createViteConfig(stagedModelDir: string, modelJsFile: string, ou
         name: 'worker',
         formats: ['iife'],
         fileName: () => outputFile
-      },
-
-      rollupOptions: {
-        onwarn: (warning, warn) => {
-          // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
-          // triggered by use of the following pattern in threads.js:
-          //   eval("require")("worker_threads")
-          // It would be nice to avoid use of `eval` there, but it's not critical for
-          // our use case so we will suppress the warnings for now
-          if (warning.code !== 'EVAL') {
-            warn(warning)
-          }
-        }
       }
     }
   }

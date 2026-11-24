@@ -1,5 +1,92 @@
 # Changelog
 
+## [0.7.49](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.48...cli-v0.7.49) (2026-09-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.17 to ^0.3.18
+    * @sdeverywhere/compile bumped from ^0.7.35 to ^0.7.36
+
+## [0.7.48](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.47...cli-v0.7.48) (2026-09-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.16 to ^0.3.17
+    * @sdeverywhere/compile bumped from ^0.7.34 to ^0.7.35
+
+## [0.7.47](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.46...cli-v0.7.47) (2026-08-27)
+
+
+### Performance Improvements
+
+* mark some C functions as `static inline` to improve performance ([#894](https://github.com/climateinteractive/SDEverywhere/issues/894)) ([3269d52](https://github.com/climateinteractive/SDEverywhere/commit/3269d520c25811a5c4cd40f06b563bf3687806f3)), closes [#893](https://github.com/climateinteractive/SDEverywhere/issues/893)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.15 to ^0.3.16
+    * @sdeverywhere/compile bumped from ^0.7.33 to ^0.7.34
+
+## [0.7.46](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.45...cli-v0.7.46) (2026-08-19)
+
+
+### Bug Fixes
+
+* add `ModelSpec` type in compile package that documents all supported `spec.json` properties ([#890](https://github.com/climateinteractive/SDEverywhere/issues/890)) ([5bc5d0b](https://github.com/climateinteractive/SDEverywhere/commit/5bc5d0b51ce14000725f60f10685be507b2fc5fa)), closes [#765](https://github.com/climateinteractive/SDEverywhere/issues/765)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.14 to ^0.3.15
+    * @sdeverywhere/compile bumped from ^0.7.32 to ^0.7.33
+
+## [0.7.45](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.44...cli-v0.7.45) (2026-08-13)
+
+
+### Dependencies
+
+* require Node.js v22 as minimum supported version ([#870](https://github.com/climateinteractive/SDEverywhere/issues/870)) ([bf5f651](https://github.com/climateinteractive/SDEverywhere/commit/bf5f651a69535f22859597ea435bd7958137a229)), closes [#869](https://github.com/climateinteractive/SDEverywhere/issues/869)
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.13 to ^0.3.14
+
+## [0.7.44](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.43...cli-v0.7.44) (2026-08-10)
+
+
+### Features
+
+* add support for the INVERT MATRIX Vensim function in C and JS ([#846](https://github.com/climateinteractive/SDEverywhere/issues/846)) ([28a1968](https://github.com/climateinteractive/SDEverywhere/commit/28a1968d64a6cd751507d989c1e8f18305ea2d4b)), closes [#845](https://github.com/climateinteractive/SDEverywhere/issues/845)
+* support all ALLOCATE AVAILABLE priority curve types and add FIND MARKET PRICE / DEMAND AT PRICE / SUPPLY AT PRICE ([#840](https://github.com/climateinteractive/SDEverywhere/issues/840)) ([bf1e242](https://github.com/climateinteractive/SDEverywhere/commit/bf1e2423f2790f1ed9f86776147d61ea72d26e39)), closes [#839](https://github.com/climateinteractive/SDEverywhere/issues/839)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+* round A&S CDF coefficients to 6 significant digits to best match Vensim ([#842](https://github.com/climateinteractive/SDEverywhere/issues/842)) ([c34d131](https://github.com/climateinteractive/SDEverywhere/commit/c34d131cf644fa3a0e66924c0775675adf3ba02f)), closes [#841](https://github.com/climateinteractive/SDEverywhere/issues/841)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/build bumped from ^0.3.12 to ^0.3.13
+    * @sdeverywhere/compile bumped from ^0.7.31 to ^0.7.32
+
 ## [0.7.43](https://github.com/climateinteractive/SDEverywhere/compare/cli-v0.7.42...cli-v0.7.43) (2026-06-03)
 
 

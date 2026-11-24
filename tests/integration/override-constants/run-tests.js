@@ -71,17 +71,13 @@ async function runTests(runnerKind, modelRunner) {
 
   // Run 4: Override constants again
   outputs = await modelRunner.runModel(inputs, outputs, {
-    constants: [
-      createConstantDef({ varId: '_constant_a[_a1]' }, 110)
-    ]
+    constants: [createConstantDef({ varId: '_constant_a[_a1]' }, 110)]
   })
   verifyOutputs(runnerKind, 4, outputs, 0, 10, 0)
 
   // Run 5: Reset one constant back to original by passing the original value
   outputs = await modelRunner.runModel(inputs, outputs, {
-    constants: [
-      createConstantDef({ varId: '_constant_a[_a1]' }, 100)
-    ]
+    constants: [createConstantDef({ varId: '_constant_a[_a1]' }, 100)]
   })
   verifyOutputs(runnerKind, 5, outputs, 0, 0, 0)
 

@@ -2039,6 +2039,22 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(() => genJS(vars.get('_y'), 'eval')).toThrow('DELAY FIXED function not yet implemented for JS code gen')
   })
 
+  it('should work for DEMAND AT PRICE function', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      demand satiation[demander] = 500,300 ~~|
+      priority[d1,pprofile] = 3,1,1,0 ~~|
+      priority[d2,pprofile] = 3,2,1,0 ~~|
+      amount demanded[demander] = DEMAND AT PRICE(demand satiation[demander], priority[demander,ptype], market price) ~~|
+    `)
+    // TODO: Emit the actual code once we implement DEMAND AT PRICE for JS code gen
+    expect(() => genJS(vars.get('_amount_demanded'))).toThrow(
+      'DEMAND AT PRICE function not yet implemented for JS code gen'
+    )
+  })
+
   it('should work for DEPRECIATE STRAIGHTLINE function', () => {
     const vars = readInlineModel(`
       dtime = 20 ~~|
@@ -2084,6 +2100,25 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(vars.size).toBe(2)
     expect(genJS(vars.get('_x'))).toEqual(['_x = 1.0;'])
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.EXP(_x);'])
+  })
+
+  it('should work for FIND MARKET PRICE function', () => {
+    const vars = readInlineModel(`
+      demander: d1, d2 ~~|
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      demand satiation[demander] = 500 ~~|
+      demand priority[d1,pprofile] = 3,1,1,0 ~~|
+      demand priority[d2,pprofile] = 3,2,1,0 ~~|
+      supply capacity[supplier] = 200 ~~|
+      supply priority[s1,pprofile] = 3,1,1,0 ~~|
+      supply priority[s2,pprofile] = 3,2,1,0 ~~|
+      market price = FIND MARKET PRICE(demand satiation[d1], demand priority[d1,ptype], supply capacity[s1], supply priority[s1,ptype]) ~~|
+    `)
+    // TODO: Emit the actual code once we implement FIND MARKET PRICE for JS code gen
+    expect(() => genJS(vars.get('_market_price'))).toThrow(
+      'FIND MARKET PRICE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for GAME function (no dimensions)', () => {
@@ -2587,6 +2622,103 @@ describe('generateEquation (Vensim -> JS)', () => {
     expect(genJS(vars.get('_y'))).toEqual(['_y = fns.INTEGER(_x);'])
   })
 
+  it('should work for INVERT MATRIX function (2x2)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 2) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genJS(vars.get('_x[_a1,_b1]'), 'init-constants')).toEqual(['_x[0][0] = 1.0;'])
+    expect(genJS(vars.get('_x[_a1,_b2]'), 'init-constants')).toEqual(['_x[0][1] = 2.0;'])
+    expect(genJS(vars.get('_x[_a2,_b1]'), 'init-constants')).toEqual(['_x[1][0] = 3.0;'])
+    expect(genJS(vars.get('_x[_a2,_b2]'), 'init-constants')).toEqual(['_x[1][1] = 4.0;'])
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = fns.INVERT_MATRIX(_x, 2);',
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i][j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (3x3)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2, B3 ~~|
+      x[DimA, DimB] = 1, 2, 3; 4, 5, 6; 7, 8, 10; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 3) ~~|
+    `)
+    expect(vars.size).toBe(10)
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = fns.INVERT_MATRIX(_x, 3);',
+      'for (let i = 0; i < 3; i++) {',
+      'for (let j = 0; j < 3; j++) {',
+      '_y[i][j] = __t1[i][j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with ELMCOUNT call used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], ELMCOUNT(DimA)) ~~|
+    `)
+    expect(vars.size).toBe(5)
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = fns.INVERT_MATRIX(_x, 2);',
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i][j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should work for INVERT MATRIX function (with variable reference used for size arg)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      n = 2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], n) ~~|
+    `)
+    expect(vars.size).toBe(6)
+    expect(genJS(vars.get('_y'))).toEqual([
+      'let __t1 = fns.INVERT_MATRIX(_x, 2);',
+      'for (let i = 0; i < 2; i++) {',
+      'for (let j = 0; j < 2; j++) {',
+      '_y[i][j] = __t1[i][j];',
+      '}',
+      '}'
+    ])
+  })
+
+  it('should throw error for INVERT MATRIX function (when matrix argument is not a 2D variable)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA] = 1, 2 ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA], 2) ~~|
+    `)
+    expect(() => genJS(vars.get('_y'))).toThrow(/^INVERT MATRIX argument 'matrix' must be a 2D matrix variable$/)
+  })
+
+  it('should throw error for INVERT MATRIX function (when LHS is not a square matrix)', () => {
+    const vars = readInlineModel(`
+      DimA: A1, A2, A3 ~~|
+      DimB: B1, B2 ~~|
+      x[DimA, DimB] = 1, 2; 3, 4; 5, 6; ~~|
+      y[DimA, DimB] = INVERT MATRIX(x[DimA, DimB], 2) ~~|
+    `)
+    expect(() => genJS(vars.get('_y'))).toThrow(/^The LHS of an equation with INVERT MATRIX must be a square matrix$/)
+  })
+
   it('should work for LN function', () => {
     const vars = readInlineModel(`
       x = 1 ~~|
@@ -3077,6 +3209,22 @@ describe('generateEquation (Vensim -> JS)', () => {
       '}',
       '_y = __t1;'
     ])
+  })
+
+  it('should work for SUPPLY AT PRICE function', () => {
+    const vars = readInlineModel(`
+      supplier: s1, s2 ~~|
+      pprofile: ptype, ppriority, pwidth, pextra ~~|
+      market price = 5 ~~|
+      supply capacity[supplier] = 200,300 ~~|
+      priority[s1,pprofile] = 3,1,1,0 ~~|
+      priority[s2,pprofile] = 3,2,1,0 ~~|
+      amount supplied[supplier] = SUPPLY AT PRICE(supply capacity[supplier], priority[supplier,ptype], market price) ~~|
+    `)
+    // TODO: Emit the actual code once we implement SUPPLY AT PRICE for JS code gen
+    expect(() => genJS(vars.get('_amount_supplied'))).toThrow(
+      'SUPPLY AT PRICE function not yet implemented for JS code gen'
+    )
   })
 
   it('should work for TAN function', () => {

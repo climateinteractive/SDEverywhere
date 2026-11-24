@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { test as base, expect, type Page, type Locator } from '@playwright/test'
+import { test as base, expect, type Page } from '@playwright/test'
 
 /**
  * Extended test fixtures with custom helper methods.

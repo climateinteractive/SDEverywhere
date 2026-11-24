@@ -301,10 +301,18 @@ function diffDatasets(
     for (const t of times) {
       const valueL = datasetL.get(t)
       if (valueL !== undefined) {
-        if (valueL < minValueL) minValueL = valueL
-        if (valueL > maxValueL) maxValueL = valueL
-        if (valueL < minValue) minValue = valueL
-        if (valueL > maxValue) maxValue = valueL
+        if (valueL < minValueL) {
+          minValueL = valueL
+        }
+        if (valueL > maxValueL) {
+          maxValueL = valueL
+        }
+        if (valueL < minValue) {
+          minValue = valueL
+        }
+        if (valueL > maxValue) {
+          maxValue = valueL
+        }
       }
 
       // TODO: Explain
@@ -316,10 +324,18 @@ function diffDatasets(
         } else {
           valueR = rawValueR
         }
-        if (valueR < minValueR) minValueR = valueR
-        if (valueR > maxValueR) maxValueR = valueR
-        if (valueR < minValue) minValue = valueR
-        if (valueR > maxValue) maxValue = valueR
+        if (valueR < minValueR) {
+          minValueR = valueR
+        }
+        if (valueR > maxValueR) {
+          maxValueR = valueR
+        }
+        if (valueR < minValue) {
+          minValue = valueR
+        }
+        if (valueR > maxValue) {
+          maxValue = valueR
+        }
       }
 
       if (valueL === undefined || valueR === undefined) {

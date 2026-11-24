@@ -21,175 +21,175 @@ listed below:
 
 ## Methods
 
-### init
+### init()?
 
-`Optional` **init**(`config`): `Promise`<`void`\>
+> `optional` **init**(`config`): `Promise`\<`void`\>
 
 Called after the user configuration has been resolved, but before the
 model is generated and other build steps.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `config` | [`ResolvedConfig`](ResolvedConfig.md) | The build configuration. |
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
-___
+***
 
-### preGenerate
+### preGenerate()?
 
-`Optional` **preGenerate**(`context`, `modelSpec`): `Promise`<`void`\>
+> `optional` **preGenerate**(`context`, `modelSpec`): `Promise`\<`void`\>
 
 Called before the "generate model" steps are performed.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
 | `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
-___
+***
 
-### preProcessMdl
+### preProcessMdl()?
 
-`Optional` **preProcessMdl**(`context`): `Promise`<`void`\>
+> `optional` **preProcessMdl**(`context`): `Promise`\<`void`\>
 
 Called before SDE preprocesses the mdl file (in the case of one mdl file),
 or before SDE flattens the mdl files (in the case of multiple mdl files).
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
-___
+***
 
-### postProcessMdl
+### postProcessMdl()?
 
-`Optional` **postProcessMdl**(`context`, `mdlContent`): `Promise`<`string`\>
+> `optional` **postProcessMdl**(`context`, `mdlContent`): `Promise`\<`string`\>
 
 Called after SDE preprocesses the mdl file (in the case of one mdl file),
 or after SDE flattens the mdl files (in the case of multiple mdl files).
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
 | `mdlContent` | `string` | The resulting mdl file content. |
 
 #### Returns
 
-`Promise`<`string`\>
+`Promise`\<`string`\>
 
 The modified mdl file content (if postprocessing was needed).
 
-___
+***
 
-### preGenerateCode
+### preGenerateCode()?
 
-`Optional` **preGenerateCode**(`context`, `format`): `Promise`<`void`\>
+> `optional` **preGenerateCode**(`context`, `format`): `Promise`\<`void`\>
 
 Called before SDE generates a JS or C file from the mdl file.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `format` | ``"js"`` \| ``"c"`` | The generated code format, either 'js' or 'c'. |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
+| `format` | `"js"` \| `"c"` | The generated code format, either 'js' or 'c'. |
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>
 
-___
+***
 
-### postGenerateCode
+### postGenerateCode()?
 
-`Optional` **postGenerateCode**(`context`, `format`, `content`): `Promise`<`string`\>
+> `optional` **postGenerateCode**(`context`, `format`, `content`): `Promise`\<`string`\>
 
 Called after SDE generates a JS or C file from the mdl file.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
-| `format` | ``"js"`` \| ``"c"`` | The generated code format, either 'js' or 'c'. |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
+| `format` | `"js"` \| `"c"` | The generated code format, either 'js' or 'c'. |
 | `content` | `string` | The resulting JS or C file content. |
 
 #### Returns
 
-`Promise`<`string`\>
+`Promise`\<`string`\>
 
 The modified JS or C file content (if postprocessing was needed).
 
-___
+***
 
-### postGenerate
+### postGenerate()?
 
-`Optional` **postGenerate**(`context`, `modelSpec`): `Promise`<`boolean`\>
+> `optional` **postGenerate**(`context`, `modelSpec`): `Promise`\<`boolean`\>
 
 Called after the "generate model" process has completed (but before the staged
 files are copied to their destination).
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
 | `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>
 
 Whether the plugin succeeded (for example, a plugin that runs tests can
 return false to indicate that one or more tests failed).
 
-___
+***
 
-### postBuild
+### postBuild()?
 
-`Optional` **postBuild**(`context`, `modelSpec`): `Promise`<`boolean`\>
+> `optional` **postBuild**(`context`, `modelSpec`): `Promise`\<`boolean`\>
 
 Called after the model has been generated and after the staged files
 have been copied to their destination.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `context` | [`BuildContext`](../classes/BuildContext.md) | The build context (for logging, etc). |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `context` | [`BuildContext`](BuildContext.md) | The build context (for logging, etc). |
 | `modelSpec` | [`ResolvedModelSpec`](ResolvedModelSpec.md) | The spec that controls how the model is generated. |
 
 #### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>
 
 Whether the plugin succeeded (for example, a plugin that runs tests can
 return false to indicate that one or more tests failed).
 
-___
+***
 
-### watch
+### watch()?
 
-`Optional` **watch**(`config`): `Promise`<`void`\>
+> `optional` **watch**(`config`): `Promise`\<`void`\>
 
 Called in development/watch mode after the initial build has completed
 (i.e., after the model has been generated and after the staged files
@@ -197,10 +197,10 @@ have been copied to their destination).
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
 | `config` | [`ResolvedConfig`](ResolvedConfig.md) | The build configuration. |
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>

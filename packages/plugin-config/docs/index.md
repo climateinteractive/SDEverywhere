@@ -1,29 +1,7 @@
 # @sdeverywhere/plugin-config
 
-## Example
-
-Example `sde.config.js` file:
-
-```js
-import { configProcessor } from '@sdeverywhere/plugin-config'
-
-export async function config() {
-  return {
-    // Specify the Vensim model to read
-    modelFiles: ['example.mdl'],
-
-    // Read csv files from `config` directory and write to the recommended output
-    // directory structure.  See `ConfigProcessorOptions` for more details.
-    modelSpec: configProcessor({
-      config: 'config'
-    }),
-
-    plugins: [
-      // ...
-    ]
-  }
-}
-```
+For examples of how to configure this plugin in an `sde.config.js` file, refer to the
+["Usage"](../README.md#usage) section of the README.
 
 ## Initialization
 

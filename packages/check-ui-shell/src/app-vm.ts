@@ -340,14 +340,6 @@ export class AppViewModel {
     )
   }
 
-  // createFreeformViewModel(): FreeformViewModel {
-  //   if (this.appModel.config.comparison === undefined) {
-  //     // TODO: Error message
-  //     return
-  //   }
-  //   return createFreeformViewModel(this.appModel.config.comparison, this.appModel.comparisonDataCoordinator)
-  //   }
-
   private createFilterPopoverViewModelFromReports(
     checkReport: CheckReport,
     comparisonReport?: ComparisonReport

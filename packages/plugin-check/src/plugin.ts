@@ -16,6 +16,7 @@ import { createConfig } from '@sdeverywhere/check-core'
 import { downloadBundle } from './bundle-file-ops'
 import type { LocalBundleSpec } from './bundle-spec'
 import type { CheckBundle, CheckPluginOptions } from './options'
+import { writeReportExportFiles } from './report-export-files'
 import { runTestSuite } from './run-suite'
 import { createViteConfigForBundle } from './vite-config-for-bundle'
 import { createViteConfigForReport } from './vite-config-for-report'
@@ -178,6 +179,11 @@ class CheckPlugin implements Plugin {
     context.log('info', 'Building model check report')
     const viteConfig = await this.createViteConfigForReport('bundle', context.config, testOptions, result.suiteSummary)
     await build(viteConfig)
+
+    // Write machine-readable versions of the report (after the Vite build, so that
+    // the files are not removed when Vite empties the output directory)
+    const reportPath = this.options?.reportPath || joinPath(context.config.prepDir, 'check-report')
+    await writeReportExportFiles(reportPath, checkConfig, result.suiteReport, result.elapsedMillis)
 
     // context.log('info', 'Done!')
 

@@ -3,8 +3,9 @@
 import { dirname, relative, resolve as resolvePath } from 'path'
 import { fileURLToPath } from 'url'
 
-import type { InlineConfig, PluginOption } from 'vite'
-import replace from '@rollup/plugin-replace'
+import type { InlineConfig } from 'vite'
+
+import { injectLiteralsPlugin } from './vite-inject-literals-plugin'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -51,20 +52,16 @@ export function createViteConfigForTests(mode: 'bundle' | 'watch', projDir: stri
     // logLevel: 'silent',
 
     plugins: [
-      // Inject special values into the generated JS
-      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
-      // built-in `define` feature because the latter does not seem to run before
-      // the glob handler (which requires the glob to be injected as a literal)
-      replace({
-        preventAssignment: true,
-        delimiters: ['', ''],
-        values: {
-          // Inject the glob patterns for matching model check yaml files
-          '"./__YAML_CHECK_GLOB_PATTERNS__"': yamlCheckGlobPatterns,
-          // Inject the glob patterns for matching model comparison yaml files
-          '"./__YAML_COMPARISON_GLOB_PATTERNS__"': yamlComparisonGlobPatterns
-        }
-      }) as unknown as PluginOption
+      // Inject special values into the generated JS.  Note that we use a literal
+      // string replacement plugin instead of Vite's built-in `define` feature
+      // because the latter does not run before the glob handler (which requires
+      // the glob to be injected as a literal).
+      injectLiteralsPlugin({
+        // Inject the glob patterns for matching model check yaml files
+        '"./__YAML_CHECK_GLOB_PATTERNS__"': yamlCheckGlobPatterns,
+        // Inject the glob patterns for matching model comparison yaml files
+        '"./__YAML_COMPARISON_GLOB_PATTERNS__"': yamlComparisonGlobPatterns
+      })
     ],
 
     build: {
@@ -80,19 +77,15 @@ export function createViteConfigForTests(mode: 'bundle' | 'watch', projDir: stri
       },
 
       // Enable watch mode if requested
-      watch: mode === 'watch' && {},
+      watch: mode === 'watch' && {}
 
-      rollupOptions: {
-        // Prevent dependencies from being included in packaged library
-        // TODO: For now we include check-core in the packaged library so that its
-        // dependencies are correctly resolved at runtime.  Ideally this would only
-        // include a couple functions that are used for defining tests, but Vite 2.x
-        // does not implement tree shaking for ES libraries, which means the generated
-        // library is much larger than it needs to be.  Once we upgrade to Vite 3.x,
-        // the generated library should be smaller; see related fix:
-        //   https://github.com/vitejs/vite/pull/8737
-        // external: Object.keys(pkg.dependencies)
-      }
+      // TODO: For now we include check-core in the packaged library so that its
+      // dependencies are correctly resolved at runtime.  Ideally this would only
+      // include a couple functions that are used for defining tests; we could
+      // consider externalizing dependencies here, for example:
+      //   rolldownOptions: {
+      //     external: Object.keys(pkg.dependencies)
+      //   }
     }
   }
 }

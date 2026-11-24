@@ -1,15 +1,15 @@
 [@sdeverywhere/plugin-deploy](../index.md) / deployPlugin
 
-# Function: deployPlugin
+# Function: deployPlugin()
 
-**deployPlugin**(`options?`): `Plugin`
+> **deployPlugin**(`options?`): `Plugin`
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`DeployPluginOptions`](../interfaces/DeployPluginOptions.md) |
 
-#### Returns
+## Returns
 
 `Plugin`

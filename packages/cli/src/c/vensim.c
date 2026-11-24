@@ -1,19 +1,16 @@
 #include "sde.h"
 
-double _epsilon = 1e-6;
+//
+// Note: This file only contains implementations of complex functions.  Simple
+// (inline-friendly) functions are defined as `static inline` functions in `vensim.h`
+// so that they can be inlined at each call site (for improved performance).
+//
 
 //
 // Vensim functions
 // See the Vensim Reference Manual for descriptions of the functions.
 // http://www.vensim.com/documentation/index.html?22300.htm
 //
-double _PULSE(double start, double width) {
-  double time_plus = _time + _time_step / 2.0;
-  if (width == 0.0) {
-    width = _time_step;
-  }
-  return (time_plus > start && time_plus < start + width) ? 1.0 : 0.0;
-}
 double _PULSE_TRAIN(double start, double width, double interval, double end) {
   double n = floor((end - start) / interval);
   for (double k = 0; k <= n; k++) {
@@ -22,29 +19,6 @@ double _PULSE_TRAIN(double start, double width, double interval, double end) {
     }
   }
   return 0.0;
-}
-double _RAMP(double slope, double start_time, double end_time) {
-  // Return 0 until the start time is exceeded.
-  // Interpolate from start time to end time.
-  // Hold at the end time value.
-  // Allow start time > end time.
-  if (_time > start_time) {
-    if (_time < end_time || start_time > end_time) {
-      return slope * (_time - start_time);
-    } else {
-      return slope * (end_time - start_time);
-    }
-  } else {
-    return 0.0;
-  }
-}
-double _XIDZ(double a, double b, double x) { return fabs(b) < _epsilon ? x : a / b; }
-double _ZIDZ(double a, double b) {
-  if (fabs(b) < _epsilon) {
-    return 0.0;
-  } else {
-    return a / b;
-  }
 }
 
 //

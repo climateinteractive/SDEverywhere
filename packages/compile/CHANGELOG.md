@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.7.36](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.35...compile-v0.7.36) (2026-09-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.6 to ^0.1.7
+
+## [0.7.35](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.34...compile-v0.7.35) (2026-09-10)
+
+
+### Dependencies
+
+* bump csv-parse from 5.3.3 to 7.0.2 ([#908](https://github.com/climateinteractive/SDEverywhere/issues/908)) ([ab55d88](https://github.com/climateinteractive/SDEverywhere/commit/ab55d88a9cf8f8799b907157953451b02853976b))
+
+## [0.7.34](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.33...compile-v0.7.34) (2026-08-27)
+
+
+### Bug Fixes
+
+* handle cycles when reducing variables ([#899](https://github.com/climateinteractive/SDEverywhere/issues/899)) ([fcb45ba](https://github.com/climateinteractive/SDEverywhere/commit/fcb45ba426ba34c0803e3f47ae47783744c97f8f)), closes [#897](https://github.com/climateinteractive/SDEverywhere/issues/897)
+
+
+### Performance Improvements
+
+* emit non-overridable constants as C `static const` values ([#898](https://github.com/climateinteractive/SDEverywhere/issues/898)) ([ae95064](https://github.com/climateinteractive/SDEverywhere/commit/ae95064eae9f5ce4c3f3b9ef712ac0b297a615f9)), closes [#896](https://github.com/climateinteractive/SDEverywhere/issues/896)
+
+## [0.7.33](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.32...compile-v0.7.33) (2026-08-19)
+
+
+### Bug Fixes
+
+* add `ModelSpec` type in compile package that documents all supported `spec.json` properties ([#890](https://github.com/climateinteractive/SDEverywhere/issues/890)) ([5bc5d0b](https://github.com/climateinteractive/SDEverywhere/commit/5bc5d0b51ce14000725f60f10685be507b2fc5fa)), closes [#765](https://github.com/climateinteractive/SDEverywhere/issues/765)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.5 to ^0.1.6
+
+## [0.7.32](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.31...compile-v0.7.32) (2026-08-10)
+
+
+### Features
+
+* add support for the INVERT MATRIX Vensim function in C and JS ([#846](https://github.com/climateinteractive/SDEverywhere/issues/846)) ([28a1968](https://github.com/climateinteractive/SDEverywhere/commit/28a1968d64a6cd751507d989c1e8f18305ea2d4b)), closes [#845](https://github.com/climateinteractive/SDEverywhere/issues/845)
+* support all ALLOCATE AVAILABLE priority curve types and add FIND MARKET PRICE / DEMAND AT PRICE / SUPPLY AT PRICE ([#840](https://github.com/climateinteractive/SDEverywhere/issues/840)) ([bf1e242](https://github.com/climateinteractive/SDEverywhere/commit/bf1e2423f2790f1ed9f86776147d61ea72d26e39)), closes [#839](https://github.com/climateinteractive/SDEverywhere/issues/839)
+
+
+### Bug Fixes
+
+* correct ALLOCATE AVAILABLE convergence and code generation ([#838](https://github.com/climateinteractive/SDEverywhere/issues/838)) ([4661254](https://github.com/climateinteractive/SDEverywhere/commit/466125408c50197085c4a81cd53ffab153b39875)), closes [#837](https://github.com/climateinteractive/SDEverywhere/issues/837)
+* correct XLSX reader to normalize line endings + process cells with attributes ([#849](https://github.com/climateinteractive/SDEverywhere/issues/849)) ([ec260fc](https://github.com/climateinteractive/SDEverywhere/commit/ec260fcc902025ca2e931a2226bf8820625f1232)), closes [#847](https://github.com/climateinteractive/SDEverywhere/issues/847)
+* detect false cyclic dependencies and break them by separating variables automatically ([#844](https://github.com/climateinteractive/SDEverywhere/issues/844)) ([3544ce7](https://github.com/climateinteractive/SDEverywhere/commit/3544ce7cf0589976d2707becaa9fae003c6cc312)), closes [#843](https://github.com/climateinteractive/SDEverywhere/issues/843)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.4 to ^0.1.5
+
 ## [0.7.31](https://github.com/climateinteractive/SDEverywhere/compare/compile-v0.7.30...compile-v0.7.31) (2026-06-03)
 
 

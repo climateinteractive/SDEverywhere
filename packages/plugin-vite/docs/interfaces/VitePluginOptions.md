@@ -6,34 +6,29 @@
 
 ### name
 
- **name**: `string`
+> **name**: `string`
 
 The name to include in log messages.
 
-___
+***
 
 ### config
 
- **config**: `InlineConfig`
+> **config**: `InlineConfig`
 
 The Vite config to use.
 
-___
+***
 
-### apply
+### apply?
 
- `Optional` **apply**: `Object`
+> `optional` **apply?**: `object`
 
 Specifies the behavior of the plugin for different `sde` build modes.
 
-#### Type declaration
+#### development?
 
-| Name | Type |
-| :------ | :------ |
-| `development?` | ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` \| ``"watch"`` \| ``"serve"`` |
-| `production?` | ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` |
-
-**development?**: ``"skip"`` \| ``"post-generate"`` \| ``"post-build"`` \| ``"watch"`` \| ``"serve"``
+> `optional` **development?**: `"skip"` \| `"post-generate"` \| `"post-build"` \| `"watch"` \| `"serve"`
 
 The behavior of the plugin when sde is configured for development mode.
 
@@ -42,14 +37,16 @@ If left undefined, defaults to 'post-build'.
 - `skip`: Don't run the plugin.
 - `post-generate`: Run `vite build` in the `postGenerate` phase.
 - `post-build`: Run `vite build` in the `postBuild` phase.
-- `watch`: Run `vite build` in the `watch` callback (rebuilds the library when
-  changes are detected in source files); useful for libraries.
+- `watch`: Run `vite build` in the `postBuild` phase of the initial build (so that
+  the output is available to other plugins in that build), and then run `vite build`
+  in watch mode in the `watch` callback (rebuilds the library when changes are
+  detected in source files); useful for libraries.
 - `serve`: Run `vite dev` (sets up local server and refreshes the app
   automatically when changes are detected); useful for applications.
 
------
+#### production?
 
-**production?**: ``"skip"`` \| ``"post-generate"`` \| ``"post-build"``
+> `optional` **production?**: `"skip"` \| `"post-generate"` \| `"post-build"`
 
 The behavior of the plugin when sde is configured for production mode.
 
@@ -58,5 +55,3 @@ If left undefined, defaults to 'post-build'.
 - `skip`: Don't run the plugin.
 - `post-generate`: Run `vite build` in the `postGenerate` phase.
 - `post-build`: Run `vite build` in the `postBuild` phase.
-
------

@@ -44,7 +44,7 @@ export default defineConfig({
       cssFileName: 'style'
     },
 
-    rollupOptions: {
+    rolldownOptions: {
       // Prevent dependencies from being included in packaged library
       external: Object.keys(pkg.dependencies)
     }

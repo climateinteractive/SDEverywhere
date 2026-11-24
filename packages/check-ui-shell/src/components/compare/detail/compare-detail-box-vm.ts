@@ -17,9 +17,8 @@ import type {
   DatasetMap,
   DiffReport
 } from '@sdeverywhere/check-core'
-import { diffDatasets, testSummaryFromReport } from '@sdeverywhere/check-core'
+import { diffDatasets, getBucketIndex, testSummaryFromReport } from '@sdeverywhere/check-core'
 
-import { getBucketIndex } from '../_shared/buckets'
 import type { PinnedItemKey } from '../_shared/pinned-item-state'
 import { datasetSpan } from '../_shared/spans'
 

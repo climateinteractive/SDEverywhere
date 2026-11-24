@@ -16,7 +16,12 @@
     "packages/plugin-deploy": {},
     "packages/create": {}
   },
-  "plugins": ["node-workspace"],
+  "plugins": [
+    {
+      "type": "node-workspace",
+      "updatePeerDependencies": false
+    }
+  ],
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "pull-request-title-pattern": "chore: release${component} ${version}",
@@ -24,6 +29,7 @@
     { "type": "feat", "hidden": false, "section": "Features" },
     { "type": "fix", "hidden": false, "section": "Bug Fixes" },
     { "type": "perf", "hidden": false, "section": "Performance Improvements" },
+    { "type": "docs", "hidden": false, "section": "Documentation Updates" },
     { "type": "deps", "hidden": false, "section": "Dependencies" }
   ]
 }

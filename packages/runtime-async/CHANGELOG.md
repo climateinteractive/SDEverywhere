@@ -1,5 +1,49 @@
 # Changelog
 
+## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.11...runtime-async-v0.2.12) (2026-09-25)
+
+
+### Features
+
+* allow for generating Wasm binary in a separate file ([#925](https://github.com/climateinteractive/SDEverywhere/issues/925)) ([c34a10c](https://github.com/climateinteractive/SDEverywhere/commit/c34a10cabcdd53832d4fca2294980586feb95387)), closes [#924](https://github.com/climateinteractive/SDEverywhere/issues/924)
+
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.10...runtime-async-v0.2.11) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Bug Fixes
+
+* replace threads.js dependency in runtime-async package with custom RPC layer ([#918](https://github.com/climateinteractive/SDEverywhere/issues/918)) ([45219c0](https://github.com/climateinteractive/SDEverywhere/commit/45219c0b8dd4701ef30bc13f1fb3847429dfb4e4)), closes [#913](https://github.com/climateinteractive/SDEverywhere/issues/913)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.10 to ^0.2.11
+
+## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.9...runtime-async-v0.2.10) (2026-08-19)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.9 to ^0.2.10
+
+## [0.2.9](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.8...runtime-async-v0.2.9) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.8 to ^0.2.9
+
 ## [0.2.8](https://github.com/climateinteractive/SDEverywhere/compare/runtime-async-v0.2.7...runtime-async-v0.2.8) (2026-02-04)
 
 

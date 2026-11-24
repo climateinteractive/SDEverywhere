@@ -4,17 +4,17 @@
 
 ## Properties
 
-### config
+### config?
 
- `Optional` **config**: `string` \| [`UserConfig`](UserConfig.md)
+> `optional` **config?**: `string` \| [`UserConfig`](UserConfig.md)
 
 The path to an `sde.config.js` file, or a `UserConfig` object.
 
-___
+***
 
-### logLevels
+### logLevels?
 
- `Optional` **logLevels**: [`LogLevel`](../types/LogLevel.md)[]
+> `optional` **logLevels?**: [`LogLevel`](../type-aliases/LogLevel.md)[]
 
 The log levels to include.  If undefined, the default 'info' and 'error' levels
 will be active.

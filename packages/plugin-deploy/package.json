@@ -1,6 +1,6 @@
 {
   "name": "@sdeverywhere/plugin-deploy",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "files": [
     "bin/**",
     "dist/**",
@@ -9,14 +9,12 @@
     "template-tests/**"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -29,7 +27,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
@@ -37,7 +35,6 @@
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

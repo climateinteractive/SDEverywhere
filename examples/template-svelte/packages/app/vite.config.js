@@ -57,17 +57,10 @@ export default defineConfig({
     outDir: 'public',
 
     // Write js/css files to `public` (instead of the default `<outDir>/assets`)
-    assetsDir: '',
+    assetsDir: ''
 
     // TODO: Uncomment for debugging purposes
     // minify: false,
-
-    rollupOptions: {
-      output: {
-        // XXX: Prevent vite from creating a separate `vendor.js` file
-        manualChunks: undefined
-      }
-    }
   },
 
   plugins: [

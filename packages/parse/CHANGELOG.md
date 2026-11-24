@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.7](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.6...parse-v0.1.7) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+## [0.1.6](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.5...parse-v0.1.6) (2026-08-19)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+## [0.1.5](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.4...parse-v0.1.5) (2026-08-10)
+
+
+### Bug Fixes
+
+* upgrade antlr4-vensim to correct `^` operator precedence ([#851](https://github.com/climateinteractive/SDEverywhere/issues/851)) ([f3662b5](https://github.com/climateinteractive/SDEverywhere/commit/f3662b536fb43aca6e3f6d2ad300ddf12e6976cf)), closes [#850](https://github.com/climateinteractive/SDEverywhere/issues/850)
+
 ## [0.1.4](https://github.com/climateinteractive/SDEverywhere/compare/parse-v0.1.3...parse-v0.1.4) (2026-04-14)
 
 

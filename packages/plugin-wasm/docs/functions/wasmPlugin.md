@@ -1,15 +1,15 @@
 [@sdeverywhere/plugin-wasm](../index.md) / wasmPlugin
 
-# Function: wasmPlugin
+# Function: wasmPlugin()
 
-**wasmPlugin**(`options?`): `Plugin`
+> **wasmPlugin**(`options?`): `Plugin`
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`WasmPluginOptions`](../interfaces/WasmPluginOptions.md) |
 
-#### Returns
+## Returns
 
 `Plugin`

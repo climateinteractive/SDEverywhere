@@ -15,9 +15,6 @@ import type { CompareDetailViewModel } from './components/compare/detail/compare
 
 import FilterPopover from './components/filter/filter-popover.svelte'
 
-import type { FreeformViewModel } from './components/freeform/freeform-vm'
-import Freeform from './components/freeform/freeform.svelte'
-
 import Header from './components/header/header.svelte'
 
 import type { PerfViewModel } from './components/perf/perf-vm'
@@ -41,9 +38,8 @@ const zoom = viewModel.headerViewModel.zoom
 let compareDetailViewModel: CompareDetailViewModel
 let perfViewModel: PerfViewModel
 let traceViewModel: TraceViewModel
-let freeformViewModel: FreeformViewModel
 
-type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'freeform' | 'trace'
+type ViewMode = 'summary' | 'comparison-detail' | 'perf' | 'trace'
 let viewMode: ViewMode = 'summary'
 
 type BundleSelectorSide = 'left' | 'right' | undefined
@@ -205,13 +201,6 @@ function onKeyDown(event: KeyboardEvent) {
       showSummary()
       event.preventDefault()
       break
-    // case 'f':
-    //   if (!freeformViewModel) {
-    //     freeformViewModel = viewModel.createFreeformViewModel()
-    //   }
-    //   viewMode = 'freeform'
-    //   event.preventDefault()
-    //   break
     case 't':
       if (viewMode !== 'trace') {
         traceViewModel = viewModel.createTraceViewModel()
@@ -243,8 +232,6 @@ function onKeyDown(event: KeyboardEvent) {
       </div>
     {:else if viewMode === 'comparison-detail'}
       <ComparisonDetail on:command={onCommand} viewModel={compareDetailViewModel} />
-    {:else if viewMode === 'freeform'}
-      <Freeform on:command={onCommand} viewModel={freeformViewModel} />
     {:else if viewMode === 'trace'}
       <Trace on:command={onCommand} viewModel={traceViewModel} />
     {:else if viewMode === 'perf'}

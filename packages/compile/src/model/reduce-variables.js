@@ -49,14 +49,22 @@ export function reduceVariables(variables, inputVarIds, mode) {
       return
     }
 
-    // Add this variable to the set of active ones
-    // TODO: Allow cycle if the current LHS is referenced on the RHS
-    // const baseVarId = v.parsedEqn.lhs.varId
-    // if (baseVarId !== currentLhsBaseVarId) {
+    // Stop if this variable is already being reduced further up the call stack, which means
+    // it takes part in a dependency cycle.  This is normal and expected: every stock and flow
+    // feedback loop is a cycle (a level's rate refers to a variable that reads the level), and
+    // a variable that holds its own value from the previous time step (`SAMPLE IF TRUE`)
+    // refers to itself.  Leaving the variable unreduced here is safe.  The caller
+    // (`resolveVarRef`) only substitutes a referenced variable when its reduced RHS is a
+    // single number, and a variable that takes part in a cycle refers to at least one other
+    // variable, so its RHS can never be a single number.  The cycle simply stops the reduction
+    // from propagating any further along that path.  Note that a cycle that is a genuine error
+    // in the model (a simultaneous equation between two aux variables, say) is still reported:
+    // `sortVarsOfType` detects it during the dependency sort and reports the whole chain.
     if (activelyReducingRefIds.has(v.refId)) {
-      throw new Error(`Cycle detected when reducing variables: ${v.refId}`)
+      return
     }
-    // }
+
+    // Add this variable to the set of active ones
     activelyReducingRefIds.add(v.refId)
 
     // We currently have two options for reducing variables.  The less aggressive

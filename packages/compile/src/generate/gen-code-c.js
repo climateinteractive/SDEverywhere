@@ -1,11 +1,15 @@
 import * as R from 'ramda'
 
-import { asort, canonicalVensimName, lines, strlist, mapIndexed } from '../_shared/helpers.js'
+import { asort, canonicalVensimName, cdbl, lines, strlist, mapIndexed } from '../_shared/helpers.js'
 import { sub, allDimensions, allMappings, subscriptFamilies } from '../_shared/subscript.js'
 import Model from '../model/model.js'
 
 import { generateEquation } from './gen-equation.js'
 import { expandVarNames } from './expand-var-names.js'
+
+// The control variables are declared in `sde.h` and read by the support code in `model.c`,
+// so they always have to be emitted as mutable globals.
+const controlVarNames = new Set(['_final_time', '_initial_time', '_saveper', '_time_step'])
 
 export function generateC(parsedModel, opts) {
   return codeGenerator(parsedModel, opts).generate()
@@ -17,6 +21,9 @@ let codeGenerator = (parsedModel, opts) => {
   let mode = ''
   // Set to true to output all variables when there is no model run spec.
   let outputAllVars = spec.outputVarNames === undefined || spec.outputVarNames.length === 0
+  // The constant variables that are emitted as C literals, keyed by variable name; see
+  // `resolveLiteralConstVars` below.
+  let literalConstVars = new Map()
   // Function to generate a section of the code
   let generateSection = R.map(v => {
     return generateEquation(v, mode, extData, directData, modelDirname, 'c')
@@ -37,6 +44,9 @@ let codeGenerator = (parsedModel, opts) => {
       // Do not generate output, but leave the results of model analysis.
     }
     if (operations.includes('generateC')) {
+      // Decide which constants can be emitted as C literals; this must happen before any
+      // code is generated, since it affects both the declaration and the init sections.
+      resolveLiteralConstVars()
       // Generate code for each variable in the proper order.
       let code = emitDeclCode()
       code += emitInitLookupsCode()
@@ -48,6 +58,130 @@ let codeGenerator = (parsedModel, opts) => {
     }
   }
 
+  //
+  // Constant folding
+  //
+
+  /**
+   * Determine which constant variables can be emitted as C literals (`static const double
+   * _x = 2.0;`) instead of as mutable globals that are assigned in `initConstants`.
+   *
+   * The point is to let the C compiler see the values.  When a constant is a mutable global,
+   * every use of it has to be compiled as a load of an unknown quantity; when it is a literal,
+   * the compiler can fold it into the expressions that use it.  The largest effect by far is
+   * that `pow(x, e)` calls where `e` is a named constant with a value like 2, 0.5, or 1 get
+   * strength-reduced into multiplies and `sqrt`.
+   *
+   * That strength reduction is also why this is opt-in: `x*x` and `sqrt(x)` are correctly
+   * rounded while `pow` is not, so results can change in the last few digits.  For En-ROADS
+   * the largest observed relative difference is ~1e-13 (and the new value is usually the more
+   * accurate one), but it is enough to change bit-exact regression baselines.  Set
+   * `SDE_NONPUBLIC_EMIT_CONST_LITERALS=1` to enable.
+   *
+   * Only unsubscripted constants with a plain numeric value qualify.  Input variables are
+   * excluded (they are assigned by `setInputs` on each run), as are constants that can be
+   * overridden with `setConstant`, the control variables (which are declared in `sde.h`), and
+   * constants that come from a `GET DIRECT CONSTANTS` call.
+   */
+  function resolveLiteralConstVars() {
+    literalConstVars = new Map()
+
+    if (process.env.SDE_NONPUBLIC_EMIT_CONST_LITERALS !== '1') {
+      // Skip this optimization if not explicitly enabled
+      return
+    }
+
+    if (spec.customConstants === true) {
+      // Any constant can be overridden at runtime, so none of them can be emitted as literals
+      return
+    }
+
+    let customConstantVarNames = []
+    if (Array.isArray(spec.customConstants)) {
+      // The developer might specify a variable name that includes subscripts, but we will
+      // ignore the subscript part and only match on the base name
+      customConstantVarNames = spec.customConstants.map(varName => canonicalVensimName(varName.split('[')[0]))
+    }
+
+    for (const v of Model.constVars()) {
+      if (v.subscripts.length > 0) {
+        // Skip subscripted constants.  Some Vensim functions (`ALLOCATE AVAILABLE`,
+        // `VECTOR SORT ORDER`, `INVERT MATRIX`, etc) take array arguments as `double*`, and a
+        // `static const double[]` cannot be passed to those.  Emitting a constant array as a
+        // literal would require tracking which arrays are passed by address, so for now we only
+        // handle the scalar case.
+        continue
+      }
+      if (controlVarNames.has(v.varName)) {
+        // Skip the control variables (`INITIAL TIME`, `FINAL TIME`, `TIME STEP`, and `SAVEPER`).
+        // These are declared as `extern` in `sde.h` and read by `model.c`, so they must remain
+        // mutable globals with external linkage.
+        continue
+      }
+      if (Model.isInputVar(v.varName)) {
+        // Skip input variables.  These are assigned by `setInputs` on every run, so their value
+        // is not fixed at compile time.
+        continue
+      }
+      if (customConstantVarNames.includes(v.varName)) {
+        // Skip constants that the developer declared as overridable with `setConstant`; like
+        // inputs, these can be assigned at runtime.
+        continue
+      }
+      if (v.directConstArgs) {
+        // Skip constants that get their value from a `GET DIRECT CONSTANTS` call.  Those values
+        // are read from an external data file at init time, so they are not known here.
+        continue
+      }
+      const rhs = v.parsedEqn?.rhs
+      if (rhs?.kind !== 'expr') {
+        // Skip constants that don't have a simple expression on the right-hand side
+        continue
+      }
+      const value = constNumberValue(rhs.expr)
+      if (value === undefined) {
+        // Skip constants whose right-hand side doesn't resolve to a number.  An arithmetic
+        // expression (even one over numbers only, like `2*3`) is emitted as generated code in
+        // `initConstants` rather than as a value we can write out here.
+        continue
+      }
+      literalConstVars.set(v.varName, cdbl(value))
+    }
+  }
+
+  /**
+   * Return the numeric value of the given expression, or undefined if it is not a number.
+   *
+   * This looks through parentheses and unary plus/minus operators, so an equation like
+   * `x = -(1.5)` resolves to -1.5.  These are the only expressions that are reduced here;
+   * folding arithmetic (`2*3` and the like) would mean computing the value in JavaScript
+   * instead of letting the C compiler do it, which we avoid.
+   *
+   * @param {*} expr The expression to evaluate.
+   * @returns {number | undefined} The numeric value of the expression, or undefined if the
+   * expression is not a (possibly negated) number.
+   */
+  function constNumberValue(expr) {
+    switch (expr?.kind) {
+      case 'number':
+        return expr.value
+      case 'parens':
+        return constNumberValue(expr.expr)
+      case 'unary-op': {
+        if (expr.op !== '-' && expr.op !== '+') {
+          return undefined
+        }
+        const childValue = constNumberValue(expr.expr)
+        if (childValue === undefined) {
+          return undefined
+        }
+        return expr.op === '-' ? -childValue : childValue
+      }
+      default:
+        return undefined
+    }
+  }
+
   // Each code section follows in an outline of the generated model code.
 
   //
@@ -56,7 +190,7 @@ let codeGenerator = (parsedModel, opts) => {
   function emitDeclCode() {
     mode = 'decl'
     return `#include "sde.h"
-
+${literalConstSection()}
 // Model variables
 ${declSection()}
 
@@ -112,12 +246,9 @@ bool data_initialized = false;
 
   function emitInitConstantsCode() {
     mode = 'init-constants'
-    return chunkedFunctions(
-      'initConstants',
-      Model.constVars(),
-      '  // Initialize constants.',
-      '  initLookups();\n  initData();'
-    )
+    // Skip the constants that are emitted as literals in the declaration section
+    const constVars = R.reject(v => literalConstVars.has(v.varName), Model.constVars())
+    return chunkedFunctions('initConstants', constVars, '  // Initialize constants.', '  initLookups();\n  initData();')
   }
 
   function emitInitLevelsCode() {
@@ -336,7 +467,20 @@ ${section(chunk)}
       asort,
       lines
     )
-    return decls(Model.allVars()) + fixedDelayDecls + depreciationDecls
+    // Skip the constants that are emitted as literals in `literalConstSection`
+    const vars = R.reject(v => literalConstVars.has(v.varName), Model.allVars())
+    return decls(vars) + fixedDelayDecls + depreciationDecls
+  }
+  function literalConstSection() {
+    // Emit a definition for each constant that is emitted as a C literal (see
+    // `resolveLiteralConstVars`).  Note that this includes the section heading and a
+    // leading blank line so that the whole section disappears when there are no such
+    // constants.
+    if (literalConstVars.size === 0) {
+      return ''
+    }
+    const defs = [...literalConstVars].map(([varName, value]) => `static const double ${varName} = ${value};`)
+    return `\n// Constants\n${lines(asort(defs))}\n`
   }
   function internalVarsSection() {
     // Declare internal variables to run the model.

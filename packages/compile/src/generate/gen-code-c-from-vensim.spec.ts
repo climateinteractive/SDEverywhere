@@ -11,6 +11,24 @@ import { parseInlineVensimModel } from '../_tests/test-support'
 import { generateCode } from './gen-code'
 import { generateC } from './gen-code-c'
 
+/**
+ * Run the given function with the environment variable that enables constant folding set,
+ * then restore the previous value.
+ */
+function withConstLiteralsEnabled(f: () => string): string {
+  const saved = process.env.SDE_NONPUBLIC_EMIT_CONST_LITERALS
+  process.env.SDE_NONPUBLIC_EMIT_CONST_LITERALS = '1'
+  try {
+    return f()
+  } finally {
+    if (saved === undefined) {
+      delete process.env.SDE_NONPUBLIC_EMIT_CONST_LITERALS
+    } else {
+      process.env.SDE_NONPUBLIC_EMIT_CONST_LITERALS = saved
+    }
+  }
+}
+
 type ExtData = Map<string, Map<number, number>>
 type DirectDataSpec = Map<string, string>
 
@@ -417,6 +435,145 @@ void setConstant(size_t varIndex, size_t* subIndices, double value) {
       break;
   }
 }`)
+  })
+
+  it('should emit constants as literals when SDE_NONPUBLIC_EMIT_CONST_LITERALS is enabled', () => {
+    const mdl = `
+      DimA: A1, A2 ~~|
+      exponent = 2 ~~|
+      offset = 1.5 ~~|
+      scale[DimA] = 10, 20 ~~|
+      input = 3 ~~|
+      y = POWER(input, exponent) + offset + scale[A1] ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = withConstLiteralsEnabled(() =>
+      readInlineModelAndGenerateC(mdl, {
+        inputVarNames: ['input'],
+        outputVarNames: ['y']
+      })
+    )
+
+    // The unsubscripted, non-input constants are emitted as literals in their own
+    // section that precedes the "Model variables" section
+    expect(code).toMatch(`\
+#include "sde.h"
+
+// Constants
+static const double _exponent = 2.0;
+static const double _offset = 1.5;
+
+// Model variables
+double _final_time;
+double _initial_time;
+double _input;
+double _saveper;
+double _scale[2];
+double _time_step;
+double _y;`)
+
+    // Those constants no longer have a mutable declaration or an `initConstants` assignment
+    expect(code).not.toMatch('double _exponent;')
+    expect(code).not.toMatch('double _offset;')
+    expect(code).not.toMatch('  // exponent = 2')
+    expect(code).not.toMatch('  // offset = 1.5')
+
+    // The input variable, the subscripted constant, and the control variables are unchanged
+    expect(code).toMatch('double _input;')
+    expect(code).toMatch('double _scale[2];')
+    expect(code).toMatch('double _time_step;')
+    expect(code).toMatch(`\
+void initConstants0() {
+  // FINAL TIME = 2
+  _final_time = 2.0;
+  // INITIAL TIME = 0
+  _initial_time = 0.0;
+  // SAVEPER = 1
+  _saveper = 1.0;
+  // TIME STEP = 1
+  _time_step = 1.0;
+  // input = 3
+  _input = 3.0;
+  // scale[DimA] = 10,20
+  _scale[0] = 10.0;
+  // scale[DimA] = 10,20
+  _scale[1] = 20.0;
+}`)
+
+    // The uses of the folded constants are unchanged
+    expect(code).toMatch('_y = _POWER(_input, _exponent) + _offset + _scale[0];')
+  })
+
+  it('should not emit constants as literals by default', () => {
+    const mdl = `
+      exponent = 2 ~~|
+      input = 3 ~~|
+      y = POWER(input, exponent) ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = readInlineModelAndGenerateC(mdl, {
+      inputVarNames: ['input'],
+      outputVarNames: ['y']
+    })
+    expect(code).not.toMatch('// Constants')
+    expect(code).toMatch('double _exponent;')
+    expect(code).toMatch(`\
+  // exponent = 2
+  _exponent = 2.0;`)
+  })
+
+  it('should not emit a constant as a literal when it can be overridden with setConstant', () => {
+    const mdl = `
+      exponent = 2 ~~|
+      offset = 1.5 ~~|
+      y = POWER(2, exponent) + offset ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = withConstLiteralsEnabled(() =>
+      readInlineModelAndGenerateC(mdl, {
+        inputVarNames: [],
+        outputVarNames: ['y'],
+        customConstants: ['exponent']
+      })
+    )
+    expect(code).toMatch('double _exponent;')
+    expect(code).toMatch(`\
+// Constants
+static const double _offset = 1.5;`)
+  })
+
+  it('should emit a negated constant as a literal', () => {
+    const mdl = `
+      offset = -1.5 ~~|
+      gain = +2 ~~|
+      y = offset + gain ~~|
+      INITIAL TIME = 0 ~~|
+      FINAL TIME = 2 ~~|
+      TIME STEP = 1 ~~|
+      SAVEPER = 1 ~~|
+    `
+    const code = withConstLiteralsEnabled(() =>
+      readInlineModelAndGenerateC(mdl, {
+        inputVarNames: [],
+        outputVarNames: ['y']
+      })
+    )
+    expect(code).toMatch(`\
+// Constants
+static const double _gain = 2.0;
+static const double _offset = -1.5;`)
+    expect(code).not.toMatch('double _offset;')
+    expect(code).not.toMatch('  // offset = -1.5')
+    expect(code).toMatch('_y = _offset + _gain;')
   })
 
   it('should generate setLookup that reports error when customLookups is disabled', () => {

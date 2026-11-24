@@ -65,7 +65,7 @@ export {
   createCheckDataCoordinatorForTests
 } from './check/check-data-coordinator'
 
-export type { CheckDataRef, CheckDataRefKey } from './check/check-data-ref'
+export type { CheckDataRef, CheckDataRefKey, CheckDataRefOp, CheckRefDataset } from './check/check-data-ref'
 
 export type { CheckDataset, CheckDatasetError } from './check/check-dataset'
 
@@ -140,6 +140,9 @@ export * from './comparison/report/comparison-group-types'
 export * from './comparison/report/comparison-group-scores'
 
 export { categorizeComparisonTestSummaries } from './comparison/report/comparison-grouping'
+export * from './comparison/report/comparison-graph-grouping'
+export * from './comparison/report/comparison-view-summaries'
+export { getBucketIndex, hasSignificantDiffs } from './comparison/report/buckets'
 
 export type { ComparisonSortMode } from './comparison/report/comparison-sort-mode'
 
@@ -186,3 +189,5 @@ export { runSuite } from './suite/suite-runner'
 export * from './suite/suite-report-types'
 
 export { suiteSummaryFromReport } from './suite/suite-reporting'
+export * from './suite/suite-export'
+export * from './suite/suite-tab-status'

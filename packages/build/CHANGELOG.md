@@ -1,5 +1,74 @@
 # Changelog
 
+## [0.3.18](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.17...build-v0.3.18) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.35 to ^0.7.36
+    * @sdeverywhere/parse bumped from ^0.1.6 to ^0.1.7
+
+## [0.3.17](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.16...build-v0.3.17) (2026-09-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.34 to ^0.7.35
+
+## [0.3.16](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.15...build-v0.3.16) (2026-08-27)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.33 to ^0.7.34
+
+## [0.3.15](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.14...build-v0.3.15) (2026-08-19)
+
+
+### Bug Fixes
+
+* retrofit `ModelSpec` type from build package on top of `ModelSpec` type from compile package ([#891](https://github.com/climateinteractive/SDEverywhere/issues/891)) ([db5a4d0](https://github.com/climateinteractive/SDEverywhere/commit/db5a4d00cb15f90765e24b5e5868fb4d8d87bb00)), closes [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)
+
+
+### Documentation Updates
+
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/compile bumped from ^0.7.32 to ^0.7.33
+    * @sdeverywhere/parse bumped from ^0.1.5 to ^0.1.6
+
+## [0.3.14](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.13...build-v0.3.14) (2026-08-13)
+
+
+### Bug Fixes
+
+* remove folder-hash dependency and use node:crypto instead ([#874](https://github.com/climateinteractive/SDEverywhere/issues/874)) ([8773269](https://github.com/climateinteractive/SDEverywhere/commit/87732692bbacb2cc48244c5980d045dc551a0695)), closes [#873](https://github.com/climateinteractive/SDEverywhere/issues/873)
+
+## [0.3.13](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.12...build-v0.3.13) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/parse bumped from ^0.1.4 to ^0.1.5
+
 ## [0.3.12](https://github.com/climateinteractive/SDEverywhere/compare/build-v0.3.11...build-v0.3.12) (2026-04-14)
 
 

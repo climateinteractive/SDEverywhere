@@ -483,7 +483,7 @@ function generateLevelInit(callExpr, ctx) {
   const fnId = callExpr.fnId
 
   // Get the index of the argument holding the initial value expression
-  let initialArgIndex = 0
+  let initialArgIndex
   switch (fnId) {
     case '_ACTIVE_INITIAL':
     case '_INTEG':
@@ -978,7 +978,8 @@ function generateAllocationFunctionCall(callExpr, ctx) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
     if (origIndexParts.length < count) {
-      throw new Error(`${callExpr.fnName} argument '${arg}' should have at least ${count} subscripts`)
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`${callExpr.fnName} argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {
@@ -1020,7 +1021,7 @@ function generateAllocationFunctionCall(callExpr, ctx) {
     case 'js':
       // TODO: Implement allocation functions for JS
       // ctx.emitPreInnerLoop(
-      //   `  let ${tmpVarId} = fns.ALLOCATE_AVAILABLE(${reqRef}, ${ppRef}, ${availArg}, ${numRequesters});`
+      //   `  let ${tmpVarId} = ${fnRef(callExpr.fnId, ctx)}(${reqRef}, ${ppRef}, ${availArg}, ${numRequesters});`
       // )
       break
     default:
@@ -1053,8 +1054,9 @@ function generateAllocateByPriorityCall(callExpr, ctx) {
   function cVarRefWithoutLastIndices(arg, count) {
     const varRef = ctx.cVarRef(arg)
     const origIndexParts = Model.splitRefId(varRef).subscripts
-    if (origIndexParts < count) {
-      throw new Error(`ALLOCATE BY PRIORITY argument '${arg}' should have at least ${count} subscripts`)
+    if (origIndexParts.length < count) {
+      const plural = count === 1 ? '' : 's'
+      throw new Error(`ALLOCATE BY PRIORITY argument '${arg.varName}' should have at least ${count} subscript${plural}`)
     }
     const newIndexParts = origIndexParts.slice(0, -count)
     if (newIndexParts.length > 0) {

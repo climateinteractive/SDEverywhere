@@ -1,18 +1,16 @@
 {
   "name": "@sdeverywhere/build",
-  "version": "0.3.12",
+  "version": "0.3.18",
   "files": [
     "dist/**"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -25,22 +23,21 @@
     "test:watch": "vitest",
     "test:ci": "vitest --pool=forks --test-timeout=10000 run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check type-check build test:ci docs"
   },
   "dependencies": {
-    "@sdeverywhere/parse": "^0.1.4",
+    "@sdeverywhere/compile": "^0.7.36",
+    "@sdeverywhere/parse": "^0.1.7",
     "chokidar": "^5.0.0",
     "cross-spawn": "^7.0.6",
-    "folder-hash": "^4.0.2",
     "neverthrow": "^4.3.1",
     "picocolors": "^1.0.0",
     "tinyglobby": "^0.2.15"
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
-    "@types/folder-hash": "^4.0.1",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

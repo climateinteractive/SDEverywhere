@@ -1,10 +1,15 @@
 {
   "name": "@sdeverywhere/compile",
-  "version": "0.7.31",
+  "version": "0.7.36",
   "description": "The core Vensim to C compiler for the SDEverywhere tool suite.",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "clean": "rm -rf dts-tmp dist",
+    "build:dts": "tsc -p tsconfig-build.json --emitDeclarationOnly --outDir dts-tmp",
+    "build:bundle": "tsdown",
+    "build": "run-s build:dts build:bundle",
     "lint": "eslint . --max-warnings 0",
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
@@ -13,12 +18,12 @@
     "test": "vitest run",
     "test:watch": "vitest --hideSkippedTests",
     "test:ci": "vitest run",
-    "ci:build": "run-s lint prettier:check type-check test:ci"
+    "ci:build": "run-s clean lint prettier:check type-check build test:ci"
   },
   "dependencies": {
-    "@sdeverywhere/parse": "^0.1.4",
+    "@sdeverywhere/parse": "^0.1.7",
     "byline": "^5.0.0",
-    "csv-parse": "^5.3.3",
+    "csv-parse": "^7.0.2",
     "fflate": "^0.8.3",
     "ramda": "^0.27.0",
     "strip-bom": "^5.0.0"

@@ -88,7 +88,7 @@ let isZero = value => {
   return Math.abs(value) < ε
 }
 let difference = (x, y) => {
-  let diff = 0
+  let diff
   if (isZero(x) || isZero(y)) {
     diff = Math.abs(x - y)
   } else {

@@ -79,6 +79,20 @@ const pred1WithInherit = ([op, time]: [string, string]) => {
   return p
 }
 
+const pred1WithSumRef = ([op, time]: [string, string]) => {
+  const whitespace = '        '
+  let p = `${whitespace}- ${op}:`
+  p += `\n${whitespace}    op: sum`
+  p += `\n${whitespace}    datasets:`
+  p += `\n${whitespace}      - Other 1`
+  p += `\n${whitespace}      - Other 2`
+  p += `\n${whitespace}    scenario: inherit`
+  if (time) {
+    p += `\n${time}`
+  }
+  return p
+}
+
 const pred2 = ([op1, op2, time]: [string, string, string]) => {
   const whitespace = '        '
   let p = `${whitespace}- ${op1}: 0`
@@ -361,6 +375,128 @@ ${predicates}
 `
     const result = parseTestYaml([yaml])
     expect(result.isOk()).toBe(true)
+  })
+
+  it('should accept test with multiple predicates that reference the sum of other datasets', () => {
+    const ops = ['gt', 'gte', 'lt', 'lte', 'eq', 'approx']
+    const combos = cartesianProductOf([ops, times])
+    const predicates = combos.map(pred1WithSumRef).join('\n')
+
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+${predicates}
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(true)
+  })
+
+  it('should accept test with predicate that references the sum of datasets in expanded form', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - approx:
+            op: sum
+            datasets:
+              - name: Output Y
+              - name: Output Z
+                source: Reference
+          tolerance: 0.1
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(true)
+  })
+
+  it('should reject test with predicate that includes both dataset and datasets', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - eq:
+            dataset: inherit
+            op: sum
+            datasets:
+              - Output Y
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(false)
+  })
+
+  it('should reject test with predicate that includes datasets without an op', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - eq:
+            datasets:
+              - Output Y
+              - Output Z
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(false)
+  })
+
+  it('should reject test with predicate that includes an op without datasets', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - eq:
+            op: sum
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(false)
+  })
+
+  it('should reject test with predicate that includes an unknown op', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - eq:
+            op: product_of
+            datasets:
+              - Output Y
+              - Output Z
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(false)
+  })
+
+  it('should reject test with predicate that includes an empty datasets array', () => {
+    const yaml = `
+- describe: Group1
+  tests:
+    - it: should do something
+      datasets:
+        - name: Output X
+      predicates:
+        - eq:
+            op: sum
+            datasets: []
+`
+    const result = parseTestYaml([yaml])
+    expect(result.isOk()).toBe(false)
   })
 
   it('should accept test with range predicates', () => {

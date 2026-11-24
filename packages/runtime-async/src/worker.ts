@@ -1,13 +1,17 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import type { TransferDescriptor } from 'threads'
-import { expose, Transfer } from 'threads/worker'
-
 import type { GeneratedModel, RunnableModel } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, createRunnableModel } from '@sdeverywhere/runtime'
 
+import type { ModelInitArgs } from './model-init-args'
+import type { InitResult, ModelWorkerMethods } from './worker-rpc/model-worker-rpc'
+import { serveModelWorker } from './worker-rpc/model-worker-rpc'
+import { parentWorkerPort } from './worker-rpc/parent-port'
+
+export type { ModelInitArgs }
+
 /** @hidden */
-let initGeneratedModel: () => Promise<GeneratedModel>
+let initGeneratedModel: (initArgs?: ModelInitArgs) => Promise<GeneratedModel>
 
 /** @hidden */
 let runnableModel: RunnableModel
@@ -19,25 +23,15 @@ let runnableModel: RunnableModel
  */
 const params = new BufferedRunModelParams()
 
-interface InitResult {
-  outputVarIds: string[]
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  modelListing?: /*ModelListingSpecs*/ any
-  startTime: number
-  endTime: number
-  saveFreq: number
-  outputRowLength: number
-}
-
 /** @hidden */
-const modelWorker = {
-  async initModel(): Promise<InitResult> {
+const modelWorker: ModelWorkerMethods = {
+  async initModel(initArgs?: ModelInitArgs): Promise<InitResult> {
     if (runnableModel) {
       throw new Error('RunnableModel was already initialized')
     }
 
     // Initialize the runnable model
-    const generatedModel = await initGeneratedModel()
+    const generatedModel = await initGeneratedModel(initArgs)
     runnableModel = createRunnableModel(generatedModel)
 
     // Transfer the model metadata to the runner
@@ -46,12 +40,11 @@ const modelWorker = {
       modelListing: runnableModel.modelListing,
       startTime: runnableModel.startTime,
       endTime: runnableModel.endTime,
-      saveFreq: runnableModel.saveFreq,
-      outputRowLength: runnableModel.numSavePoints
+      saveFreq: runnableModel.saveFreq
     }
   },
 
-  runModel(ioBuffer: ArrayBuffer): TransferDescriptor<ArrayBuffer> {
+  runModel(ioBuffer: ArrayBuffer): ArrayBuffer {
     if (!runnableModel) {
       throw new Error('RunnableModel must be initialized before running the model in worker')
     }
@@ -64,7 +57,7 @@ const modelWorker = {
     runnableModel.runModel(params)
 
     // Transfer the buffer back to the runner
-    return Transfer(ioBuffer)
+    return ioBuffer
   }
 }
 
@@ -75,13 +68,17 @@ const modelWorker = {
  * sending the outputs back to the main thread.
  *
  * @param init The function that initializes the generated model instance that
- * is used in the worker thread.
+ * is used in the worker thread.  This is passed the {@link ModelInitArgs} derived from
+ * the options (if any) that were passed to `spawnAsyncModelRunner` in the main thread,
+ * or undefined if there are none.  Note that the factory function exported by an
+ * Emscripten-generated Wasm model accepts those arguments as its module argument, so
+ * it can be passed here directly.
  */
-export function exposeModelWorker(init: () => Promise<GeneratedModel>): void {
+export function exposeModelWorker(init: (initArgs?: ModelInitArgs) => Promise<GeneratedModel>): void {
   // Save the initializer, which will be used when the runner calls `initModel`
   // on the worker
   initGeneratedModel = init
 
-  // Expose the worker implementation to `threads.js`
-  expose(modelWorker)
+  // Handle the requests that arrive from the runner in the main thread
+  serveModelWorker(parentWorkerPort(), modelWorker)
 }

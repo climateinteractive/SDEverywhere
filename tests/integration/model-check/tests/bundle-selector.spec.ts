@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Climate Interactive / New Venture Fund
 
-import { copyFile, mkdir, readdir, rm, utimes } from 'node:fs/promises'
+import { copyFile, readdir, rm, utimes } from 'node:fs/promises'
 import { dirname, join as joinPath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 

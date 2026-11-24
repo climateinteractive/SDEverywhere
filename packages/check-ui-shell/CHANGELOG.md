@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.2.28](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.27...check-ui-shell-v0.2.28) (2026-11-10)
+
+
+### Features
+
+* write machine-readable check+comparison results alongside model-check report ([#954](https://github.com/climateinteractive/SDEverywhere/issues/954)) ([1f66036](https://github.com/climateinteractive/SDEverywhere/commit/1f66036bef656e0583ec972f9b798559eff8c00b)), closes [#950](https://github.com/climateinteractive/SDEverywhere/issues/950)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.15 to ^0.1.16
+
+## [0.2.27](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.26...check-ui-shell-v0.2.27) (2026-09-20)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.14 to ^0.1.15
+
+## [0.2.26](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.25...check-ui-shell-v0.2.26) (2026-08-27)
+
+
+### Features
+
+* add support for check tests that verify that one dataset is equal/etc to the sum of other datasets ([#905](https://github.com/climateinteractive/SDEverywhere/issues/905)) ([c62a9bc](https://github.com/climateinteractive/SDEverywhere/commit/c62a9bc1f20d62b8e9d1d75fd5125267c224d8b1)), closes [#904](https://github.com/climateinteractive/SDEverywhere/issues/904)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.13 to ^0.1.14
+
+## [0.2.25](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.24...check-ui-shell-v0.2.25) (2026-08-13)
+
+
+### Bug Fixes
+
+* remove unused/incomplete freeform view code ([#863](https://github.com/climateinteractive/SDEverywhere/issues/863)) ([5542f20](https://github.com/climateinteractive/SDEverywhere/commit/5542f20b9055f4da829f44ba0f8b4b74afb54f0f)), closes [#862](https://github.com/climateinteractive/SDEverywhere/issues/862)
+* use untrack when initializing `initialName` in bundle copy dialog ([#854](https://github.com/climateinteractive/SDEverywhere/issues/854)) ([76fb1c5](https://github.com/climateinteractive/SDEverywhere/commit/76fb1c573b3a6c42fb9e8915662b826e44d86cae)), closes [#853](https://github.com/climateinteractive/SDEverywhere/issues/853)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/check-core bumped from ^0.1.12 to ^0.1.13
+
 ## [0.2.24](https://github.com/climateinteractive/SDEverywhere/compare/check-ui-shell-v0.2.23...check-ui-shell-v0.2.24) (2026-05-28)
 
 

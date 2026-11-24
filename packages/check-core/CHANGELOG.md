@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.1.16](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.15...check-core-v0.1.16) (2026-11-10)
+
+
+### Features
+
+* write machine-readable check+comparison results alongside model-check report ([#954](https://github.com/climateinteractive/SDEverywhere/issues/954)) ([1f66036](https://github.com/climateinteractive/SDEverywhere/commit/1f66036bef656e0583ec972f9b798559eff8c00b)), closes [#950](https://github.com/climateinteractive/SDEverywhere/issues/950)
+
+## [0.1.15](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.14...check-core-v0.1.15) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+## [0.1.14](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.13...check-core-v0.1.14) (2026-08-27)
+
+
+### Features
+
+* add support for check tests that verify that one dataset is equal/etc to the sum of other datasets ([#905](https://github.com/climateinteractive/SDEverywhere/issues/905)) ([c62a9bc](https://github.com/climateinteractive/SDEverywhere/commit/c62a9bc1f20d62b8e9d1d75fd5125267c224d8b1)), closes [#904](https://github.com/climateinteractive/SDEverywhere/issues/904)
+
+
+### Bug Fixes
+
+* correct scheduling of ref data requests when concurrency &gt; 1 ([#903](https://github.com/climateinteractive/SDEverywhere/issues/903)) ([f821c42](https://github.com/climateinteractive/SDEverywhere/commit/f821c421c801350fb552f20bad60308e4a33142d)), closes [#902](https://github.com/climateinteractive/SDEverywhere/issues/902)
+
+## [0.1.13](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.12...check-core-v0.1.13) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade ajv to latest version ([#858](https://github.com/climateinteractive/SDEverywhere/issues/858)) ([566d111](https://github.com/climateinteractive/SDEverywhere/commit/566d1111eac877fa95814272a7bd02bea22fe6d5)), closes [#857](https://github.com/climateinteractive/SDEverywhere/issues/857)
+
 ## [0.1.12](https://github.com/climateinteractive/SDEverywhere/compare/check-core-v0.1.11...check-core-v0.1.12) (2026-05-28)
 
 

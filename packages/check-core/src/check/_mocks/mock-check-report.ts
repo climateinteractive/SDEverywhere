@@ -1,6 +1,6 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import { dataRef } from '../check-data-ref'
+import { dataRef, sumDataRef } from '../check-data-ref'
 import type { CheckDataset } from '../check-dataset'
 import type { CheckResult } from '../check-func'
 import type { CheckKey } from '../check-planner'
@@ -31,6 +31,13 @@ export function opDataRef(dataset: CheckDataset, scenario?: CheckScenario): Chec
   return {
     kind: 'data',
     dataRef: dataRef(dataset, scenario)
+  }
+}
+
+export function opSumDataRef(datasets: CheckDataset[], scenario?: CheckScenario): CheckPredicateOpDataRef {
+  return {
+    kind: 'data',
+    dataRef: sumDataRef(datasets, scenario)
   }
 }
 

@@ -1,5 +1,65 @@
 # Changelog
 
+## [0.2.17](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.16...plugin-worker-v0.2.17) (2026-09-25)
+
+
+### Features
+
+* add option to plugin-worker for generating a module that exports the worker source ([#928](https://github.com/climateinteractive/SDEverywhere/issues/928)) ([38ea3f8](https://github.com/climateinteractive/SDEverywhere/commit/38ea3f8363abc50f73f54c8718ade8512ba2b57a)), closes [#927](https://github.com/climateinteractive/SDEverywhere/issues/927)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime-async bumped from ^0.2.11 to ^0.2.12
+
+## [0.2.16](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.15...plugin-worker-v0.2.16) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+
+### Bug Fixes
+
+* replace threads.js dependency in runtime-async package with custom RPC layer ([#918](https://github.com/climateinteractive/SDEverywhere/issues/918)) ([45219c0](https://github.com/climateinteractive/SDEverywhere/commit/45219c0b8dd4701ef30bc13f1fb3847429dfb4e4)), closes [#913](https://github.com/climateinteractive/SDEverywhere/issues/913)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.10 to ^0.2.11
+    * @sdeverywhere/runtime-async bumped from ^0.2.10 to ^0.2.11
+
+## [0.2.15](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.14...plugin-worker-v0.2.15) (2026-08-19)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.9 to ^0.2.10
+    * @sdeverywhere/runtime-async bumped from ^0.2.9 to ^0.2.10
+
+## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.13...plugin-worker-v0.2.14) (2026-08-10)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @sdeverywhere/runtime bumped from ^0.2.8 to ^0.2.9
+    * @sdeverywhere/runtime-async bumped from ^0.2.8 to ^0.2.9
+
 ## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/plugin-worker-v0.2.12...plugin-worker-v0.2.13) (2026-02-04)
 
 

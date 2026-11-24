@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { onMount } from 'svelte'
-import Icon from 'svelte-awesome/components/Icon.svelte'
+import Icon from 'svelte-awesome'
 import fuzzysort from 'fuzzysort'
 
 import { faCloud } from '@fortawesome/free-regular-svg-icons'

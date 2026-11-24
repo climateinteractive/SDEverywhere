@@ -1,15 +1,15 @@
 [@sdeverywhere/plugin-vite](../index.md) / vitePlugin
 
-# Function: vitePlugin
+# Function: vitePlugin()
 
-**vitePlugin**(`options`): `Plugin`
+> **vitePlugin**(`options`): `Plugin`
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options` | [`VitePluginOptions`](../interfaces/VitePluginOptions.md) |
 
-#### Returns
+## Returns
 
 `Plugin`

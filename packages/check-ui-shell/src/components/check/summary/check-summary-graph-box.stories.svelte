@@ -22,7 +22,7 @@ import { mockBundleModel } from '../../../_mocks/mock-bundle'
 import { mockDataset } from '../../../_mocks/mock-data'
 import { inputVar, outputVar } from '../../../_mocks/mock-vars'
 
-import { dataset, opConstantRef, opDataRef } from '../../../_mocks/mock-check-report'
+import { dataset, opConstantRef, opDataRef, opSumDataRef } from '../../../_mocks/mock-check-report'
 import { inputAtValue } from '../../../_mocks/mock-check-scenario'
 
 import StoryDecorator from '../../_storybook/story-decorator.svelte'
@@ -56,9 +56,13 @@ function createPredicateReport(
   }
 }
 
+function scaledDataset(scale: number): Dataset {
+  return new Map(Array.from(mockDataset(), ([time, value]) => [time, value * scale]))
+}
+
 function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSummaryGraphBoxViewModel {
   const inputVarNames = ['I1']
-  const outputVarNames = ['O1', 'O2', 'O2_Upper', 'O2_Lower']
+  const outputVarNames = ['O1', 'O1_Part1', 'O1_Part2', 'O2', 'O2_Upper', 'O2_Lower']
   const modelSpec: ModelSpec = {
     modelSizeInBytes: 0,
     dataSizeInBytes: 0,
@@ -71,6 +75,14 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
     for (const datasetKey of datasetKeys) {
       let ds: Dataset
       switch (datasetKey) {
+        // Note that O1_Part1 and O1_Part2 add up to O1, which makes them useful
+        // for demonstrating a predicate that references the sum of two datasets
+        case 'Model__o1_part1':
+          ds = scaledDataset(0.4)
+          break
+        case 'Model__o1_part2':
+          ds = scaledDataset(0.6)
+          break
         case 'Model__o2':
           ds = mockDataset(5)
           break
@@ -664,6 +676,37 @@ function createGraphBoxViewModel(predicateReport: CheckPredicateReport): CheckSu
       time: {
         after_incl: 2020,
         before_incl: 2090
+      }
+    })
+    args.viewModel = createGraphBoxViewModel(report)
+  }}
+/>
+
+<Story
+  name="Without time: approx (sum of datasets)"
+  {template}
+  beforeEach={async ({ args }) => {
+    const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [
+      ['approx', opSumDataRef([dataset('Model', 'O1_Part1'), dataset('Model', 'O1_Part2')])]
+    ]
+    const report = createPredicateReport(ops, {
+      tolerance: 5
+    })
+    args.viewModel = createGraphBoxViewModel(report)
+  }}
+/>
+
+<Story
+  name="With time range: eq (sum of datasets)"
+  {template}
+  beforeEach={async ({ args }) => {
+    const ops: [CheckPredicateOp, CheckPredicateOpRef][] = [
+      ['eq', opSumDataRef([dataset('Model', 'O1_Part1'), dataset('Model', 'O1_Part2')])]
+    ]
+    const report = createPredicateReport(ops, {
+      time: {
+        after_incl: 2020,
+        before_incl: 2080
       }
     })
     args.viewModel = createGraphBoxViewModel(report)

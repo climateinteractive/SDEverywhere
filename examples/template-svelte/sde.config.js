@@ -88,7 +88,7 @@ export async function config() {
     // Specify the format of the generated code, either 'js' or 'c'
     genFormat,
 
-    // Specify the Vensim model to read
+    // Specify the model file to read
     modelFiles: ['model/MODEL_NAME.mdl'],
 
     // The following files will be hashed to determine whether the model needs
@@ -111,10 +111,11 @@ export async function config() {
       // containing the Wasm model
       genFormat === 'c' && wasmPlugin(),
 
-      // Generate a `worker.js` file that runs the model asynchronously on a
-      // worker thread for improved responsiveness
+      // Generate a `worker-source.ts` module that exports the source code of the
+      // worker that runs the model asynchronously on a worker thread for improved
+      // responsiveness
       workerPlugin({
-        outputPaths: [corePath('src', 'model', 'generated', 'worker.js')]
+        outputSourceModulePaths: [corePath('src', 'model', 'generated', 'worker-source.ts')]
       }),
 
       // Build or serve the model-check report

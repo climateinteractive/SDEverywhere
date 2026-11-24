@@ -2,11 +2,14 @@
 
 /*
  * This file contains no-op polyfills for the small set of Node APIs that are
- * referenced by the Node implementation of the threads.js package (which is
- * used by the default generated bundle any custom bundle that uses the
- * `@sdeverywhere/runtime-async` package).  These polyfills are not actually
- * used at runtime in the browser because they are only referenced in the
- * (unused) Node code path.
+ * referenced by check bundles built with an older version of plugin-check.
+ * Those bundles used the threads.js package, whose Node implementation
+ * referenced these modules; they are not actually used at runtime in the
+ * browser because they only appear in the (unused) Node code path.
+ *
+ * Bundles built with the current version of plugin-check don't reference these
+ * modules at all, but we keep these polyfills around so that an older bundle
+ * can still be loaded as the baseline bundle for comparison purposes.
  */
 
 // from 'events'

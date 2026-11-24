@@ -1,26 +1,21 @@
 {
   "name": "@sdeverywhere/plugin-check",
-  "version": "0.3.33",
+  "version": "0.3.40",
   "files": [
-    "bin/**",
     "dist/**",
     "template-bundle/**",
     "template-report/**",
-    "template-tests/**"
+    "template-tests/**",
+    "!**/*.spec.ts"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
-  },
-  "bin": {
-    "sde-check": "bin/sde-check.js"
   },
   "scripts": {
     "clean": "rm -rf dist",
@@ -28,41 +23,28 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
-    "test:watch": "echo No tests yet",
-    "test:ci": "echo No tests yet",
+    "test": "vitest run",
+    "test:watch": "vitest --hideSkippedTests",
+    "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-replace": "^6.0.3",
-    "@sdeverywhere/check-core": "^0.1.12",
-    "@sdeverywhere/check-ui-shell": "^0.2.24",
-    "@sdeverywhere/runtime": "^0.2.8",
-    "@sdeverywhere/runtime-async": "^0.2.8",
+    "@sdeverywhere/check-core": "^0.1.16",
+    "@sdeverywhere/check-ui-shell": "^0.2.28",
+    "@sdeverywhere/runtime": "^0.2.11",
+    "@sdeverywhere/runtime-async": "^0.2.12",
     "assert-never": "^1.2.1",
     "chokidar": "^5.0.0",
     "picocolors": "^1.0.0",
-    "rollup": "^4.53.3",
-    "vite": "^7.1.12"
-  },
-  "dependenciesComments": {
-    "rollup": [
-      "XXX: For now, rollup is listed as a dependency even though it is not actually",
-      "needed since we only use the @rollup plugins with vite.  Those @rollup plugins",
-      "don't technically need rollup to function properly, but they list rollup as a",
-      "required peer dependency.  To avoid making consumers worry about this, we list",
-      "it as a dependency here."
-    ]
+    "vite": "^8.3.0"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

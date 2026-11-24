@@ -1,0 +1,31 @@
+// This contains the TypeScript configuration for the ts files in the `scripts`
+// directory.  Note that these scripts are not part of any package, so they are
+// type-checked separately from the packages (see `type-check-scripts` in the
+// top-level `package.json`).
+{
+  "compilerOptions": {
+    // Use "es2022" (the newest target supported by our TypeScript version) because these
+    // scripts only ever run under the Node version used for development and CI, which is
+    // well ahead of it.  Note that `lib` is intentionally left unspecified so that it
+    // follows the target.
+    "target": "es2022",
+    // Use "es2022" to support top-level await
+    "module": "es2022",
+    // Use Node.js-compatible module resolution
+    "moduleResolution": "node",
+    // Improve compatibility with ES6 modules in generated code
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    // Enable strict enforcement of `import type`
+    "verbatimModuleSyntax": true,
+    // Allow .ts extensions in imports (the scripts are run directly by Node, which
+    // strips the types at load time, so the import specifiers must match the files
+    // on disk)
+    "allowImportingTsExtensions": true,
+    // These scripts are never compiled, only type-checked
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts"]
+}

@@ -407,16 +407,6 @@ function parseWorkbookRels(xml) {
 }
 
 /**
- * Scan a worksheet's XML and build a sparse cell map shaped like the SheetJS
- * worksheet object: `{ [cellRef]: { v }, '!ref': 'A1:Z99' }`. Skips empty
- * cells, error cells (`t='e'`), and numeric cells whose cached `<v>` value
- * is missing.
- *
- * @param {string} xml The contents of a `xl/worksheets/sheet*.xml` file.
- * @param {string[]} sharedStrings The shared-string table for resolving `t='s'` cells.
- * @returns The sparse cell map, including a `!ref` key if any cells were read.
- */
-/**
  * Extract the text content of the `<v>` element in a cell body, tolerating
  * attributes on the tag (e.g. `<v xml:space="preserve">`). Returns undefined
  * when there is no `<v>` element (e.g. an uncalculated formula cell).
@@ -429,6 +419,16 @@ function getVText(body) {
   return m ? m[1] : undefined
 }
 
+/**
+ * Scan a worksheet's XML and build a sparse cell map shaped like the SheetJS
+ * worksheet object: `{ [cellRef]: { v }, '!ref': 'A1:Z99' }`. Skips empty
+ * cells, error cells (`t='e'`), and numeric cells whose cached `<v>` value
+ * is missing.
+ *
+ * @param {string} xml The contents of a `xl/worksheets/sheet*.xml` file.
+ * @param {string[]} sharedStrings The shared-string table for resolving `t='s'` cells.
+ * @returns The sparse cell map, including a `!ref` key if any cells were read.
+ */
 function parseSheetXml(xml, sharedStrings) {
   const cells = Object.create(null)
 

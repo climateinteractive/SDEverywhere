@@ -15,6 +15,7 @@ import type {
   CheckStatus,
   ComparisonConfig,
   CheckTestReport,
+  SuiteReport,
   SuiteSummary
 } from '@sdeverywhere/check-core'
 import {
@@ -28,6 +29,8 @@ import {
 export interface RunTestSuiteResult {
   allChecksPassed: boolean
   suiteSummary: SuiteSummary
+  suiteReport: SuiteReport
+  elapsedMillis: number
 }
 
 /**
@@ -77,7 +80,9 @@ export async function runTestSuite(
 
           resolve({
             allChecksPassed,
-            suiteSummary
+            suiteSummary,
+            suiteReport: report,
+            elapsedMillis
           })
         } catch (e) {
           reject(e)

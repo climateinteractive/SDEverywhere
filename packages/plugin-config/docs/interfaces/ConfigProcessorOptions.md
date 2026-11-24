@@ -6,15 +6,15 @@
 
 ### config
 
- **config**: `string`
+> **config**: `string`
 
 The absolute path to the directory containing the CSV config files.
 
-___
+***
 
-### out
+### out?
 
- `Optional` **out**: `string` \| [`ConfigProcessorOutputPaths`](ConfigProcessorOutputPaths.md)
+> `optional` **out?**: `string` \| [`ConfigProcessorOutputPaths`](ConfigProcessorOutputPaths.md)
 
 Either a single path to a base output directory (in which case, the recommended
 directory structure will be used) or a `ConfigProcessorOutputPaths` containing specific paths.
@@ -28,3 +28,15 @@ If a single string is provided, the following subdirectories will be used:
         generated/
     strings/
 ```
+
+***
+
+### spec?
+
+> `optional` **spec?**: [`ConfigProcessorSpec`](../type-aliases/ConfigProcessorSpec.md)
+
+Additional model spec properties that cannot be derived from the CSV config files.
+
+These are merged into the `ModelSpec` returned by the processor, which allows for
+configuring settings like `directData` for which there is currently no
+representation in the config files.

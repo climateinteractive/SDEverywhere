@@ -4,8 +4,7 @@ import { existsSync, mkdirSync } from 'node:fs'
 import { dirname, relative, join as joinPath, resolve as resolvePath } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import type { Alias, InlineConfig, PluginOption } from 'vite'
-import replace from '@rollup/plugin-replace'
+import type { Alias, InlineConfig } from 'vite'
 
 import type { SuiteSummary } from '@sdeverywhere/check-core'
 
@@ -36,23 +35,14 @@ export function createViteConfigForReport(
   // Use `template-report` as the root directory for the report project
   const root = resolvePath(__dirname, '..', 'template-report')
 
-  // Make sure the `bundles` directory exists, otherwise Vite's dependency scanner
-  // may report errors when processing the `import.meta.glob` call
+  // Make sure the `bundles` directory exists.  This is required by the local bundles
+  // plugin, which watches this directory for changes and scans it when the report app
+  // asks for the list of available local bundles.
+  // TODO: Use localBundlesPath from options
   const bundlesDir = resolvePath(projDir, 'bundles')
   if (!existsSync(bundlesDir)) {
     mkdirSync(bundlesDir, { recursive: true })
   }
-
-  // Include `bundles/**/*.js` files under the configured project root directory.  This
-  // glob path apparently must be a relative path (relative to the `template-report/src`
-  // directory where the glob is used).
-  const templateSrcDir = resolvePath(root, 'src')
-  const relProjDir = relative(templateSrcDir, projDir)
-  // XXX: The glob pattern must use forward slashes only, so on Windows we need to
-  // convert backslashes to slashes
-  const relProjDirPath = relProjDir.replaceAll('\\', '/')
-  // TODO: Use localBundlesPath from options
-  const bundlesPath = `${relProjDirPath}/bundles/**/*.js`
 
   // Calculate output directory relative to the template root
   let reportPath: string
@@ -73,10 +63,12 @@ export function createViteConfigForReport(
     } as Alias
   }
 
-  // XXX: This provides custom handling for Node built-ins such as 'events' that are
-  // referenced by the check bundle (specifically in the Node implementation of
-  // threads.js).  These are not actually used in the browser, so we just need
-  // to provide no-op polyfills for these.
+  // XXX: This provides custom handling for the Node built-ins that are referenced by
+  // check bundles that were built with an older version of plugin-check (which used
+  // the threads.js package, whose Node implementation referenced these modules).
+  // Bundles built with the current version don't reference these modules at all, but
+  // we keep these no-op polyfills so that an older bundle can still be loaded as the
+  // baseline bundle for comparison purposes.
   const noopPolyfillAlias = (find: string) => {
     return {
       find,
@@ -136,14 +128,9 @@ export function createViteConfigForReport(
       ],
 
       exclude: [
-        // XXX: The threads.js implementation references `tiny-worker` as an optional
-        // dependency, but it doesn't get used at runtime, so we can just exclude it
-        // so that Vite doesn't complain in dev mode
-        'tiny-worker'
-
-        // XXX: Similarly, chart.js treats `moment` as an optional dependency, but we
-        // don't use it at runtime; we need to exclude it here, otherwise Vite will
-        // complain about missing dependencies in dev mode
+        // XXX: chart.js treats `moment` as an optional dependency, but we don't use
+        // it at runtime; if it causes Vite to complain about missing dependencies in
+        // dev mode, we can exclude it here
         // 'moment'
       ]
     },
@@ -164,15 +151,21 @@ export function createViteConfigForReport(
         // Make the overlay use the `messages.html` file that is written to the prep directory
         alias('@_prep_', prepDir),
 
-        // XXX: Include no-op polyfills for these modules that are used in the Node-specific
-        // implementation of threads.js; this allows us to use one bundle that works in both
-        // Node and browser environments
+        // Include no-op polyfills for the Node built-ins that are referenced by check
+        // bundles built with an older version of plugin-check (see above)
         noopPolyfillAlias('events'),
         noopPolyfillAlias('fs'),
         noopPolyfillAlias('os'),
         noopPolyfillAlias('path'),
         noopPolyfillAlias('url'),
-        noopPolyfillAlias('worker_threads')
+        noopPolyfillAlias('worker_threads'),
+
+        // XXX: The Node implementation of threads.js (used by check bundles built with
+        // an older version of plugin-check) also has a `require('tiny-worker')` fallback
+        // that is never taken in the browser.  Rollup ignored `require` calls in an ES
+        // module, but Rolldown (used by Vite 8+) resolves them, and an unresolved import
+        // is a hard error, so point this at the no-op polyfill as well.
+        noopPolyfillAlias('tiny-worker')
       ]
     },
 
@@ -192,25 +185,6 @@ export function createViteConfigForReport(
     },
 
     plugins: [
-      // Inject special values into the generated JS
-      // TODO: We currently have to use `@rollup/plugin-replace` instead of Vite's
-      // built-in `define` feature because the latter does not seem to run before
-      // the glob handler (which requires the glob to be injected as a literal)
-      replace({
-        preventAssignment: true,
-        delimiters: ['', ''],
-        values: {
-          // Inject the path for baseline bundles
-          // XXX: Note that we use './bundles/**/*.txt' instead of something special
-          // like './__BASELINE_BUNDLES_PATH__' because sometimes Vite's dependency
-          // scanner sees the latter (instead of the injected path) and reports
-          // an error since the path does not exist.  As a workaround, we use
-          // './bundles/**/*.txt', which gets interpreted as the valid path
-          // '.../template-report/src/bundles/**/*.txt' (see `bundles/unused.txt`).
-          './bundles/**/*.txt': bundlesPath
-        }
-      }) as unknown as PluginOption,
-
       // When local development mode is active, enable the local bundles plugin that
       // allows the report app to access the local bundles directory
       ...(mode === 'watch' ? [localBundlesPlugin(bundlesDir, currentBundleSpec.path, options?.fetchRemoteBundle)] : [])
@@ -224,21 +198,16 @@ export function createViteConfigForReport(
       // Write js/css files to `public` (instead of the default `<outDir>/assets`)
       assetsDir: '',
 
-      rollupOptions: {
-        output: {
-          // XXX: Prevent vite from creating a separate `vendor.js` file
-          manualChunks: undefined
-        },
-
-        onwarn: (warning, warn) => {
-          // XXX: Suppress "Use of eval is strongly discouraged" warnings that are
-          // triggered by use of the following pattern in threads.js:
-          //   eval("require")("worker_threads")
-          // It would be nice to avoid use of `eval` there, but it's not critical for
-          // our use case so we will suppress the warnings for now
-          if (warning.code !== 'EVAL') {
-            warn(warning)
-          }
+      rolldownOptions: {
+        // XXX: Suppress "Use of direct eval" warnings that are triggered by use
+        // of the following pattern in threads.js, which appears in check bundles
+        // built with an older version of plugin-check (such a bundle can still be
+        // used as the baseline bundle for comparison purposes):
+        //   eval("require")("worker_threads")
+        // Bundles built with the current version of plugin-check don't use `eval`
+        // at all, so this is only needed for backward compatibility.
+        checks: {
+          eval: false
         }
       }
     },

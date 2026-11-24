@@ -5,7 +5,7 @@ import type { InputId } from '../config/generated/spec-types'
 import { config } from '../config/config'
 import type { Input } from './inputs'
 import { createModelInput, createSimpleInputValue } from './inputs'
-import modelWorkerJs from './generated/worker.js?raw'
+import modelWorkerJs from './generated/worker-source'
 
 /**
  * High-level interface to the runnable model.

@@ -3,7 +3,7 @@
 #
 # The actions in our workflows are pinned to specific commit hashes (with the
 # version in a trailing comment) so that a moved tag can't silently change what
-# runs CI.  Dependabot updates both the hash and the comment for us, which
+# runs in CI.  Dependabot updates both the hash and the comment for us, which
 # means the pins don't go stale.
 #
 

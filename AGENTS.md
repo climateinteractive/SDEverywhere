@@ -53,6 +53,15 @@ For example, to build only `packages/check-core`, run `pnpm -F check-core build`
 - Use a dash to separate words.
 - We never use CamelCase names for file or folder names.
 
+### Git Conventions
+
+- When working on a large feature or change, don't put everything into a single commit.
+- Always break up your work into smaller/reasonable/logical chunks.
+- Implement one task at a time.
+- Before you commit your changes, make sure tests are passing and type-check / lint / prettier checks are clean.
+- Never include a GitHub issue number (e.g., `#123`) in commit messages (for example, do not include a `(#123)` suffix); this will just pollute the GitHub issue with unnecessary links.
+- Never include a "Co-Authored-By: Claude" line in commit messages.
+
 ### Language Conventions
 
 - This project uses [TypeScript](https://www.typescriptlang.org/) (`.ts`) syntax whenever possible.

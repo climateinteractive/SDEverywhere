@@ -1,19 +1,17 @@
 {
   "name": "@sdeverywhere/plugin-config",
-  "version": "0.2.10",
+  "version": "0.2.14",
   "files": [
     "dist/**",
     "template-config/**"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -26,7 +24,7 @@
     "test:watch": "vitest",
     "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "bundle": "tsup",
+    "bundle": "tsdown",
     "copy-types": "cp src/spec-types.ts dist",
     "build": "run-s bundle copy-types",
     "docs": "../../scripts/gen-docs.js",
@@ -34,14 +32,13 @@
   },
   "dependencies": {
     "byline": "^5.0.0",
-    "csv-parse": "^5.3.3",
-    "sanitize-html": "^2.13.0"
+    "csv-parse": "^7.0.2",
+    "sanitize-html": "^2.17.6"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/byline": "^4.2.33",
     "@types/dedent": "^0.7.0",
     "@types/marked": "^4.0.1",

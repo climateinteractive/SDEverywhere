@@ -25,8 +25,6 @@ extern "C" {
 #include "vensim.h"
 #include "macros.h"
 
-EXTERN double _epsilon;
-
 // Enable this to add print statements in initLevels and evalAux for debugging.
 // #define PRDBG
 #ifdef PRDBG

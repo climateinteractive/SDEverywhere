@@ -4,6 +4,8 @@ import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { writeFile } from 'fs/promises'
 import { join as joinPath } from 'path'
 
+import type { ModelSpec as CoreModelSpec } from '@sdeverywhere/compile'
+
 import type { Result } from 'neverthrow'
 import { err, ok } from 'neverthrow'
 
@@ -70,16 +72,22 @@ export async function buildOnce(
       }
     }
 
-    // Write the spec file
-    const specJson = {
+    // Write the spec file.  Note that this is typed as the `ModelSpec` type from the
+    // compile package (which describes the `spec.json` file format), so that the type
+    // checker will flag any mismatch between what we write here and what the compile
+    // package accepts.
+    const specJson: CoreModelSpec = {
       inputVarNames: modelSpec.inputVarNames,
       outputVarNames: modelSpec.outputVarNames,
-      externalDatfiles: modelSpec.datFiles,
+      datFiles: modelSpec.datFiles,
       bundleListing: modelSpec.bundleListing,
-      customConstants: modelSpec.customConstants || false,
-      customLookups: modelSpec.customLookups || false,
-      customOutputs: modelSpec.customOutputs || false,
-      ...modelSpec.options
+      customConstants: modelSpec.customConstants,
+      customLookups: modelSpec.customLookups,
+      customOutputs: modelSpec.customOutputs,
+      directData: modelSpec.directData,
+      dimensionFamilies: modelSpec.dimensionFamilies,
+      specialSeparationDims: modelSpec.specialSeparationDims,
+      separateAllVarsWithDims: modelSpec.separateAllVarsWithDims
     }
     const specPath = joinPath(config.prepDir, 'spec.json')
     await writeFile(specPath, JSON.stringify(specJson, null, 2))
@@ -172,9 +180,16 @@ export async function buildOnce(
 /**
  * Convert a `ModelSpec` instance to a `ResolvedModelSpec` instance.
  *
- * @param modelSpec The `ModelSpec` instance returned by the `UserConfig`.
+ * @param userModelSpec The `ModelSpec` instance returned by the `UserConfig`.
  */
-function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
+function resolveModelSpec(userModelSpec: ModelSpec): ResolvedModelSpec {
+  // Merge the properties from the deprecated `options` bag into the normal structure so
+  // that the rest of this function (and everything downstream) only needs to look at the
+  // normal properties.  Note that a property that is configured directly on the
+  // `ModelSpec` takes precedence over the same property provided in `options`.
+  const { options, ...configuredProps } = userModelSpec
+  const modelSpec: ModelSpec = { ...options, ...configuredProps }
+
   let inputVarNames: VarName[]
   let inputSpecs: InputSpec[]
   if (modelSpec.inputs.length > 0) {
@@ -243,6 +258,9 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
   }
 
   return {
+    // Carry through the properties (for example, `directData` and `specialSeparationDims`)
+    // that are shared with the compile package and don't need to be resolved here
+    ...modelSpec,
     inputVarNames,
     inputs: inputSpecs,
     outputVarNames,
@@ -251,7 +269,6 @@ function resolveModelSpec(modelSpec: ModelSpec): ResolvedModelSpec {
     bundleListing: modelSpec.bundleListing === true,
     customConstants,
     customLookups,
-    customOutputs,
-    options: modelSpec.options
+    customOutputs
   }
 }

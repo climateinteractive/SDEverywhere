@@ -3,7 +3,7 @@
 <!-- SCRIPT -->
 <script lang="ts">
 import { createEventDispatcher } from 'svelte'
-import Icon from 'svelte-awesome/components/Icon.svelte'
+import Icon from 'svelte-awesome'
 import { faCog, faFilter, faHome } from '@fortawesome/free-solid-svg-icons'
 
 import type { HeaderViewModel } from './header-vm'

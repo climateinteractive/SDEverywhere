@@ -34,5 +34,5 @@ emsdk
 node_modules
 
 # Other tools
-.claude
+.claude/**/*.local.json
 .zed

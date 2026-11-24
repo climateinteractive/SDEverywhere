@@ -8,15 +8,15 @@ Describes a model input variable.
 
 ### varName
 
- **varName**: `string`
+> **varName**: `string`
 
 The variable name (as used in the modeling tool).
 
-___
+***
 
-### inputId
+### inputId?
 
- `Optional` **inputId**: `string`
+> `optional` **inputId?**: `string`
 
 The stable input identifier.  It is recommended to set this to a value (for example, a
 numeric string like what `plugin-config` uses) that is separate from `varName` and is
@@ -25,26 +25,26 @@ between two versions of the model, comparisons can still be performed between th
 If a distinct `inputId` is not available, plugins can infer one from `varName`, but
 note that this approach will be less resilient to renames.
 
-___
+***
 
-### defaultValue
+### defaultValue?
 
- `Optional` **defaultValue**: `number`
+> `optional` **defaultValue?**: `number`
 
 The default value for the input.
 
-___
+***
 
-### minValue
+### minValue?
 
- `Optional` **minValue**: `number`
+> `optional` **minValue?**: `number`
 
 The minimum value for the input.
 
-___
+***
 
-### maxValue
+### maxValue?
 
- `Optional` **maxValue**: `number`
+> `optional` **maxValue?**: `number`
 
 The maximum value for the input.

@@ -380,6 +380,9 @@ export class BufferedRunModelParams implements RunModelParams {
     headerView[headerIndex++] = lookupsOffsetInBytes
     headerView[headerIndex++] = lookupsLengthInElements
     headerView[headerIndex++] = lookupIndicesOffsetInBytes
+    // Note: The increment on the last line is not strictly needed, but we keep the `++` so that
+    // the sequence stays uniform and remains correct if another field is appended later
+    // eslint-disable-next-line no-useless-assignment
     headerView[headerIndex++] = lookupIndicesLengthInElements
 
     // Update the views
@@ -465,6 +468,9 @@ export class BufferedRunModelParams implements RunModelParams {
     const lookupsOffsetInBytes = headerView[headerIndex++]
     const lookupsLengthInElements = headerView[headerIndex++]
     const lookupIndicesOffsetInBytes = headerView[headerIndex++]
+    // Note: The increment on the last line is not strictly needed, but we keep the `++` so that
+    // the sequence stays uniform and remains correct if another field is appended later
+    // eslint-disable-next-line no-useless-assignment
     const lookupIndicesLengthInElements = headerView[headerIndex++]
 
     // Verify that the buffer is long enough to contain all sections

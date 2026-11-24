@@ -1,9 +1,39 @@
 // Copyright (c) 2020-2022 Climate Interactive / New Venture Fund
 
-import { BlobWorker, spawn, Thread, Transfer, Worker } from 'threads'
-
 import type { ModelRunner } from '@sdeverywhere/runtime'
 import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/runtime'
+
+import type { ModelInitArgs } from './model-init-args'
+import { createModelWorkerClient } from './worker-rpc/model-worker-rpc'
+import type { InitResult } from './worker-rpc/model-worker-rpc'
+import type { WorkerSpec } from './worker-rpc/spawn-worker'
+import { spawnWorker } from './worker-rpc/spawn-worker'
+import type { WorkerHandle } from './worker-rpc/worker-port'
+
+export type { WorkerSpec }
+
+/**
+ * Options for {@link spawnAsyncModelRunner}.
+ */
+export interface AsyncModelRunnerOptions {
+  /**
+   * The Wasm binary for a model that was compiled without embedding the binary in the
+   * generated JS file (i.e., without `-sSINGLE_FILE=1`), for example when the `plugin-wasm`
+   * `outputWasmPath` option is used.  The binary is sent to the worker, which passes it to
+   * the Emscripten-generated module factory function:
+   * ```js
+   * const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer()
+   * const runner = await spawnAsyncModelRunner({ path: './worker.js' }, { wasmBinary })
+   * ```
+   *
+   * The binary can be provided as an `ArrayBuffer` or as a `Uint8Array` (for example, the
+   * `Buffer` returned by `readFileSync` in Node.js).  Note that the binary is copied (not
+   * transferred) when it is sent to the worker, so it remains usable in the calling
+   * context, for example if it is used to spawn more than one runner.  (If a `Uint8Array`
+   * is a view into a larger buffer, the entire underlying buffer is copied.)
+   */
+  wasmBinary?: ArrayBuffer | Uint8Array
+}
 
 /**
  * Initialize a `ModelRunner` that runs the model asynchronously in a worker
@@ -34,26 +64,53 @@ import { BufferedRunModelParams, ModelListing, Outputs } from '@sdeverywhere/run
  * }
  * ```
  *
+ * The returned promise rejects if the worker fails to initialize the model or
+ * exits unexpectedly.
+ *
  * @param workerSpec Either a `path` to the worker JavaScript file, or the `source`
  * containing the full JavaScript source of the worker.
+ * @param options Additional options, such as the Wasm binary to use when the model was
+ * compiled without embedding the binary in the generated JS file.
  */
-export async function spawnAsyncModelRunner(workerSpec: { path: string } | { source: string }): Promise<ModelRunner> {
-  if (workerSpec['path']) {
-    return spawnAsyncModelRunnerWithWorker(new Worker(workerSpec['path']))
-  } else {
-    return spawnAsyncModelRunnerWithWorker(BlobWorker.fromText(workerSpec['source']))
-  }
+export async function spawnAsyncModelRunner(
+  workerSpec: WorkerSpec,
+  options?: AsyncModelRunnerOptions
+): Promise<ModelRunner> {
+  return spawnAsyncModelRunnerWithWorker(spawnWorker(workerSpec), options)
 }
 
 /**
  * @hidden For internal use only
  */
-async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRunner> {
-  // Spawn the given Worker that contains the `ModelWorker`
-  const modelWorker = await spawn(worker)
+async function spawnAsyncModelRunnerWithWorker(
+  worker: WorkerHandle,
+  options?: AsyncModelRunnerOptions
+): Promise<ModelRunner> {
+  // Create the client that communicates with the `ModelWorker` running in the worker
+  const client = createModelWorkerClient(worker)
 
-  // Wait for the worker to initialize the wasm model (in the worker thread)
-  const initResult = await modelWorker.initModel()
+  // Build the arguments for the model initialization function in the worker.  Note that
+  // these are left undefined when there is nothing to pass, so that an initialization
+  // function that takes no arguments is unaffected.
+  let initArgs: ModelInitArgs | undefined
+  if (options?.wasmBinary !== undefined) {
+    initArgs = { wasmBinary: options.wasmBinary }
+  }
+
+  // Wait for the worker to initialize the model (in the worker thread). If
+  // initialization fails, make sure the worker and any associated resources are
+  // released before propagating the original error.
+  let initResult: InitResult
+  try {
+    initResult = await client.initModel(initArgs)
+  } catch (error) {
+    try {
+      await worker.terminate()
+    } catch {
+      // Preserve the model initialization error if worker termination also fails
+    }
+    throw error
+  }
 
   // Create a `ModelListing` instance if the listing was defined in the generated model
   const modelListing = initResult.modelListing ? new ModelListing(initResult.modelListing) : undefined
@@ -84,13 +141,13 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
       // Update the I/O parameters
       params.updateFromParams(inputs, outputs, options)
 
-      // Run the model in the worker. We pass the underlying `ArrayBuffer`
-      // instance back to the worker wrapped in a `Transfer` to make it
-      // no-copy transferable, and then the worker will return it back
-      // to us.
+      // Run the model in the worker. We transfer the underlying `ArrayBuffer`
+      // instance to the worker to make it no-copy transferable, and then the
+      // worker will transfer it back to us.
       let ioBuffer: ArrayBuffer
       try {
-        ioBuffer = await modelWorker.runModel(Transfer(params.getEncodedBuffer()))
+        const buffer = params.getEncodedBuffer()
+        ioBuffer = await client.runModel(buffer)
       } finally {
         running = false
       }
@@ -113,7 +170,8 @@ async function spawnAsyncModelRunnerWithWorker(worker: Worker): Promise<ModelRun
         return Promise.resolve()
       } else {
         terminated = true
-        return Thread.terminate(modelWorker)
+        client.dispose(new Error('Async model runner has already been terminated'))
+        return worker.terminate()
       }
     }
   }

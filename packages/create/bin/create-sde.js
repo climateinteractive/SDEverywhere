@@ -3,7 +3,7 @@
 
 const currentVersion = process.versions.node
 const requiredMajorVersion = parseInt(currentVersion.split('.')[0], 10)
-const minimumMajorVersion = 20
+const minimumMajorVersion = 22
 
 if (requiredMajorVersion < minimumMajorVersion) {
   console.error(`Node.js v${currentVersion} is not supported by SDEverywhere.`)

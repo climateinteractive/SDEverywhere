@@ -1,15 +1,15 @@
 [@sdeverywhere/plugin-check](../index.md) / checkPlugin
 
-# Function: checkPlugin
+# Function: checkPlugin()
 
-**checkPlugin**(`options?`): `Plugin`
+> **checkPlugin**(`options?`): `Plugin`
 
-#### Parameters
+## Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Parameter | Type |
+| ------ | ------ |
 | `options?` | [`CheckPluginOptions`](../interfaces/CheckPluginOptions.md) |
 
-#### Returns
+## Returns
 
 `Plugin`

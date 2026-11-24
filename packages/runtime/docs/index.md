@@ -3,7 +3,7 @@
 ## High-level API
 
 Create a [ModelRunner](interfaces/ModelRunner.md) around a
-[GeneratedModel](types/GeneratedModel.md) to run that model either synchronously
+[GeneratedModel](type-aliases/GeneratedModel.md) to run that model either synchronously
 or asynchronously.
 
 - [ModelRunner](interfaces/ModelRunner.md)

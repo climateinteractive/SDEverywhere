@@ -1,7 +1,5 @@
 // Copyright (c) 2021-2022 Climate Interactive / New Venture Fund
 
-import assertNever from 'assert-never'
-
 import { derived, get, writable, type Readable } from 'svelte/store'
 
 import type {
@@ -19,15 +17,13 @@ import type {
   ComparisonUnresolvedView,
   ComparisonView,
   ComparisonViewGroup,
-  DatasetKey,
-  GraphComparisonReport
+  DatasetKey
 } from '@sdeverywhere/check-core'
-import { diffGraphs } from '@sdeverywhere/check-core'
+import { diffGraphs, groupGraphsByDiffs } from '@sdeverywhere/check-core'
 
 import type { UserPrefs } from '../../../_shared/user-prefs'
 
 import { getAnnotationsForDataset, getAnnotationsForScenario } from '../_shared/annotations'
-import { getBucketIndex } from '../_shared/buckets'
 import type { PinnedItemState } from '../_shared/pinned-item-state'
 
 import { groupItemsByTitle, scoreForSortMode } from './compare-detail-item'
@@ -631,110 +627,25 @@ export function getGraphsGroupedByDiffs(
   testSummaries: ComparisonTestSummary[],
   graphIds: ComparisonGraphId[]
 ): CompareGraphsGroupedByDiffs {
-  // Prepare the groups
-  const added: CompareGraphsRowViewModel[] = []
-  const removed: CompareGraphsRowViewModel[] = []
-  const metadataAndDatasets: CompareGraphsRowViewModel[] = []
-  const metadataOnly: CompareGraphsRowViewModel[] = []
-  const datasetsOnly: CompareGraphsRowViewModel[] = []
-  const unchanged: CompareGraphsRowViewModel[] = []
-
-  // Compare the graphs
-  const graphSpecsL = comparisonConfig.bundleL.modelSpec.graphSpecs
-  const graphSpecsR = comparisonConfig.bundleR.modelSpec.graphSpecs
-  const diffCountByBucket = Array(comparisonConfig.thresholds.length + 3).fill(0)
-  for (const graphId of graphIds) {
-    const graphL = graphSpecsL?.find(s => s.id === graphId)
-    const graphR = graphSpecsR?.find(s => s.id === graphId)
-    const graphReport = diffGraphs(graphL, graphR, scenario.key, testSummaries)
-    const maxDiffPct = maxDiffPctForGraph(graphReport)
-    const row = createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, graphId, graphReport)
-
-    // Determine which section the row will be added to
-    let bucketIndex: number
-    switch (graphReport.inclusion) {
-      case 'right-only':
-        // Use "yellow" bucket for added graphs
-        bucketIndex = 1
-        added.push(row)
-        break
-      case 'left-only':
-        // Use "yellow" bucket for removed graphs
-        bucketIndex = 1
-        removed.push(row)
-        break
-      case 'both':
-        if (maxDiffPct > 0) {
-          // Use the appropriate bucket for graphs with dataset changes
-          bucketIndex = getBucketIndex(maxDiffPct, comparisonConfig.thresholds)
-          if (graphReport.metadataReports.length > 0) {
-            metadataAndDatasets.push(row)
-          } else {
-            datasetsOnly.push(row)
-          }
-        } else {
-          if (graphReport.metadataReports.length > 0) {
-            // Use "yellow" bucket for graphs with metadata changes only
-            bucketIndex = 1
-            metadataOnly.push(row)
-          } else {
-            // Use "green" bucket for graphs with no changes
-            bucketIndex = 0
-            unchanged.push(row)
-          }
-        }
-        break
-      case 'neither':
-        // This shouldn't happen in practice
-        bucketIndex = 0
-        unchanged.push(row)
-        break
-      default:
-        assertNever(graphReport.inclusion)
-    }
-
-    // Increment the count for the chosen bucket
-    diffCountByBucket[bucketIndex]++
-  }
-
-  // Get the percentage of diffs for each bucket relative to the total number of graphs
-  const totalGraphCount = graphIds.length
-  const nonZeroDiffCount = totalGraphCount - diffCountByBucket[0]
-  const diffPercentByBucket = diffCountByBucket.map(count => (count / totalGraphCount) * 100)
+  // Group the graphs into sections (added, removed, etc) and order by the number/magnitude
+  // of differences
+  const grouped = groupGraphsByDiffs(comparisonConfig, scenario.key, testSummaries, graphIds)
 
   // Add a section for each non-empty group
-  const sections: CompareGraphsSectionViewModel[] = []
-  function addSection(rows: CompareGraphsRowViewModel[], title: string, sort: boolean) {
-    if (rows.length > 0) {
-      const sortedRows = sort ? rows.sort((a, b) => (a.maxDiffPct > b.maxDiffPct ? -1 : 1)) : rows
-      sections.push({
-        title,
-        rows: sortedRows
-      })
+  const sections: CompareGraphsSectionViewModel[] = grouped.groups.map(group => {
+    return {
+      title: group.title,
+      rows: group.items.map(item =>
+        createCompareGraphsRowViewModel(comparisonConfig, dataCoordinator, scenario, item.graphId, item.graphReport)
+      )
     }
-  }
-  addSection(added, 'Added graphs', false)
-  addSection(removed, 'Removed graphs', false)
-  addSection(metadataAndDatasets, 'Graphs with metadata and dataset changes', true)
-  addSection(metadataOnly, 'Graphs with metadata changes only', false)
-  addSection(datasetsOnly, 'Graphs with dataset changes only', true)
-  addSection(unchanged, 'Unchanged graphs', false)
+  })
 
   return {
     sections,
-    nonZeroDiffCount,
-    diffPercentByBucket
+    nonZeroDiffCount: grouped.nonZeroDiffCount,
+    diffPercentByBucket: grouped.diffPercentByBucket
   }
-}
-
-function maxDiffPctForGraph(graphReport: GraphComparisonReport): number {
-  let maxDiffPct = 0
-  for (const datasetReport of graphReport.datasetReports) {
-    if (datasetReport.maxDiff !== undefined && datasetReport.maxDiff > maxDiffPct) {
-      maxDiffPct = datasetReport.maxDiff
-    }
-  }
-  return maxDiffPct
 }
 
 function cloneDetailRowViewModel(

@@ -248,7 +248,7 @@ function createComparisonScenariosFilterPanelViewModelFromReport(
   // Track the filter states for each scenario
   const scenarioStates: FilterStates = {}
 
-  let scenarioItems: FilterItem[] = []
+  let scenarioItems: FilterItem[]
   if (config.comparison?.reportOptions?.summarySectionsForComparisonsByScenario) {
     // When ComparisonReportOptions is defined, use the result of `summarySectionsForComparisonsByScenario`
     // to group scenarios

@@ -5,6 +5,8 @@ import { derived, get, writable } from 'svelte/store'
 
 import type {
   CheckDataCoordinator,
+  ComparisonTabDiffCount,
+  SuiteTabStatus,
   CheckReport,
   ComparisonConfig,
   ComparisonSortMode,
@@ -13,6 +15,7 @@ import type {
   ComparisonTestSummary,
   DatasetKey
 } from '@sdeverywhere/check-core'
+import { getChecksTabStatus, getComparisonTabStatus } from '@sdeverywhere/check-core'
 
 import type { CheckSummaryViewModel } from '../check/summary/check-summary-vm'
 import { createCheckSummaryViewModel } from '../check/summary/check-summary-vm'
@@ -44,45 +47,17 @@ export function createSummaryViewModel(
   sortMode: Readable<ComparisonSortMode>,
   skipComparisonScenarios: ComparisonScenarioTitleSpec[] = []
 ): SummaryViewModel {
-  interface TabInfo {
-    subtitle: string
-    status: string
-  }
-
   function getTabInfo(
-    diffCount: Readable<{ count: number; kind: string }>,
+    diffCount: Readable<ComparisonTabDiffCount>,
     skippedScenarioCount: Readable<number>
-  ): Readable<TabInfo> {
-    return derived([diffCount, skippedScenarioCount], ([$diffCount, $skippedScenarioCount]) => {
-      if ($diffCount.count === 0) {
-        if ($skippedScenarioCount === 0) {
-          // There are no diffs and no skipped scenarios
-          return {
-            subtitle: 'all clear',
-            status: 'passed'
-          }
-        } else {
-          // There are no diffs, but there are skipped scenarios
-          const kindPart = $skippedScenarioCount === 1 ? 'scenario' : 'scenarios'
-          return {
-            subtitle: `no diffs, but ${$skippedScenarioCount} skipped ${kindPart}`,
-            status: 'warning'
-          }
-        }
-      } else {
-        // There are diffs
-        // TODO: For now we say "diffs" even though some might be errors
-        const kindPart = $diffCount.count === 1 ? $diffCount.kind : `${$diffCount.kind}s`
-        return {
-          subtitle: `${$diffCount.count} ${kindPart} with diffs`,
-          status: 'warning'
-        }
-      }
-    })
+  ): Readable<SuiteTabStatus> {
+    return derived([diffCount, skippedScenarioCount], ([$diffCount, $skippedScenarioCount]) =>
+      getComparisonTabStatus($diffCount, $skippedScenarioCount)
+    )
   }
 
   const tabItems: TabItemViewModel[] = []
-  function addTabItem(id: string, title: string, tabInfo: Readable<TabInfo>): void {
+  function addTabItem(id: string, title: string, tabInfo: Readable<SuiteTabStatus>): void {
     tabItems.push({
       id,
       title,
@@ -94,44 +69,7 @@ export function createSummaryViewModel(
   // Always add the check summary tab (if there are no checks defined, it will say "No checks",
   // which is better than having no content at all)
   const checkSummaryViewModel = createCheckSummaryViewModel(checkDataCoordinator, checkReport)
-  let checkTabInfo: TabInfo
-  if (checkSummaryViewModel.total === 0) {
-    checkTabInfo = {
-      subtitle: 'no checks',
-      status: 'none'
-    }
-  } else if (checkSummaryViewModel.failed > 0 || checkSummaryViewModel.errors > 0) {
-    const parts: string[] = []
-    if (checkSummaryViewModel.failed > 0) {
-      parts.push(`${checkSummaryViewModel.failed} failed`)
-    }
-    if (checkSummaryViewModel.errors > 0) {
-      if (checkSummaryViewModel.errors === 1) {
-        parts.push(`${checkSummaryViewModel.errors} error`)
-      } else {
-        parts.push(`${checkSummaryViewModel.errors} errors`)
-      }
-    }
-    checkTabInfo = {
-      subtitle: parts.join(', '),
-      status: 'failed'
-    }
-  } else {
-    // Show passed count, and skipped count if there are any
-    const parts: string[] = []
-    let status = 'passed'
-    if (checkSummaryViewModel.passed > 0) {
-      parts.push(`${checkSummaryViewModel.passed} passed`)
-    }
-    if (checkSummaryViewModel.skipped > 0) {
-      parts.push(`${checkSummaryViewModel.skipped} skipped`)
-      status = 'warning'
-    }
-    checkTabInfo = {
-      subtitle: parts.join(', '),
-      status: status
-    }
-  }
+  const checkTabInfo = getChecksTabStatus(checkSummaryViewModel)
   addTabItem('checks', 'Checks', writable(checkTabInfo))
 
   // Add stats header and comparison tabs, if comparison tests are defined
@@ -164,37 +102,7 @@ export function createSummaryViewModel(
       // For now, if we have one or more views that show graphs grouped by diffs, report the
       // number of changed graphs.  If no graph differences, report the number of views
       // (scenarios) with differences.
-      const allViewRows = comparisonSummaries.views.allRows
-      const viewRowsWithDiffsCount = comparisonViewsSummaryViewModel.rowsWithDiffs
-      const viewsDiffCount = derived(
-        [allViewRows, viewRowsWithDiffsCount],
-        ([$allViewRows, $viewRowsWithDiffsCount]) => {
-          let changedGraphCount = 0
-          for (const row of $allViewRows) {
-            // TODO: We may end up counting the same graph here multiple times if there are multiple
-            // views that use "grouped-by-diffs" mode and display the same subset of graphs in each.
-            // Ideally we would get the number of unique graphs with changes here instead.
-            const view = row.viewMetadata?.view
-            if (view?.kind === 'view' && view.graphOrder === 'grouped-by-diffs') {
-              changedGraphCount += row?.viewMetadata?.changedGraphCount || 0
-            }
-          }
-          if (changedGraphCount > 0) {
-            // Show "N graphs with diffs"
-            return {
-              count: changedGraphCount,
-              kind: 'graph'
-            }
-          } else {
-            // Show "N views with diffs"
-            return {
-              count: $viewRowsWithDiffsCount,
-              kind: 'view'
-            }
-          }
-        }
-      )
-      // if (changedGraphCount > 0) {
+      const viewsDiffCount = comparisonSummaries.views.diffCount
       const viewsTabInfo = getTabInfo(viewsDiffCount, skippedScenarioCount)
       addTabItem('comp-views', 'Comparison views', viewsTabInfo)
     }

@@ -18,7 +18,7 @@ import type { Config as CoreConfig } from '../config/config'
 import { createModelInput, type Input } from './model-inputs'
 
 import { inputVarIds } from './generated/model-spec'
-import workerJs from './generated/worker.js?raw'
+import workerJs from './generated/worker-source'
 
 /**
  * Defines a context that holds a distinct set of model inputs and outputs.

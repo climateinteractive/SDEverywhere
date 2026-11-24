@@ -28,7 +28,9 @@ function toposort(nodes, edges) {
   })
 
   while (i--) {
-    if (!visited[i]) visit(nodes[i], i, new Set())
+    if (!visited[i]) {
+      visit(nodes[i], i, new Set())
+    }
   }
 
   return sorted
@@ -63,7 +65,9 @@ function toposort(nodes, edges) {
       )
     }
 
-    if (visited[i]) return
+    if (visited[i]) {
+      return
+    }
     visited[i] = true
 
     var outgoing = outgoingEdges.get(node) || new Set()
@@ -82,10 +86,17 @@ function toposort(nodes, edges) {
   }
 }
 
+/**
+ * Find the strongly connected components of the graph using an iterative form of
+ * Tarjan's algorithm (iterative to avoid stack overflow on the deep dependency
+ * chains found in large models).
+ *
+ * @param {Array} nodes The nodes in the graph.
+ * @param {Map} outgoingEdges A map of each node to the set of nodes that it points to.
+ * @returns {Array} An array of strongly connected components, where each component is
+ * an array of the nodes that it contains.
+ */
 function stronglyConnectedComponents(nodes, outgoingEdges) {
-  // Find the strongly connected components of the graph using an iterative
-  // form of Tarjan's algorithm (iterative to avoid stack overflow on the
-  // deep dependency chains found in large models).
   var index = 0
   var nodeIndex = new Map()
   var lowlink = new Map()
@@ -93,7 +104,9 @@ function stronglyConnectedComponents(nodes, outgoingEdges) {
   var stack = []
   var sccs = []
   for (var start of nodes) {
-    if (nodeIndex.has(start)) continue
+    if (nodeIndex.has(start)) {
+      continue
+    }
     var frames = [{ node: start, edges: null, i: 0, child: undefined }]
     while (frames.length > 0) {
       var frame = frames[frames.length - 1]
@@ -123,7 +136,9 @@ function stronglyConnectedComponents(nodes, outgoingEdges) {
           lowlink.set(node, Math.min(lowlink.get(node), nodeIndex.get(w)))
         }
       }
-      if (descended) continue
+      if (descended) {
+        continue
+      }
       // All edges have been visited, so the node is complete
       if (lowlink.get(node) === nodeIndex.get(node)) {
         var scc = []
@@ -155,8 +170,12 @@ function makeOutgoingEdges(arr) {
   var edges = new Map()
   for (var i = 0, len = arr.length; i < len; i++) {
     var edge = arr[i]
-    if (!edges.has(edge[0])) edges.set(edge[0], new Set())
-    if (!edges.has(edge[1])) edges.set(edge[1], new Set())
+    if (!edges.has(edge[0])) {
+      edges.set(edge[0], new Set())
+    }
+    if (!edges.has(edge[1])) {
+      edges.set(edge[1], new Set())
+    }
     edges.get(edge[0]).add(edge[1])
   }
   return edges

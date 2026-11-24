@@ -1,19 +1,17 @@
 {
   "name": "@sdeverywhere/plugin-worker",
-  "version": "0.2.13",
+  "version": "0.2.17",
   "files": [
     "dist/**",
     "template-worker/**"
   ],
   "type": "module",
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "scripts": {
@@ -22,24 +20,23 @@
     "prettier:check": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "precommit": "../../scripts/precommit",
-    "test": "echo No tests yet",
-    "test:watch": "echo No tests yet",
-    "test:ci": "echo No tests yet",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ci": "vitest run",
     "type-check": "tsc --noEmit -p tsconfig-test.json",
-    "build": "tsup",
+    "build": "tsdown",
     "docs": "../../scripts/gen-docs.js",
     "ci:build": "run-s clean lint prettier:check test:ci type-check build docs"
   },
   "dependencies": {
-    "@sdeverywhere/runtime": "^0.2.8",
-    "@sdeverywhere/runtime-async": "^0.2.8",
-    "vite": "^7.1.12"
+    "@sdeverywhere/runtime": "^0.2.11",
+    "@sdeverywhere/runtime-async": "^0.2.12",
+    "vite": "^8.3.0"
   },
   "peerDependencies": {
     "@sdeverywhere/build": "^0.3.10"
   },
   "devDependencies": {
-    "@sdeverywhere/build": "*",
     "@types/node": "^20.14.8"
   },
   "author": "Climate Interactive",

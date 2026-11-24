@@ -1,4 +1,4 @@
 {
   "name": "extdata",
-  "externalDatfiles": ["extdata_data.dat"]
+  "datFiles": ["extdata_data.dat"]
 }

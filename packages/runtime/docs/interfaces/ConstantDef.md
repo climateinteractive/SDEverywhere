@@ -9,14 +9,14 @@ generated model.
 
 ### varRef
 
- **varRef**: [`VarRef`](VarRef.md)
+> **varRef**: [`VarRef`](VarRef.md)
 
 The reference that identifies the constant variable to be modified.
 
-___
+***
 
 ### value
 
- **value**: `number`
+> **value**: `number`
 
 The new constant value.

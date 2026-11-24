@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.2.14](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.13...plugin-config-v0.2.14) (2026-09-20)
+
+
+### Features
+
+* make published packages ESM only ([#915](https://github.com/climateinteractive/SDEverywhere/issues/915)) ([e164667](https://github.com/climateinteractive/SDEverywhere/commit/e164667c22cbb192c930f264d5aa4a03d9f7b4bc)), closes [#914](https://github.com/climateinteractive/SDEverywhere/issues/914)
+
+## [0.2.13](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.12...plugin-config-v0.2.13) (2026-09-10)
+
+
+### Dependencies
+
+* bump csv-parse from 5.3.3 to 7.0.2 ([#908](https://github.com/climateinteractive/SDEverywhere/issues/908)) ([ab55d88](https://github.com/climateinteractive/SDEverywhere/commit/ab55d88a9cf8f8799b907157953451b02853976b))
+
+## [0.2.12](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.11...plugin-config-v0.2.12) (2026-08-19)
+
+
+### Bug Fixes
+
+* retrofit `ModelSpec` type from build package on top of `ModelSpec` type from compile package ([#891](https://github.com/climateinteractive/SDEverywhere/issues/891)) ([db5a4d0](https://github.com/climateinteractive/SDEverywhere/commit/db5a4d00cb15f90765e24b5e5868fb4d8d87bb00)), closes [#327](https://github.com/climateinteractive/SDEverywhere/issues/327)
+
+
+### Documentation Updates
+
+* flesh out Usage sections in plugin package README files ([#882](https://github.com/climateinteractive/SDEverywhere/issues/882)) ([dfad45b](https://github.com/climateinteractive/SDEverywhere/commit/dfad45bef835e0dc473f53437d04315a23bf4ae7)), closes [#337](https://github.com/climateinteractive/SDEverywhere/issues/337)
+* replace "Example" section in API index page with a sentence that links to README ([#884](https://github.com/climateinteractive/SDEverywhere/issues/884)) ([a690ac7](https://github.com/climateinteractive/SDEverywhere/commit/a690ac7deda8b71ef7006afc553b5a86710d54c9)), closes [#883](https://github.com/climateinteractive/SDEverywhere/issues/883)
+* update documentation to say that Stella format is supported in addition to Vensim ([#889](https://github.com/climateinteractive/SDEverywhere/issues/889)) ([35492e9](https://github.com/climateinteractive/SDEverywhere/commit/35492e95ea5f490e9e0667cc25b2043ca10eb12c)), closes [#888](https://github.com/climateinteractive/SDEverywhere/issues/888)
+
+## [0.2.11](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.10...plugin-config-v0.2.11) (2026-08-13)
+
+
+### Dependencies
+
+* upgrade sanitize-html to 2.17.6 ([#868](https://github.com/climateinteractive/SDEverywhere/issues/868)) ([097384a](https://github.com/climateinteractive/SDEverywhere/commit/097384a12ff463294240d3c663dc0c21c9e9ea1e)), closes [#867](https://github.com/climateinteractive/SDEverywhere/issues/867)
+
 ## [0.2.10](https://github.com/climateinteractive/SDEverywhere/compare/plugin-config-v0.2.9...plugin-config-v0.2.10) (2026-05-04)
 
 

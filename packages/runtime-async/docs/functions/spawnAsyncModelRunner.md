@@ -1,8 +1,8 @@
 [@sdeverywhere/runtime-async](../index.md) / spawnAsyncModelRunner
 
-# Function: spawnAsyncModelRunner
+# Function: spawnAsyncModelRunner()
 
-**spawnAsyncModelRunner**(`workerSpec`): `Promise`<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
+> **spawnAsyncModelRunner**(`workerSpec`, `options?`): `Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
 
 Initialize a [`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md) that runs the model asynchronously in a worker
 (a Web Worker when running in a browser environment, or a worker thread
@@ -32,12 +32,16 @@ async function initApp() {
 }
 ```
 
-#### Parameters
+The returned promise rejects if the worker fails to initialize the model or
+exits unexpectedly.
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `workerSpec` | { `path`: `string`  } \| { `source`: `string`  } | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
+## Parameters
 
-#### Returns
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `workerSpec` | [`WorkerSpec`](../type-aliases/WorkerSpec.md) | Either a `path` to the worker JavaScript file, or the `source` containing the full JavaScript source of the worker. |
+| `options?` | [`AsyncModelRunnerOptions`](../interfaces/AsyncModelRunnerOptions.md) | Additional options, such as the Wasm binary to use when the model was compiled without embedding the binary in the generated JS file. |
 
-`Promise`<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
+## Returns
+
+`Promise`\<[`ModelRunner`](../../../runtime/docs/interfaces/ModelRunner.md)\>
