@@ -1,0 +1,89 @@
+{UTF-8}
+
+pprofile : ptype, ppriority, pwidth, pextra ~~|
+cdf case : (c1-c12) ~~|
+agent : (a1-a2) ~~|
+
+curve width[cdf case] = 0.05, 0.3, 1, 7, 0.05, 0.3, 1, 7, 0.05, 0.3, 1, 7
+  ~~ Normal curve widths (standard deviations), each paired with three base priorities. |
+
+base priority[cdf case] = 0, 0, 0, 0, 10, 10, 10, 10, 1000, 1000, 1000, 1000 ~~|
+
+agent offset[agent] = 0, 0.025
+  ~~ Agent a2 sits a fortieth of a width above a1, so the two agents sample z on \
+  interleaved grids with an effective step of 0.025. |
+
+z = -6 + 0.05 * Time
+  ~~ Distance from base priority in widths: -6 to 6 in steps of 0.05. |
+
+test price[cdf case] = base priority[cdf case] + z * curve width[cdf case] ~~|
+
+profile[cdf case,agent,ptype] = 3 ~~|
+profile[cdf case,agent,ppriority] = base priority[cdf case] + agent offset[agent] * curve width[cdf case] ~~|
+profile[cdf case,agent,pwidth] = curve width[cdf case] ~~|
+profile[cdf case,agent,pextra] = 0 ~~|
+
+quantity[cdf case,agent] = 1 ~~|
+
+amount supplied[cdf case,agent] = SUPPLY AT PRICE(
+  quantity[cdf case,agent],
+  profile[cdf case,agent,ptype],
+  test price[cdf case])
+  ~~ The normal CDF at the test price. |
+
+amount demanded[cdf case,agent] = DEMAND AT PRICE(
+  quantity[cdf case,agent],
+  profile[cdf case,agent,ptype],
+  test price[cdf case])
+  ~~ The complementary normal CDF at the test price. |
+
+market profile[cdf case,agent,ptype] = 3 ~~|
+market profile[cdf case,agent,ppriority] = base priority[cdf case] + agent spread[agent] * curve width[cdf case] ~~|
+market profile[cdf case,agent,pwidth] = curve width[cdf case] ~~|
+market profile[cdf case,agent,pextra] = 0 ~~|
+
+agent spread[agent] = 0, 1
+  ~~ The two market agents are one width apart. |
+
+fixed profile[cdf case,agent,pprofile] = 0 ~~|
+
+market demand[cdf case,a1] = 0.05 + 1.9 * Time / 240 ~~|
+market demand[cdf case,a2] = 0 ~~|
+
+market price[cdf case] = FIND MARKET PRICE(
+  market demand[cdf case,a1],
+  fixed profile[cdf case,a1,ptype],
+  quantity[cdf case,a1],
+  market profile[cdf case,a1,ptype])
+  ~~ A fixed demand from 0.05 to 1.95 against two normal suppliers of quantity 1. |
+
+market amount supplied[cdf case,agent] = SUPPLY AT PRICE(
+  quantity[cdf case,agent],
+  market profile[cdf case,agent,ptype],
+  market price[cdf case]) ~~|
+
+available[cdf case] = 0.05 + 1.9 * Time / 240 ~~|
+
+amount allocated[cdf case,agent] = ALLOCATE AVAILABLE(
+  quantity[cdf case,agent],
+  market profile[cdf case,agent,ptype],
+  available[cdf case])
+  ~~ Two normal requesters of quantity 1, one width apart, sharing 0.05 to 1.95. |
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+INITIAL TIME = 0 ~~|
+FINAL TIME = 240 ~~|
+TIME STEP = 1 ~~|
+SAVEPER = TIME STEP ~~|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|12||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
+///---\\\
+:L<%^E!@

@@ -8,6 +8,18 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { writeFullListing } from './write-full-listing'
 
+/**
+ * The shape of the full listing object passed to `writeFullListing`.
+ */
+interface FullListing {
+  /** The dimension entries. */
+  dimensions: unknown[]
+  /** The variable entries. */
+  variables: unknown[]
+  /** The variable instance arrays, keyed by group name. */
+  varInstances: { [key: string]: unknown[] }
+}
+
 describe('writeFullListing', () => {
   let tmpDir: string
 
@@ -25,14 +37,14 @@ describe('writeFullListing', () => {
    * @param full The full listing object.
    * @returns The text written to the file.
    */
-  function writeAndRead(full: any): string {
+  function writeAndRead(full: FullListing): string {
     const pathname = path.join(tmpDir, 'model.json')
     writeFullListing(pathname, full)
     return fs.readFileSync(pathname, 'utf8')
   }
 
   it('should match JSON.stringify(full, null, 2) for a typical listing', () => {
-    const full: any = {
+    const full: FullListing = {
       dimensions: [
         { id: '_dima', subIds: ['_a1', '_a2'], subs: [{ id: '_a1' }, { id: '_a2' }] },
         { id: '_dimb', subIds: ['_b1'] }
@@ -54,7 +66,7 @@ describe('writeFullListing', () => {
   })
 
   it('should match JSON.stringify(full, null, 2) when all arrays are empty', () => {
-    const full: any = {
+    const full: FullListing = {
       dimensions: [],
       variables: [],
       varInstances: {
@@ -75,7 +87,7 @@ describe('writeFullListing', () => {
   })
 
   it('should match JSON.stringify(full, null, 2) for escaped strings and undefined values', () => {
-    const full: any = {
+    const full: FullListing = {
       dimensions: [{ id: 'line1\nline2', comment: 'say "hi"\t\\' }],
       variables: [{ refId: '_x', modelLHS: undefined, units: 'm/s' }, undefined, { refId: 'é∑' }],
       varInstances: {
