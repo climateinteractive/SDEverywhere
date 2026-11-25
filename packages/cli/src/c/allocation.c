@@ -55,20 +55,29 @@ static inline double __get_pp(double* pp, size_t iProfile, size_t iElement) {
 }
 
 // Normal distribution
-// Abramowitz and Stegun 26.2.17 (Hastings 5-term rational approximation),
-// using 6-significant-digit rounded coefficients to best match Vensim.
-static double __cdf_unit_normal(double x) {
-  double p = 0.231642;
-  double b[5] = {0.319382, -0.356564, 1.78148, -1.82126, 1.33027};
+// Abramowitz and Stegun 26.2.16 (Hastings 3-term rational approximation), which is
+// what Vensim uses. Between x = 0 and x = 0.05, Vensim interpolates linearly between
+// 0.5 and the approximation's value at 0.05, so we do the same.
+#define NORMAL_LINEAR_LIMIT 0.05
+static double __cdf_unit_normal_approx(double x) {
+  double p = 0.33267;
+  double b[3] = {0.4361836, -0.1201676, 0.9372980};
   double t = 1.0 / (1.0 + p * x);
   double y = 0.0;
   double k = t;
-  for (size_t i = 0; i < 5; i++) {
+  for (size_t i = 0; i < 3; i++) {
     y += b[i] * k;
     k *= t;
   }
   static const double base = 0.39894228040143267794;  // 1/sqrt(2*pi)
   return 1.0 - (base * exp(-(x * x) / 2.0)) * y;
+}
+// Return the unit normal CDF for x >= 0.
+static double __cdf_unit_normal(double x) {
+  if (x < NORMAL_LINEAR_LIMIT) {
+    return 0.5 + (x / NORMAL_LINEAR_LIMIT) * (__cdf_unit_normal_approx(NORMAL_LINEAR_LIMIT) - 0.5);
+  }
+  return __cdf_unit_normal_approx(x);
 }
 // Vensim uses a standard deviation of at least 0.05 for the normal curve. A
 // smaller width, including zero, gives the same allocations as a width of 0.05.
